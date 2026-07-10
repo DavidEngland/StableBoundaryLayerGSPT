@@ -1,0 +1,25 @@
+id: eq01
+family: equilibrium
+description: Stable fixed-point convergence under weak forcing.
+
+parameters:
+  sigma: 1.0
+  K: 0.8
+  alpha: 0.7
+  S0: 0.6
+  T0: 280.0
+
+expected_behavior:
+  qualitative: convergent
+  manifold_branch: stable
+
+expected_diagnostics:
+  tke_min_nonnegative: true
+  ri_mean_range: [0.0, 1.0]
+
+tolerances:
+  steady_state_residual_max: 1.0e-3
+
+provenance:
+  source: synthetic
+  validation_tier: L2

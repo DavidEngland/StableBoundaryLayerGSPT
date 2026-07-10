@@ -1,0 +1,38 @@
+schema_version: 0.1.0
+component: critical_manifold
+summary: Contract for reduced-manifold reconstruction and branch labeling.
+
+inputs:
+  - name: Ri
+    type: float
+    units: 1
+    constraints:
+      min: 0.0
+  - name: TKE
+    type: float
+    units: m^2 s^-2
+    constraints:
+      min_exclusive: 0.0
+  - name: cooling_rate
+    type: float
+    units: K s^-1
+
+outputs:
+  - name: manifold_branch
+    type: string
+    allowed:
+      - stable
+      - unstable
+      - transition
+  - name: eigenvalues
+    type: array<float>
+    units: s^-1
+
+properties:
+  deterministic: true
+  smooth_branch_locality: true
+
+validation_tiers:
+  - L1
+  - L2
+  - L3

@@ -1,0 +1,29 @@
+schema_version: 0.1.0
+validation_tiers:
+  L0:
+    purpose: Software correctness and API-level behavior.
+    required:
+      - unit_tests
+      - argument_validation
+  L1:
+    purpose: Mathematical invariants and physical admissibility.
+    required:
+      - positivity_checks
+      - dimensional_consistency
+      - smoothness_constraints
+  L2:
+    purpose: Synthetic benchmark regression against canonical cases.
+    required:
+      - benchmark_golden_regression
+      - tolerance_envelope_checks
+  L3:
+    purpose: Alignment with analytical or published reference results.
+    required:
+      - closed_form_comparison_where_available
+      - known_case_reproduction
+  L4:
+    purpose: Observational validation for campaign datasets.
+    required:
+      - dataset_adapter_qc
+      - observational_diagnostic_agreement
+      - uncertainty_propagation_report

@@ -1,0 +1,9 @@
+schema_version: 0.1.0
+figures:
+  - id: figure01
+    title: Phase-space diagnostic summary
+    required_files:
+      - figure01.md
+      - figure01.tex
+      - figure01.json
+    provenance_required: true

@@ -1,0 +1,252 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+usage() {
+  cat <<'EOF'
+StableBoundaryLayerGSPT reference CLI
+
+Usage:
+  scripts/stablebl build [--dataset NAME] [--config PATH]
+  scripts/stablebl diagnostics [--dataset NAME] [--nsamples N] [--ngrid N] [--seed N]
+  scripts/stablebl paper [--dataset NAME]
+  scripts/stablebl bundle --synthetic [--dataset NAME] [--nsamples N] [--ngrid N] [--seed N]
+
+Notes:
+  - v0.1 supports synthetic reference-theory workflows without observational datasets.
+  - Dataset defaults to CASES99 where applicable.
+EOF
+}
+
+require_cmd() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "Missing required command: $cmd" >&2
+    exit 1
+  fi
+}
+
+parse_common_dataset() {
+  local dataset="${1:-CASES99}"
+  echo "$dataset" | tr '[:lower:]' '[:upper:]'
+}
+
+build_bundle_manifest() {
+  local bundle_dir="$1"
+  local dataset="$2"
+  local run_dir="$3"
+  local bifurcation_dir="$4"
+  local now_iso
+  now_iso="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+  cat > "$bundle_dir/manifest.json" <<EOF
+{
+  "schema_version": "0.1.0",
+  "release": "v0.1-reference-theory",
+  "dataset": "$dataset",
+  "generated_utc": "$now_iso",
+  "inputs": {
+    "synthetic": true
+  },
+  "artifacts": {
+    "pipeline_run_dir": "$run_dir",
+    "bifurcation_run_dir": "$bifurcation_dir",
+    "paper_pdf": "paper.pdf",
+    "paper_tex": "paper.tex",
+    "paper_md": "paper.md",
+    "figures_dir": "figures",
+    "diagnostics_dir": "diagnostics",
+    "benchmarks_dir": "benchmarks",
+    "spec_dir": "spec"
+  }
+}
+EOF
+}
+
+cmd="${1:-}"
+if [[ -z "$cmd" || "$cmd" == "--help" || "$cmd" == "-h" ]]; then
+  usage
+  exit 0
+fi
+shift
+
+case "$cmd" in
+  build)
+    dataset="CASES99"
+    config_path=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --dataset)
+          dataset="$(parse_common_dataset "${2:-}")"
+          shift 2
+          ;;
+        --config)
+          config_path="${2:-}"
+          shift 2
+          ;;
+        *)
+          echo "Unknown argument for build: $1" >&2
+          usage
+          exit 1
+          ;;
+      esac
+    done
+
+    if [[ -n "$config_path" ]]; then
+      julia --project=. scripts/run_pipeline.jl --dataset "$dataset" --config "$config_path"
+    else
+      julia --project=. scripts/run_pipeline.jl --dataset "$dataset"
+    fi
+    ;;
+
+  diagnostics)
+    dataset="CASES99"
+    nsamples="300"
+    ngrid="60"
+    seed="42"
+
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --dataset)
+          dataset="$(parse_common_dataset "${2:-}")"
+          shift 2
+          ;;
+        --nsamples)
+          nsamples="${2:-}"
+          shift 2
+          ;;
+        --ngrid)
+          ngrid="${2:-}"
+          shift 2
+          ;;
+        --seed)
+          seed="${2:-}"
+          shift 2
+          ;;
+        *)
+          echo "Unknown argument for diagnostics: $1" >&2
+          usage
+          exit 1
+          ;;
+      esac
+    done
+
+    julia --project=. scripts/sweep_bifurcation.jl --dataset "$dataset" --nsamples "$nsamples" --ngrid "$ngrid" --seed "$seed"
+    ;;
+
+  paper)
+    dataset="CASES99"
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --dataset)
+          dataset="$(parse_common_dataset "${2:-}")"
+          shift 2
+          ;;
+        *)
+          echo "Unknown argument for paper: $1" >&2
+          usage
+          exit 1
+          ;;
+      esac
+    done
+
+    julia --project=. scripts/assemble_manuscript.jl --dataset "$dataset"
+    require_cmd pdflatex
+    pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
+    ;;
+
+  bundle)
+    synthetic="false"
+    dataset="CASES99"
+    nsamples="300"
+    ngrid="60"
+    seed="42"
+
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --synthetic)
+          synthetic="true"
+          shift
+          ;;
+        --dataset)
+          dataset="$(parse_common_dataset "${2:-}")"
+          shift 2
+          ;;
+        --nsamples)
+          nsamples="${2:-}"
+          shift 2
+          ;;
+        --ngrid)
+          ngrid="${2:-}"
+          shift 2
+          ;;
+        --seed)
+          seed="${2:-}"
+          shift 2
+          ;;
+        *)
+          echo "Unknown argument for bundle: $1" >&2
+          usage
+          exit 1
+          ;;
+      esac
+    done
+
+    if [[ "$synthetic" != "true" ]]; then
+      echo "bundle currently requires --synthetic for v0.1 reference-theory builds" >&2
+      exit 1
+    fi
+
+    require_cmd julia
+    require_cmd pdflatex
+    require_cmd shasum
+    require_cmd zip
+
+    julia --project=. scripts/run_pipeline.jl --dataset "$dataset"
+    julia --project=. scripts/sweep_bifurcation.jl --dataset "$dataset" --nsamples "$nsamples" --ngrid "$ngrid" --seed "$seed"
+    julia --project=. scripts/assemble_manuscript.jl --dataset "$dataset"
+    pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
+
+    latest_run_dir="$(ls -td "results/${dataset}"/run_* 2>/dev/null | head -n 1 || true)"
+    latest_bifurcation_dir="$(ls -td "results/${dataset}"/bifurcation_* 2>/dev/null | head -n 1 || true)"
+
+    if [[ -z "$latest_run_dir" || -z "$latest_bifurcation_dir" ]]; then
+      echo "Expected result directories were not generated." >&2
+      exit 1
+    fi
+
+    timestamp="$(date -u +"%Y%m%dT%H%M%SZ")"
+    bundle_dir="bundle/synthetic_${dataset}_${timestamp}"
+    mkdir -p "$bundle_dir"
+
+    cp reports/generated/paper.pdf "$bundle_dir/paper.pdf"
+    cp reports/generated/paper.tex "$bundle_dir/paper.tex"
+    cp reports/generated/paper.md "$bundle_dir/paper.md"
+    cp -R reports/generated/figures "$bundle_dir/figures"
+    cp -R reports/generated/diagnostics "$bundle_dir/diagnostics"
+    cp -R benchmarks "$bundle_dir/benchmarks"
+    cp -R spec "$bundle_dir/spec"
+    cp "$latest_run_dir/run_manifest.json" "$bundle_dir/provenance.json"
+
+    build_bundle_manifest "$bundle_dir" "$dataset" "$latest_run_dir" "$latest_bifurcation_dir"
+
+    (
+      cd "$bundle_dir"
+      find . -type f ! -name checksums.txt -print0 | sort -z | xargs -0 shasum -a 256 > checksums.txt
+    )
+
+    (cd bundle && zip -qr "$(basename "$bundle_dir").zip" "$(basename "$bundle_dir")")
+
+    echo "Bundle complete"
+    echo "bundle_dir=$bundle_dir"
+    echo "archive=bundle/$(basename "$bundle_dir").zip"
+    ;;
+
+  *)
+    echo "Unknown command: $cmd" >&2
+    usage
+    exit 1
+    ;;
+esac

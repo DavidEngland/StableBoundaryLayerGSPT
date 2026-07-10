@@ -1,0 +1,33 @@
+schema_version: 0.1.0
+component: llj
+summary: Contract for low-level jet diagnostics and coupling to stability transitions.
+
+inputs:
+  - name: wind_profile
+    type: array<float>
+    units: m s^-1
+  - name: height_levels
+    type: array<float>
+    units: m
+  - name: stability_profile
+    type: array<float>
+    units: 1
+
+outputs:
+  - name: jet_core_height
+    type: float
+    units: m
+  - name: jet_core_speed
+    type: float
+    units: m s^-1
+  - name: llj_present
+    type: bool
+
+properties:
+  deterministic: true
+  profile_smoothness_required: true
+
+validation_tiers:
+  - L1
+  - L2
+  - L4

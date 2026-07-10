@@ -1,0 +1,21 @@
+id: relax01
+family: relaxation
+description: Slow-fast relaxation toward alternating quiescent and burst phases.
+
+parameters:
+  epsilon: 0.05
+  sigma: 1.0
+  K: 0.8
+
+expected_behavior:
+  qualitative: relaxation_pattern
+
+expected_diagnostics:
+  phase_separation_present: true
+
+tolerances:
+  phase_ratio_min: 1.2
+
+provenance:
+  source: synthetic
+  validation_tier: L2

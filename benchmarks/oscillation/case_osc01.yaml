@@ -1,0 +1,21 @@
+id: osc01
+family: oscillation
+description: Self-sustained synthetic oscillation regime.
+
+parameters:
+  epsilon: 0.03
+  sigma: 1.1
+  K: 0.9
+
+expected_behavior:
+  qualitative: bounded_oscillation
+
+expected_diagnostics:
+  oscillation_detected: true
+
+tolerances:
+  period_range: [100.0, 5000.0]
+
+provenance:
+  source: synthetic
+  validation_tier: L2

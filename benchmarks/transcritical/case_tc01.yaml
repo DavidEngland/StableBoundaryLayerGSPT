@@ -1,0 +1,24 @@
+id: tc01
+family: transcritical
+description: Near-exchange behavior around transcritical crossing.
+
+parameters:
+  sigma: 1.0
+  K: 1.0
+  alpha: 0.6
+  S0: 0.8
+  T0: 280.0
+
+expected_behavior:
+  qualitative: branch_exchange
+  manifold_branch: transition
+
+expected_diagnostics:
+  transcritical_near_fraction_min: 0.01
+
+tolerances:
+  crossing_residual_abs_max: 1.0e-2
+
+provenance:
+  source: synthetic
+  validation_tier: L2

@@ -1,0 +1,20 @@
+id: hys01
+family: hysteresis
+description: Synthetic forcing ramp with path-dependent loop area.
+
+parameters:
+  ramp_steps: 100
+  ramp_amplitude: 1.5
+
+expected_behavior:
+  qualitative: path_dependent_loop
+
+expected_diagnostics:
+  loop_area_positive: true
+
+tolerances:
+  loop_area_min: 1.0e-4
+
+provenance:
+  source: synthetic
+  validation_tier: L2

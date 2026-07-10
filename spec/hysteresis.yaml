@@ -1,0 +1,28 @@
+schema_version: 0.1.0
+component: hysteresis
+summary: Contract for hysteresis-loop diagnostics across forcing ramps.
+
+inputs:
+  - name: forcing_ramp
+    type: array<float>
+    units: 1
+  - name: response_series
+    type: array<float>
+    units: 1
+
+outputs:
+  - name: loop_area
+    type: float
+    units: 1
+  - name: turning_points
+    type: array<int>
+    units: index
+
+properties:
+  deterministic: true
+  path_dependent: true
+
+validation_tiers:
+  - L2
+  - L3
+  - L4

@@ -1,0 +1,23 @@
+id: fold01
+family: fold
+description: Fold-proximal regime under strong stability gradient.
+
+parameters:
+  sigma: 1.0
+  K: 0.8
+  alpha: 0.6
+  a_fold: 0.6
+  b_fold: 0.35
+
+expected_behavior:
+  qualitative: fold_proximity
+
+expected_diagnostics:
+  fold_near_fraction_min: 0.0
+
+tolerances:
+  fold_proxy_abs_max: 5.0e-2
+
+provenance:
+  source: synthetic
+  validation_tier: L2

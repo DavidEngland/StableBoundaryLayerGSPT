@@ -1,0 +1,37 @@
+schema_version: 0.1.0
+component: fold_detection
+summary: Contract for fold-map identification from synthetic or observed state trajectories.
+
+inputs:
+  - name: sigma
+    type: float
+    units: 1
+  - name: K
+    type: float
+    units: 1
+  - name: Gamma
+    type: float
+    units: K m^-1
+    constraints:
+      min: 0.0
+  - name: S
+    type: float
+    units: s^-1
+    constraints:
+      min: 0.0
+
+outputs:
+  - name: fold_indicator
+    type: float
+    units: 1
+  - name: fold_near
+    type: bool
+
+properties:
+  deterministic: true
+  monotone_tolerance_comparable: true
+
+validation_tiers:
+  - L1
+  - L2
+  - L3
