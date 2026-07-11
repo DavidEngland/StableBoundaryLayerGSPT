@@ -26,3 +26,11 @@ so
 $$
 H = \rho c_p c_h l_0\sqrt{e+\delta}\Gamma.
 $$
+
+When the fast state is projected onto the regularized critical manifold, the closure becomes
+
+$$
+H = \rho c_p c_h l_0\sqrt{e^*(S,\Gamma,\eta)+\delta}\,\Gamma,
+$$
+
+so the surface energy budget is closed by a nonlinear map from slow variables to turbulent heat flux. This coupling is the mechanism that permits fold-induced jumps and hysteresis in the reduced atmospheric-surface system.

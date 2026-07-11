@@ -16,6 +16,14 @@ $$
 
 and laminar clamping is used for $\Delta \le 0$.
 
+For differentiable solver interfaces, introduce the smoothing scale $\eta>0$ and define
+
+$$
+e^*_{\eta} = \frac{1}{2\alpha}\left(\Delta + \sqrt{\Delta^2 + \eta^2}\right).
+$$
+
+This regularization is $C^\infty$ for fixed $\eta$ and recovers the clipped manifold in the limit $\eta \to 0$.
+
 ## Transcritical Exchange
 
 At

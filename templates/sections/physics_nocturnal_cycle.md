@@ -4,6 +4,14 @@
 
 Nocturnal evolution is controlled by nonlinear coupling between turbulent mixing and the land-surface energy budget.
 
+Using the geometric closure,
+
+$$
+K_h = c_h l_0\sqrt{e^*(S,\Gamma,\eta)+\delta},
+$$
+
+so the sensible heat flux remains strictly positive even on the background-mixing branch. Because $\Gamma$ is slaved to skin-temperature evolution through the surface energy budget, this closure feeds back on $T_s$ and can drive brittle transitions and hysteresis when trajectories cross the fold set.
+
 ## Typical Relaxation Cycle
 
 1. Turbulent state: mixing keeps inversion weak.

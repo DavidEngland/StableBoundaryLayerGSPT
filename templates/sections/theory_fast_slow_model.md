@@ -36,3 +36,33 @@ C_s\dot T_s &= R_n(T_s)-\rho c_p c_h l_0\sqrt{e+\delta}\Gamma-G(T_s), \\
 $$
 
 This is a minimal closed fast-slow model preserving core nocturnal SBL physics.
+
+## Geometric Flux Closure
+
+The turbulence closure is written directly in the regularized TKE coordinate rather than through empirical functions of a local Richardson number. The eddy diffusivities are
+
+$$
+K_m = c_m l_0 \sqrt{e+\delta}, \qquad K_h = c_h l_0 \sqrt{e+\delta},
+$$
+
+with structural constants $c_m,c_h$, turbulent length scale $l_0$, and background-mixing parameter $\delta > 0$. This makes both diffusivities strictly positive and supplies a natural minimum diffusivity floor proportional to $\sqrt{\delta}$.
+
+For NWP-style time steps the fast TKE state is projected to the critical manifold, giving the diagnostic turbulent branch
+
+$$
+e^* = \max\left(0, \frac{\Delta}{\alpha}\right), \qquad \Delta = \sigma \left(\frac{U}{h}\right)^2 - K\Gamma.
+$$
+
+To retain smooth gradients for implicit solvers and variational data assimilation, the clipped branch may be replaced by the $C^\infty$ regularization
+
+$$
+e^*_{\eta} = \frac{1}{2\alpha}\left(\Delta + \sqrt{\Delta^2 + \eta^2}\right), \qquad \eta \ll 1.
+$$
+
+Substituting back into the diffusivity law yields the geometric closure
+
+$$
+K_{m,h} = c_{m,h} l_0 \sqrt{e^*(S,\Gamma,\eta) + \delta},
+$$
+
+which resolves a weakly stable transition branch for $\Delta > 0$ and a background-mixing branch for $\Delta \le 0$ without allowing the diffusivity to collapse to zero.
