@@ -31,6 +31,7 @@ function generate_report_fragments(dataset::String, diagnostics::AbstractDict{St
     theory_source = render_source_section("templates/sections/theory_fast_slow_model.md"; dataset=dataset)
     mathematics_source = render_source_section("templates/sections/mathematics_transition_mechanisms.md"; dataset=dataset)
     physics_source = render_source_section("templates/sections/physics_nocturnal_cycle.md"; dataset=dataset)
+    archive_source = render_source_section("templates/sections/archive_synthesis.md"; dataset=dataset)
 
     write(
         "reports/generated/theory/01_state_space.md",
@@ -45,6 +46,10 @@ function generate_report_fragments(dataset::String, diagnostics::AbstractDict{St
         "# Physics\n\nGenerated: $(Dates.now())\n\nDataset: $(dataset)\n\n$(physics_source)\n",
     )
     write(
+        "reports/generated/theory/02_archive_synthesis.md",
+        "# Archive Synthesis\n\nGenerated: $(Dates.now())\n\nDataset: $(dataset)\n\n$(archive_source)\n",
+    )
+    write(
         "reports/generated/diagnostics/01_core_metrics.md",
         "# Core Metrics\n\nri_mean=$(ri_mean)\n\ntke_mean=$(tke_mean)\n",
     )
@@ -55,6 +60,7 @@ function generate_report_fragments(dataset::String, diagnostics::AbstractDict{St
 
     return Dict(
         "theory" => "reports/generated/theory/01_state_space.md",
+        "archive_synthesis" => "reports/generated/theory/02_archive_synthesis.md",
         "mathematics" => "reports/generated/mathematics/01_fast_slow_system.md",
         "physics" => "reports/generated/physics/01_surface_energy_budget.md",
         "diagnostics" => "reports/generated/diagnostics/01_core_metrics.md",

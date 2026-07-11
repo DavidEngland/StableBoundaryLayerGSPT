@@ -82,9 +82,11 @@ tex_template = read_text(tex_template_path; fallback="\\documentclass{article}\\
 md_template = read_text(md_template_path; fallback="# Template missing")
 
 theory_md = read_text("reports/generated/theory/01_state_space.md"; fallback="Theory section not generated yet.")
+archive_md = read_text("reports/generated/theory/02_archive_synthesis.md"; fallback="Archive synthesis not generated yet.")
 diag_md = read_text("reports/generated/diagnostics/03_bifurcation_sweep.md"; fallback="Diagnostics section not generated yet.")
 
 theory_tex = "\\paragraph{Theory Source} See \\path{reports/generated/theory/01_state_space.md}"
+archive_tex = "\\paragraph{Archive Synthesis} See \\path{reports/generated/theory/02_archive_synthesis.md}"
 diag_tex = "\\paragraph{Diagnostics Source} See \\path{reports/generated/diagnostics/03_bifurcation_sweep.md}"
 
 fig_dir = "reports/generated/figures"
@@ -97,6 +99,7 @@ tex_context = Dict(
 	"dataset" => dataset,
 	"generated_timestamp" => timestamp,
 	"theory_section" => theory_tex,
+	"archive_synthesis_section" => archive_tex,
 	"diagnostics_section" => diag_tex,
 	"figure_tex_includes" => figure_tex_includes,
 )
@@ -105,6 +108,7 @@ md_context = Dict(
 	"dataset" => dataset,
 	"generated_timestamp" => timestamp,
 	"theory_section" => theory_md,
+	"archive_synthesis_section" => archive_md,
 	"diagnostics_section" => diag_md,
 	"figure_md_includes" => figure_md_includes,
 )

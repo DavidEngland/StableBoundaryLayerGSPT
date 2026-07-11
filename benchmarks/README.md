@@ -19,5 +19,10 @@ Each benchmark case should define:
 - hysteresis
 - relaxation
 - oscillation
+- inertial
 
 These benchmarks are used for L2 validation and regression hardening.
+
+## Inertial Benchmark Design
+
+The inertial family is reserved for future Coriolis-coupled vector-momentum extensions of the reference theory. The first case should remain analytically simple enough to admit a near-closed-form hodograph target before adding surface-energy coupling or turbulent re-ignition.

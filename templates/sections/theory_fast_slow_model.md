@@ -66,3 +66,26 @@ K_{m,h} = c_{m,h} l_0 \sqrt{e^*(S,\Gamma,\eta) + \delta},
 $$
 
 which resolves a weakly stable transition branch for $\Delta > 0$ and a background-mixing branch for $\Delta \le 0$ without allowing the diffusivity to collapse to zero.
+
+## Future Coriolis-Coupled Extension
+
+The same geometric closure admits a straightforward vector-momentum extension in which the scalar slow-shear description is replaced by a two-component horizontal wind state. In the reduced variant,
+
+$$
+x = (e,U,V,T_s) \in \mathbb{R}^4,
+$$
+
+and the slow momentum equations become
+
+$$
+\dot U = f(V-V_g)-\gamma\sqrt{e+\delta}U, \qquad
+\dot V = -f(U-U_g)-\gamma\sqrt{e+\delta}V.
+$$
+
+The production term is then driven by total horizontal speed or vector shear,
+
+$$
+\Delta = \sigma \left(\frac{\sqrt{U^2+V^2}}{h}\right)^2 - K G(T_s),
+$$
+
+so the fast equation and its regularized critical manifold remain structurally unchanged while the slow return path acquires Coriolis rotation. This is the natural route to capturing Blackadar-type inertial oscillations and circular hodograph overshoot within the same GSPT framework.

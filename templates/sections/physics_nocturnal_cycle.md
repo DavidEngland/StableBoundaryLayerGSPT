@@ -25,3 +25,7 @@ so the sensible heat flux remains strictly positive even on the background-mixin
 ## Relationship to McNider Framework
 
 The model encodes McNider-style land-atmosphere coupling while recasting regime transitions in geometric fast-slow language (invariant manifolds, transcritical exchange, folded slow structures, and relaxation oscillations when conditions permit).
+
+## Future Inertial-Oscillation Physics
+
+If a second horizontal wind component is added, post-collapse evolution is no longer a one-directional acceleration toward stronger shear. Instead, the ageostrophic wind rotates under Coriolis forcing, producing the familiar inertial hodograph circle and Blackadar-style overshoot. In that setting, turbulence is reignited not by monotone scalar shear growth but when the rotating wind vector again becomes large enough for production to overcome stratification.

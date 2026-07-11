@@ -33,6 +33,17 @@ C_s\dot T_s &= R_n(T_s)-\rho c_p c_h l_0\sqrt{e+\delta}\Gamma-G(T_s), \\
 \end{aligned}
 $$
 
+## Planned Vector-Momentum Extension
+
+For future inertial-oscillation studies, the scalar shear equation may be replaced by a two-component horizontal momentum subsystem,
+
+$$
+\dot U = f(V-V_g)-\gamma\sqrt{e+\delta}U, \qquad
+\dot V = -f(U-U_g)-\gamma\sqrt{e+\delta}V,
+$$
+
+with production diagnosed from a vector-speed or vector-shear proxy rather than from a single scalar shear variable. This preserves the fast-slow geometry while permitting Blackadar-style rotational overshoot in the slow flow.
+
 ## Contract
 
 - Consumed by Theory and Mathematics generators

@@ -1,0 +1,68 @@
+id: io01
+family: inertial
+description: Idealized Blackadar-style inertial oscillation benchmark after sudden decoupling.
+
+model_variant:
+  feature_flag: vector_momentum
+  governing_spec: spec/equations/coriolis_vector_extension.md
+  closure_mode: frictionless_limit
+
+mathematical_layout:
+  state_vector:
+    - e
+    - U
+    - V
+    - T_s
+  assumptions:
+    - post-collapse limit with e -> 0
+    - background mixing neglected for the benchmark baseline
+    - stratification held fixed over the inertial timescale
+    - geostrophic forcing constant in time
+    - no turbulent re-ignition during the verification window
+  reduced_system:
+    U_dot: f * (V - V_g)
+    V_dot: -f * (U - U_g)
+  analytic_solution:
+    center:
+      - U_g
+      - V_g
+    radius: sqrt((U0 - U_g)^2 + (V0 - V_g)^2)
+    period: 2 * pi / f
+    hodograph: circular
+
+parameters:
+  f: 1.0e-4
+  U_g: 8.0
+  V_g: 0.0
+  U0: 2.0
+  V0: 0.0
+  T_s: 280.0
+  Gamma_fixed: 0.3
+  verification_window_seconds: 43200.0
+
+expected_behavior:
+  qualitative: inertial_hodograph_circle
+  branch_regime: post-collapse laminar_return
+  rotational_direction: clockwise_nh
+
+expected_diagnostics:
+  hodograph_closed_curve: true
+  geostrophic_center_preserved: true
+  speed_radius_conserved: true
+  inertial_period_seconds: 62831.853071795864
+  transcritical_reignition_absent: true
+
+tolerances:
+  radius_relative_error_max: 0.02
+  center_absolute_error_max: 0.1
+  period_relative_error_max: 0.02
+  closure_residual_max: 1.0e-6
+
+reference_figures:
+  - hodograph_uv_circle
+  - ageostrophic_speed_timeseries
+
+provenance:
+  source: synthetic
+  validation_tier: L2
+  scientific_role: baseline verification before coupled SEB and finite-drag extensions

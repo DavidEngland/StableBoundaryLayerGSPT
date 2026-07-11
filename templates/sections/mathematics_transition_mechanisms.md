@@ -24,6 +24,16 @@ $$
 
 This regularization is $C^\infty$ for fixed $\eta$ and recovers the clipped manifold in the limit $\eta \to 0$.
 
+## Vector-Momentum Generalization
+
+The manifold machinery is unchanged if the scalar slow shear is replaced by horizontal momentum components $(U,V)$. The only modification is the forcing diagnostic,
+
+$$
+\Delta = \sigma \left(\frac{\sqrt{U^2+V^2}}{h}\right)^2 - K G(T_s),
+$$
+
+or an analogous vector-shear norm in a vertically resolved setting. The fast foliation and transcritical threshold are therefore preserved, but the slow flow reaching that threshold becomes rotational under Coriolis coupling.
+
 ## Transcritical Exchange
 
 At
