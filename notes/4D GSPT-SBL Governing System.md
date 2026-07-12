@@ -2,7 +2,9 @@ The Complete 4D GSPT-SBL Governing System
 The full state vector is defined as \mathbf{x} = (e, U, V, T_s) \in \mathbb{R}^4, where e is the fast turbulent coordinate, and (U, V, T_s) are the slow environmental coordinates. The system is scaled using the small singular perturbation parameter \varepsilon, representing the ratio of the rapid turbulent allocation timescale to the slow macro-environmental thermodynamic forcing timescale (0 < \varepsilon \ll 1).
 1. The Complete Fast-Slow Equations
 Fast Subsystem (Turbulence Mechanics)
-\varepsilon \frac{de}{dt} = \sqrt{e + \delta} \left[ \frac{\sigma}{h^2} (U^2 + V^2) - K \cdot G(T_s) - \alpha e \right]
+\varepsilon \frac{de}{dt} = \mathcal{F}(e,U,V,T_s)
+
+\mathcal{F}(e,U,V,T_s) = \sqrt{e + \delta} \left[ \eta\,\gamma\,(U^2 + V^2) - K \cdot G(T_s) \right] - \frac{(e+\delta)^{3/2}}{l_0}
 Slow Subsystem (Atmospheric Rotational Dynamics & Surface Thermodynamics)
 \frac{dU}{dt} = f(V - V_g) - \gamma \sqrt{e + \delta} \cdot U \frac{dV}{dt} = -f(U - U_g) - \gamma \sqrt{e + \delta} \cdot V \frac{dT_s}{dt} = \frac{1}{C_{\text{skin}}} \left[ R_{\downarrow} - \sigma_{SB} T_s^4 - \lambda \frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H \sqrt{e + \delta} \cdot (T_s - T_a) \right]
 2. Parameterization of Closures and Functions
@@ -12,9 +14,9 @@ The stable stratification is driven by the vertical temperature inversion betwee
 G(T_s) = \exp\left( \beta \frac{T_a - T_s}{T_a} \right) - 1
 * Behavior: When T_s = T_a (neutral stratification), G(T_s) = 0, and buoyant destruction vanishes. When T_s < T_a (nocturnal cooling), G(T_s) > 0, rapidly accelerating the buoyant destruction of TKE.
 B. The Turbulent Diffusivity/Drag Closure
-The momentum drag coefficient \gamma and the surface thermodynamic sensible heat exchange coefficient C_H are scaled identically with the regularized turbulent velocity scale u_* \sim \sqrt{e + \delta}:
-\gamma = \frac{\kappa^2}{\ln(h/z_0)^2} \cdot \frac{1}{h} C_H = \frac{\kappa^2}{\ln(h/z_{0m})\ln(h/z_{0h})}
-Where \kappa is the von Kármán constant, h is the bulk boundary layer height scale, and z_0 represents the surface roughness lengths.
+The momentum drag coefficient \gamma and the surface thermodynamic sensible heat exchange coefficient C_H are scaled with logarithmic roughness laws:
+\gamma = \gamma_{\mathrm{eff}}\frac{\kappa^2}{\ln(h/z_{0m})^2} \cdot \frac{1}{h} \qquad C_H = \frac{\kappa^2}{\ln(h/z_{0m})\ln(h/z_{0h})}
+Where \kappa is the von Kármán constant, h is the bulk boundary layer height scale, and z_{0m}, z_{0h} are the momentum and thermal roughness lengths.
 3. Physical Parameters and Baseline Scaling
 To run this model numerically (e.g., in Julia/SciML or Python's solve_ivp), use the following verified baseline parameters scaled for a typical mid-latitude nocturnal boundary layer (resembling CASES99 conditions):
 Environmental Controls & Geostrophic Forcing
@@ -29,11 +31,11 @@ Turbulence & Boundary Layer Internals
 Parameter	Description	Baseline Value	Units
 \varepsilon	Singular Perturbation Parameter	0.01	Dimensionless
 \delta	Background Mixing Parameter	1.0 \times 10^{-4}	\text{m}^2\text{s}^{-2}
-\sigma	Mechanical Shear Production Weight	0.15	Dimensionless
-K	Buoyant Destruction Weight	0.40	\text{m}^2\text{s}^{-3}
-\alpha	Viscous Dissipation Coeff	0.25	\text{s}^{-1}
+K	Buoyant Destruction Weight	0.32	Dimensionless gain
 \beta	Stratification Sensitivity Parameter	15.0	Dimensionless
 h	Coupling Bulk Scale Height	50.0	\text{m}
+\gamma_{\mathrm{eff}}	Drag Scaling Efficiency	2.0	Dimensionless
+\eta	Shear Production Efficiency	15.0	Dimensionless
 Thermal Properties (Surface Energy Budget)
 Parameter	Description	Baseline Value	Units
 \sigma_{SB}	Stefan-Boltzmann Constant	5.67 \times 10^{-8}	\text{W m}^{-2}\text{K}^{-4}
@@ -43,7 +45,7 @@ d_{\text{soil}}	Effective Soil Layer Depth	0.5	\text{m}
 C_{\text{skin}}	Thermal Capacity of Skin Layer	2.0 \times 10^{4}	\text{J m}^{-2}\text{K}^{-1}
 4. Geometric Features of the 4D Phase Space
 When analyzing this mathematical system, the geometric structures shift from your previous lower-dimensional derivations in three important ways:
-1. The Critical Manifold \mathcal{M}_0: Defined strictly in the limit \varepsilon \to 0 by setting the fast equation to zero (f = 0). This yields the active turbulent sheet where: e^* = \frac{1}{\alpha} \left[ \frac{\sigma}{h^2}(U^2 + V^2) - K \cdot G(T_s) \right]
-2. The Trapped Laminar State: If \frac{\sigma}{h^2}(U^2 + V^2) < K \cdot G(T_s), the term inside the brackets becomes negative. Because real-world kinetic energy cannot be negative, the regularization parameter \delta holds the system on the background mixing floor where e \approx 0.
-3. The Rank-Deficient Fold (\mathcal{C}_{\text{fold}}): Substituting e^* into the prognostic T_s equation yields the reduced slow flow on the manifold. Differentiating this with respect to the coordinate T_s defines the fold line. Because U^2 + V^2 is a circular symmetric term, the fold curve is an open, parabolic boundary wrapped around the (U, V) wind velocity plane.
+1. The Critical Manifold \mathcal{M}_0: Defined strictly in the limit \varepsilon \to 0 by setting the fast equation to zero: \mathcal{F}(e,U,V,T_s)=0. On the active turbulent sheet, e+\delta = l_0\Delta where \Delta = \eta\,\gamma\,(U^2+V^2)-K\,G(T_s), so e^* = l_0\Delta-\delta.
+2. The Trapped Laminar State: If \Delta \le 0, no active turbulent root exists. The regularization parameter \delta then holds the system near the background mixing floor, so e remains close to the laminar branch.
+3. The Fold Set (\mathcal{C}_{\text{fold}}): The nonlinear SEB creates the parameter dependence required for the manifold to fold, but the geometric fold itself is defined by the simultaneous conditions \mathcal{F}=0 and \partial_e\mathcal{F}=0. Because U^2 + V^2 is circularly symmetric, the turbulent branch has paraboloid-of-revolution geometry in the (U, V, e) coordinates for fixed T_s.
 

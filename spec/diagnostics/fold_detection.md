@@ -6,10 +6,10 @@
 
 ## Fold Conditions
 
-For reduced slow manifold relation $H(T_s, S)=0$, fold points satisfy:
+For the 4D fast-slow system, the fold set is defined geometrically by the fast subsystem:
 
 $$
-H = 0, \quad \frac{\partial H}{\partial T_s} = 0.
+\mathcal{F}(e,U,V,T_s)=0, \qquad \partial_e\mathcal{F}(e,U,V,T_s)=0.
 $$
 
-Crossing a fold indicates branch loss of attraction and fast jump to laminar branch.
+The surface energy budget does not define the fold directly; it supplies the slow parameter dependence that can drive trajectories into this non-hyperbolic set. Crossing a fold indicates loss of normal hyperbolicity and fast departure from the attracting branch.

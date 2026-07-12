@@ -1,48 +1,45 @@
 # Slow System
 
 - Equation ID: `EQ-SLOW-001`
-- Slow variables: `S`, `T_s`, `Gamma`
-- Physical interpretation: geostrophic forcing, land-surface energy evolution, and inversion strength evolution
+- Slow variables: `U`, `V`, `T_s`
+- Physical interpretation: geostrophic forcing, inertial rotation, and land-surface thermodynamic evolution
 
-## Shear Evolution
-
-$$
-\dot S = F_g - \gamma\sqrt{e + \delta}S
-$$
-
-- $F_g$: effective pressure-gradient forcing
-- $\gamma\sqrt{e + \delta}S$: turbulent drag term
-
-## Stability Evolution
+## Momentum Evolution
 
 $$
-\dot\Gamma = a(T_a - T_s) - b\sqrt{e + \delta}\Gamma
+\dot U = f_c(V-V_g)-\gamma\sqrt{e+\delta}U,
 $$
 
-- $a$: conversion of surface cooling to inversion growth
-- $b$: turbulent erosion of inversion
+$$
+\dot V = -f_c(U-U_g)-\gamma\sqrt{e+\delta}V.
+$$
 
-## Complete Four-Variable ODE System
+- $f_c$: Coriolis parameter
+- $(U_g,V_g)$: geostrophic forcing target
+- $\gamma\sqrt{e+\delta}(U,V)$: regularized turbulent drag
+
+## Surface Thermodynamic Evolution
+
+$$
+C_{\mathrm{skin}}\dot T_s = R_{\downarrow}-\sigma_{SB}T_s^4-\lambda\frac{T_s-T_{\mathrm{deep}}}{d_{\mathrm{soil}}}+\rho c_p C_H\sqrt{e+\delta}(T_a-T_s)
+$$
+
+## Complete 4D ODE System
 
 $$
 \begin{aligned}
-\varepsilon\dot e &= \sqrt{e+\delta}(\sigma S^2-K\Gamma-\alpha e), \\
-\dot S &= F_g - \gamma\sqrt{e+\delta}S, \\
-C_s\dot T_s &= R_n(T_s)-\rho c_p c_h l_0\sqrt{e+\delta}\Gamma-G(T_s), \\
-\dot\Gamma &= a(T_a-T_s)-b\sqrt{e+\delta}\Gamma.
+\varepsilon\dot e &= \mathcal{F}(e,U,V,T_s), \\
+\dot U &= f_c(V-V_g)-\gamma\sqrt{e+\delta}U, \\
+\dot V &= -f_c(U-U_g)-\gamma\sqrt{e+\delta}V, \\
+C_{\mathrm{skin}}\dot T_s &= R_{\downarrow}-\sigma_{SB}T_s^4-\lambda\frac{T_s-T_{\mathrm{deep}}}{d_{\mathrm{soil}}}+\rho c_p C_H\sqrt{e+\delta}(T_a-T_s).
 \end{aligned}
 $$
 
-## Planned Vector-Momentum Extension
-
-For future inertial-oscillation studies, the scalar shear equation may be replaced by a two-component horizontal momentum subsystem,
+where
 
 $$
-\dot U = f(V-V_g)-\gamma\sqrt{e+\delta}U, \qquad
-\dot V = -f(U-U_g)-\gamma\sqrt{e+\delta}V,
+\mathcal{F}(e,U,V,T_s)=\sqrt{e+\delta}\left[\eta\,\gamma\,(U^2+V^2)-K\,G(T_s)\right]-\frac{(e+\delta)^{3/2}}{l_0}.
 $$
-
-with production diagnosed from a vector-speed or vector-shear proxy rather than from a single scalar shear variable. This preserves the fast-slow geometry while permitting Blackadar-style rotational overshoot in the slow flow.
 
 ## Contract
 

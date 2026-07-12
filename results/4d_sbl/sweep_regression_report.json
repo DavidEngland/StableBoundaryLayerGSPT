@@ -1,0 +1,13 @@
+{
+    "step": 1,
+    "low_forcing_rule": "U_g < 4.0 should remain laminar after collapse (no re-ignition)",
+    "high_forcing_rule": "U_g > 10.0 should show at least one re-ignition",
+    "summary_csv": "results/4d_sbl/sweep_regression_summary.csv",
+    "issues": [
+    ],
+    "description": "4D GSPT-SBL geostrophic forcing sweep",
+    "U_g_range": [
+        2,
+        15
+    ]
+}

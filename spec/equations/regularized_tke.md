@@ -10,21 +10,21 @@
 Setting $\varepsilon = 0$ gives
 
 $$
-\sqrt{e + \delta}(\Delta - \alpha e) = 0.
+\mathcal{F}(e,U,V,T_s)=\sqrt{e + \delta}\left[\eta\,\gamma\,(U^2+V^2)-K\,G(T_s)\right]-\frac{(e+\delta)^{3/2}}{l_0}=0.
 $$
 
 Because $\delta > 0$, $\sqrt{e+\delta}$ does not vanish, so
 
 $$
-e^* = \frac{\Delta}{\alpha} \quad \text{for} \quad \Delta > 0,
+e^* = l_0\Delta-\delta \quad \text{for} \quad \Delta > 0,
 $$
 
-and in the singular limit we clamp to laminar branch $e^* = 0$ when $\Delta \le 0$.
+and in the singular limit the system is clamped to the laminar branch when $\Delta \le 0$.
 
-For solver-facing closures, the branch clip may be replaced by the smooth regularization
+For solver-facing closures, the branch clip may be replaced by the smooth diagnostic regularization
 
 $$
-e^*_{\eta} = \frac{1}{2\alpha}\left(\Delta + \sqrt{\Delta^2 + \eta^2}\right), \qquad \eta > 0,
+e^*_{\xi} = \frac{1}{2}\left(e^* + \sqrt{(e^*)^2+\xi^2}\right), \qquad \xi > 0,
 $$
 
-which is $C^\infty$ for fixed $\eta$ and converges to $\max(0, \Delta/\alpha)$ as $\eta \to 0$.
+which is $C^\infty$ for fixed $\xi$ and converges to the clipped branch as $\xi \to 0$. This expression is diagnostic only; the prognostic model evolves the full fast equation.

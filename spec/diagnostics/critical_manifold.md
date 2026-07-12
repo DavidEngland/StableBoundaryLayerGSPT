@@ -7,10 +7,16 @@
 
 ## Definition
 
-From the fast subsystem singular limit:
+From the fast subsystem singular limit, the critical manifold is defined implicitly by
 
 $$
-e^*(S,\Gamma) = \max\left(0, \frac{\sigma S^2 - K\Gamma}{\alpha}\right)
+\mathcal{F}(e,U,V,T_s)=0.
 $$
 
-Reduced slow flow is computed on this manifold in variables $(S, T_s, \Gamma)$.
+On the active turbulent branch,
+
+$$
+e^*(U,V,T_s) = l_0\left[\eta\,\gamma\,(U^2+V^2)-K\,G(T_s)\right]-\delta,
+$$
+
+with clipping to the laminar branch when the bracketed production-destruction balance is non-positive. Reduced slow flow is computed on this manifold in variables $(U,V,T_s)$.

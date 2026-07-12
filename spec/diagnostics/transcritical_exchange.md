@@ -5,13 +5,13 @@
 - Transition surface:
 
 $$
-\Delta = \sigma S^2 - K\Gamma = 0
+\Delta = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s) = 0
 $$
 
 - Local eigenvalue model:
 
 $$
-\lambda = -\sqrt{\alpha\Delta}
+\lambda_f = \partial_e\mathcal{F}\big|_{\mathcal{M}_0}
 $$
 
 - Early warning outputs: `slowing_down_index`, `variance_growth`, `autocorrelation_lag1`
