@@ -1,107 +1,277 @@
-Technical Alignment: 4D GSPT-SBL Model Specifications
+# 4D GSPT-SBL Model: Technical Specifications and Geometric Dynamics
 
-1. Formal 4D State Vector and Governing Equations
+## Executive Summary
 
-The 4D GSPT-SBL model is defined as a mathematically closed, fast-slow dynamical system. The state vector \mathbf{x} = (e, U, V, T_s) \in \mathbb{R}^4 maps the turbulent kinetic energy to the macroscale environmental state.
+The 4D GSPT-SBL model is a mathematically closed fast-slow system that recasts nocturnal stable boundary layer regime transitions as geometric events in a coupled atmosphere-surface dynamical system. Its principal value is that turbulence collapse, inertial jet formation, and shear-driven recovery are no longer treated as ad hoc parameterization switches, but as trajectories evolving relative to a regularized critical manifold.
 
-* Fast Turbulent Coordinate:
-  * e: Turbulent Kinetic Energy (TKE) [m^2 s^{-2}].
-* Slow Environmental Coordinates:
-  * U, V: Horizontal momentum components [m s^{-1}].
-  * T_s: Surface skin temperature [K].
+Three structural points matter most.
 
-The system is partitioned by the singular perturbation parameter \varepsilon (0 < \varepsilon \ll 1), representing the separation between rapid turbulent adjustment and slow thermodynamic forcing.
+1. The state space is genuinely multiscale:
 
-Fast Subsystem (Turbulence Mechanics)
+$$
+\mathbf{x} = (e,U,V,T_s)^T \in \mathbb{R}^4,
+$$
 
-The evolution of e is governed by an energy-conserving fast field that utilizes a background mixing floor \delta to ensure the vector field remains C^\infty at the laminar transition:
+with one fast variable and three slow variables.
 
-\varepsilon \frac{de}{dt} = \mathcal{F}(e,U,V,T_s)
+2. The fast vector field is smooth for $\delta > 0$, so normal hyperbolicity can be discussed rigorously away from fold points.
 
-\mathcal{F}(e,U,V,T_s) = \sqrt{e + \delta} \left[ \eta\,\gamma\,(U^2 + V^2) - K \cdot G(T_s) \right] - \frac{(e+\delta)^{3/2}}{l_0}
+3. The Coriolis-coupled slow flow realizes the Blackadar mechanism dynamically: post-collapse inertial rotation of the ageostrophic wind generates the low-level jet (LLJ), which can then force recovery across the folded geometry.
 
-Slow Subsystem (Atmospheric Rotational Dynamics & Surface Thermodynamics)
+## 1. Governing Fast-Slow System
 
-The horizontal momentum equations incorporate the Coriolis parameter f and geostrophic targets \mathbf{v}_g = (U_g, V_g). The friction term is unified via the regularized turbulent velocity scale u_* \sim \sqrt{e + \delta}: \frac{dU}{dt} = f(V - V_g) - \gamma \sqrt{e + \delta} \cdot U \frac{dV}{dt} = -f(U - U_g) - \gamma \sqrt{e + \delta} \cdot V
+The model is partitioned by a singular perturbation parameter
 
-The thermal evolution of the surface is governed by the non-linear Surface Energy Budget (SEB): \frac{dT_s}{dt} = \frac{1}{C_{\text{skin}}} \left[ R_{\downarrow} - \sigma_{SB} T_s^4 - \lambda \frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H \sqrt{e + \delta} \cdot (T_s - T_a) \right]
+$$
+0 < \varepsilon \ll 1,
+$$
 
-2. Calibrated Parameter Matrix (Julia-Aligned)
+representing the ratio of rapid turbulent adjustment to slower thermodynamic and rotational forcing.
 
-The following parameters provide numerical closure for High-Performance Computing (HPC) implementations and SciML integration.
+### Fast Coordinate
 
-Parameter	Description	Calibrated Value	Physical Units
-\kappa	Von Kármán Constant	0.4	Dimensionless
-z_{0m}	Roughness Length (Momentum)	0.05	\text{m}
-z_{0h}	Roughness Length (Heat)	0.01	\text{m}
-l_0	Mixing Length Scale	15.0	\text{m}
-K	Buoyant Destruction Weight	0.32¹	Dimensionless gain
-\eta	Shear Production Efficiency	15.0	Dimensionless
-\varepsilon	Singular Perturbation Parameter	0.01	Dimensionless
-\delta	Background Mixing Parameter	1.0 \times 10^{-4}	\text{m}^2\text{s}^{-2}
-\beta	Stratification Sensitivity	15.0	Dimensionless
-h	Coupling Bulk Scale Height	50.0	\text{m}
-U_g	Zonal Geostrophic Wind	10.0	\text{m s}^{-1}
-V_g	Meridional Geostrophic Wind	0.0	\text{m s}^{-1}
-f	Coriolis Parameter	1.0 \times 10^{-4}	\text{s}^{-1}
-T_a	Reference Air Temp (z=h)	285.15	\text{K}
-T_{\text{deep}}	Deep Soil Core Temp	283.15	\text{K}
-R_{\downarrow}	Downward Longwave Radiation	260.0	\text{W m}^{-2}
-\rho c_p	Volumetric Heat Capacity (Air)	1200.0	\text{J m}^{-3}\text{K}^{-1}
-\sigma_{SB}	Stefan-Boltzmann Constant	5.67 \times 10^{-8}	\text{W m}^{-2}\text{K}^{-4}
-\lambda	Soil Thermal Conductivity	1.2	\text{W m}^{-1}\text{K}^{-1}
-d_{\text{soil}}	Effective Soil Layer Depth	0.5	\text{m}
-C_{\text{skin}}	Thermal Capacity (Skin)	2.0 \times 10^{4}	\text{J m}^{-2}\text{K}^{-1}
+- $e$: turbulence kinetic energy (TKE) [$\mathrm{m}^2\,\mathrm{s}^{-2}$]
 
-¹Note: Baseline physical context suggests K=0.40; K=0.32 is the calibrated production default and should be accompanied by a sensitivity or supplementary calibration section in publication-facing material.
+### Slow Coordinates
 
-3. Fast Field Regularization and Manifold Smoothing
+- $U, V$: horizontal momentum components [$\mathrm{m}\,\mathrm{s}^{-1}$]
+- $T_s$: surface skin temperature [$\mathrm{K}$]
 
-To ensure the system is suitable for implicit solvers and 4D-Var data assimilation, we apply a two-layer regularization.
+### Fast Subsystem
 
-* Background Mixing Floor (\delta): By setting \delta > 0, the fast vector field is smooth and its Jacobian remains finite. On the attracting turbulent branch, the fast eigenvalue \lambda_f = \partial_e \mathcal{F} is negative, which supplies normal hyperbolicity away from fold points and satisfies the local hypotheses used in Fenichel theory.
-* Diagnostic Manifold Smoothing (\xi): For closure evaluation and initialization, the clipped branch can be replaced by a C^\infty diagnostic approximation using a separate mollifier \xi > 0. This smoothed equilibrium is not the exact equilibrium of the prognostic fast ODE; it is a solver-facing diagnostic approximation to the clipped manifold.
-* Stability Exchange: In the isolated fast subsystem (\varepsilon = 0), the laminar-turbulent threshold is governed by the sign of \Delta = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s). In the coupled slow subsystem (\varepsilon > 0), smooth diagnostics prevent numerical chatter while the prognostic model continues to evolve the full fast equation.
+The prognostic TKE equation is written in energy-conserving form as
 
-4. Geometric Narrative: The Paraboloid and the Fold Line
+$$
+\varepsilon \frac{de}{dt} = \mathcal{F}(e,U,V,T_s),
+$$
 
-The SBL dynamics are realized as a topological structure within the 4D state space.
+with
 
-* Critical Manifold (\mathcal{M}_0): Defined in the limit \varepsilon \to 0 by \mathcal{F}(e,U,V,T_s)=0. On the active turbulent branch, e+\delta = l_0\Delta with \Delta = \eta\,\gamma\,(U^2+V^2)-K\,G(T_s).
-* The Paraboloid of Revolution: For fixed T_s, the turbulent branch satisfies e = l_0\eta\,\gamma\,(U^2+V^2) - l_0K\,G(T_s) - \delta. Hence e is affine in U^2+V^2, so the manifold is a paraboloid of revolution in the (U,V,e) geometry.
-* The Fold Line (\mathcal{C}_{fold}): The nonlinear SEB supplies the parameter dependence that allows the critical manifold to fold, but the geometric fold itself is defined by
+$$
+\mathcal{F}(e,U,V,T_s)
+= \sqrt{e+\delta}\left[\eta\,\gamma\,(U^2+V^2) - K\,G(T_s)\right]
+- \frac{(e+\delta)^{3/2}}{l_0}.
+$$
 
-> \mathcal{F}(e,U,V,T_s)=0, \qquad \partial_e \mathcal{F}(e,U,V,T_s)=0.
+Here:
 
-At this set, normal hyperbolicity fails and the reduced slow flow becomes singular.
-* Brittle Transition: Crossing \mathcal{C}_{fold} triggers a catastrophic jump. Because the attracting turbulent branch terminates, the trajectory executes a fast-scale O(\varepsilon) transition toward the background mixing floor, uncoupling the atmosphere from the surface.
+- $\eta\,\gamma\,(U^2+V^2)$ is mechanical production
+- $K\,G(T_s)$ is buoyancy destruction
+- $(e+\delta)^{3/2}/l_0$ is dissipation
 
-5. Closure Functions and Flux Parameterizations
+The stratification map is
 
-The GSPT geometry is translated into implementable closures for Numerical Weather Prediction (NWP).
+$$
+G(T_s) = \exp\!\left(\beta\frac{T_a-T_s}{T_a}\right) - 1.
+$$
 
-* Logarithmic Drag and Heat Exchange: The momentum drag coefficient \gamma and heat exchange coefficient C_H are derived from logarithmic profiles: \gamma = \frac{\kappa^2}{[\ln(h/z_{0m})]^2} \cdot \frac{1}{h} C_H = \frac{\kappa^2}{\ln(h/z_{0m})\ln(h/z_{0h})}
-* Stratification Function G(T_s): Uses an exponential activation form to ensure C^\infty differentiability: G(T_s) = \exp\left( \beta \frac{T_a - T_s}{T_a} \right) - 1
-* Numerical Stability via \delta: The background parameter \delta ensures a strictly positive baseline for eddy diffusivities (K_{min} = c l_0 \sqrt{\delta}). This prevents the "runaway cooling" paradox and ill-conditioned Jacobians by ensuring vertical diffusion remains well-defined even in extreme stability.
+### Slow Subsystem
 
-6. Structural Implementation: Discrete Exterior Calculus (DEC)
+The slow atmospheric momentum equations are
 
-To preserve geometric invariants on a spatial mesh, the model utilizes DEC on a simplicial complex.
+$$
+\frac{dU}{dt} = f_c(V-V_g) - \gamma\sqrt{e+\delta}\,U,
+$$
 
-* Mapping to Differential Forms:
-  * 0-forms: T_s (Primal Nodes).
-  * 1-forms: U, V (Integrated along Primal Edges to preserve circulation).
-  * 2-forms: e (Integrated spatial density on Faces/Volumes).
-* Hodge Star Operator (\star): Metric properties are encapsulated entirely within \star, separating them from the topological exterior derivative (d). This allows the O(\varepsilon) relaxation jump to be dissipated structurally, preventing the grid-scale shocks and spurious gravity waves associated with standard finite-difference transitions.
-* Invariance: This discretization preserves the discrete exterior calculus identities exactly and enables circulation-preserving discretizations of the momentum equations. Exact Kelvin-circulation preservation depends on the temporal discretization and nonlinear advection treatment, so it should not be claimed without a scheme-specific proof.
+$$
+\frac{dV}{dt} = -f_c(U-U_g) - \gamma\sqrt{e+\delta}\,V.
+$$
 
-7. The Nocturnal Lifecycle as a Relaxation Oscillation
+The surface thermodynamic evolution is governed by the nonlinear surface energy budget:
 
-The SBL lifecycle is a four-phase relaxation oscillation driven by the non-monotonic feedback between friction and shear.
+$$
+\frac{dT_s}{dt}
+= \frac{1}{C_{\mathrm{skin}}}
+\left[
+R_{\downarrow}
+- \sigma_{SB}T_s^4
+- \lambda\frac{T_s-T_{\mathrm{deep}}}{d_{\mathrm{soil}}}
++ \rho c_p C_H\sqrt{e+\delta}(T_a-T_s)
+\right].
+$$
 
-1. Evening Cooling: The trajectory tracks the upper turbulent branch of \mathcal{M}_0. Radiative cooling drops T_s, intensifying stratification and moving the state toward the fold.
-2. Catastrophic Collapse: Upon reaching \mathcal{C}_{fold}, normal hyperbolicity is lost. The system executes a brittle jump, plunging TKE toward the background floor and uncoupling the wind from surface friction.
-3. Inertial Acceleration (Blackadar): Stripped of frictional brakes, the ageostrophic wind initiates an inertial rotation around the geostrophic vector \mathbf{v}_g. This slow excursion wraps around the paraboloid geometry while the Low-Level Jet (LLJ) grows.
-4. Turbulent Breakout: The intensifying LLJ increases mechanical production until the rotating state crosses the fold geometry and the fast field becomes positive (\mathcal{F} > 0), re-igniting TKE via a fast-scale jump back to the turbulent branch.
+This is the exact 4D production form implemented in `src/Dynamics/Dynamics.jl`.
 
-Hysteresis and Path-Dependence: The recovery threshold is significantly higher than the collapse threshold. During the uncoupled phase, the surface cools unchecked, pulling the system deeper into the laminar regime. This geometric separation requires the LLJ to generate a massive surplus of shear before the "brittle" recovery can occur.
+## 2. Calibrated Parameter Matrix
+
+The baseline code-aligned parameters are:
+
+| Parameter | Description | Value | Units |
+| --- | --- | ---: | --- |
+| $\varepsilon$ | singular perturbation parameter | 0.01 | dimensionless |
+| $\delta$ | background mixing parameter | $1.0 \times 10^{-4}$ | $\mathrm{m}^2\,\mathrm{s}^{-2}$ |
+| $\eta$ | shear production efficiency | 15.0 | dimensionless |
+| $\gamma_{\mathrm{eff}}$ | drag scaling efficiency | 2.0 | dimensionless |
+| $l_0$ | dissipation length scale | 15.0 | $\mathrm{m}$ |
+| $K$ | buoyancy-destruction gain | 0.32 | dimensionless |
+| $\beta$ | stratification sensitivity | 15.0 | dimensionless |
+| $h$ | bulk coupling height scale | 50.0 | $\mathrm{m}$ |
+| $\kappa$ | von Karman constant | 0.4 | dimensionless |
+| $z_{0m}$ | momentum roughness length | 0.05 | $\mathrm{m}$ |
+| $z_{0h}$ | thermal roughness length | 0.01 | $\mathrm{m}$ |
+| $U_g$ | zonal geostrophic wind | 10.0 | $\mathrm{m}\,\mathrm{s}^{-1}$ |
+| $V_g$ | meridional geostrophic wind | 0.0 | $\mathrm{m}\,\mathrm{s}^{-1}$ |
+| $f_c$ | Coriolis parameter | $1.0 \times 10^{-4}$ | $\mathrm{s}^{-1}$ |
+| $T_a$ | reference air temperature | 285.15 | $\mathrm{K}$ |
+| $T_{\mathrm{deep}}$ | deep soil temperature | 283.15 | $\mathrm{K}$ |
+| $R_{\downarrow}$ | downward longwave radiation | 260.0 | $\mathrm{W}\,\mathrm{m}^{-2}$ |
+| $\rho c_p$ | volumetric heat capacity of air | 1200.0 | $\mathrm{J}\,\mathrm{m}^{-3}\,\mathrm{K}^{-1}$ |
+| $\sigma_{SB}$ | Stefan-Boltzmann constant | $5.67 \times 10^{-8}$ | $\mathrm{W}\,\mathrm{m}^{-2}\,\mathrm{K}^{-4}$ |
+| $\lambda$ | soil thermal conductivity | 1.2 | $\mathrm{W}\,\mathrm{m}^{-1}\,\mathrm{K}^{-1}$ |
+| $d_{\mathrm{soil}}$ | effective soil depth | 0.5 | $\mathrm{m}$ |
+| $C_{\mathrm{skin}}$ | skin-layer heat capacity | $2.0 \times 10^4$ | $\mathrm{J}\,\mathrm{m}^{-2}\,\mathrm{K}^{-1}$ |
+
+Publication note: $K=0.40$ remains the physically motivated baseline context, but $K=0.32$ is the calibrated production default in the verified Julia implementation. A publication-facing manuscript should either justify this calibration in the main text or provide a sensitivity appendix.
+
+## 3. Closure Coefficients and Regularization
+
+The momentum drag and heat-exchange coefficients are
+
+$$
+\gamma = \gamma_{\mathrm{eff}}\,\frac{\kappa^2}{\log^2(h/z_{0m})}\,\frac{1}{h},
+$$
+
+$$
+C_H = \frac{\kappa^2}{\log(h/z_{0m})\log(h/z_{0h})}.
+$$
+
+### Background Mixing Floor
+
+The parameter $\delta > 0$ plays three roles.
+
+1. Mathematical: it makes the fast vector field smooth and keeps $\partial_e \mathcal{F}$ finite.
+2. Physical: it represents unresolved subgrid mixing agents such as gravity-wave breaking or canopy wakes.
+3. Numerical: it imposes a strictly positive diffusivity floor and avoids singular Jacobians.
+
+On the attracting turbulent branch, the fast eigenvalue
+
+$$
+\lambda_f = \partial_e \mathcal{F}
+$$
+
+is negative away from fold points, supplying normal hyperbolicity in the Fenichel regime.
+
+### Diagnostic Manifold Smoothing
+
+For closure evaluation and initialization, the active branch may be replaced by a smooth diagnostic approximation using a separate mollifier $\xi > 0$.
+
+First define
+
+$$
+\Delta = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
+$$
+
+On the active turbulent branch of the singular problem,
+
+$$
+e^* = l_0\Delta - \delta.
+$$
+
+A smooth clipped approximation is then
+
+$$
+e^*_{\xi} = \frac{1}{2}\left(e^* + \sqrt{(e^*)^2+\xi^2}\right).
+$$
+
+This is a diagnostic approximation for closure evaluation. It is not the exact equilibrium relation solved by the prognostic fast ODE.
+
+## 4. Geometric Architecture
+
+### Critical Manifold
+
+In the singular limit $\varepsilon \to 0$, the critical manifold is defined implicitly by
+
+$$
+\mathcal{F}(e,U,V,T_s)=0.
+$$
+
+On the active turbulent branch,
+
+$$
+e + \delta = l_0\Delta.
+$$
+
+### Paraboloid of Revolution
+
+For fixed $T_s$, the active branch satisfies
+
+$$
+e = l_0\eta\,\gamma\,(U^2+V^2) - l_0K\,G(T_s) - \delta.
+$$
+
+Hence $e$ is affine in $U^2+V^2$, so the turbulent branch is a paraboloid of revolution in $(U,V,e)$ coordinates.
+
+### Fold Set
+
+The nonlinear SEB supplies the slow parameter dependence required for the manifold to fold, but the geometric fold itself is defined by
+
+$$
+\mathcal{F}(e,U,V,T_s)=0,
+\qquad
+\partial_e\mathcal{F}(e,U,V,T_s)=0.
+$$
+
+At this set, normal hyperbolicity fails and the reduced slow flow becomes singular. That is the reviewer-safe GSPT definition of the fold.
+
+### Regime Interpretation
+
+- Rubbery regime: smooth passage governed by the fast stability-exchange geometry without discontinuous branch loss.
+- Brittle regime: trajectory reaches the fold set and is forced into a fast jump between branches.
+
+## 5. Nocturnal Lifecycle as a Relaxation Oscillation
+
+The nocturnal SBL is realized as a four-phase relaxation oscillation.
+
+1. Evening cooling: the trajectory drifts slowly along the upper attracting branch while $T_s$ decreases.
+2. Catastrophic collapse: upon reaching the fold, fast dynamics drive a brittle jump toward the laminar floor.
+3. Inertial acceleration: weakened drag allows the ageostrophic wind to rotate around the geostrophic target, producing Blackadar-style LLJ growth.
+4. Turbulent breakout: increasing $U^2+V^2$ strengthens mechanical production until the rotating state crosses the fold geometry and $\mathcal{F}>0$, triggering fast recovery to the turbulent branch.
+
+This produces hysteresis because the recovery path is geometrically separated from the collapse path; the LLJ must generate substantially larger production for recovery than was required to maintain the pre-collapse turbulent state.
+
+## 6. Geometric Flux Closure for NWP
+
+The eddy diffusivities are coupled directly to the regularized TKE coordinate:
+
+$$
+K_m = c_m l_0\sqrt{e^*_{\xi}+\delta},
+\qquad
+K_h = c_h l_0\sqrt{e^*_{\xi}+\delta}.
+$$
+
+This yields a natural minimum background diffusivity floor,
+
+$$
+K_{\min} \propto l_0\sqrt{\delta},
+$$
+
+so the closure preserves a nonzero mixing baseline without requiring arbitrary stability tails. The main point is structural: the diffusivity floor arises from the regularized manifold geometry, not from an external empirical patch.
+
+## 7. Discrete Exterior Calculus Perspective
+
+For mesh-based NWP implementations, the model admits a natural DEC interpretation.
+
+- 0-forms: $T_s$ on primal nodes
+- 1-forms: $U,V$ on oriented primal edges
+- 2-forms: $e$ as an areal or volumetric density
+
+The Hodge star operator $\star$ carries metric information separately from the exterior derivative $d$. This separation is attractive because the $O(\varepsilon)$ fast jump can be localized in constitutive structure without forcing spurious finite-difference shock behavior.
+
+Reviewer-safe statement: DEC preserves the discrete exterior-calculus identities exactly and enables circulation-preserving discretizations of the momentum equations. Exact Kelvin-circulation preservation depends on the temporal integrator and the treatment of nonlinear advection, so it should not be claimed without a scheme-specific proof.
+
+## 8. Publication Readiness
+
+The framework is structurally strong in three domains.
+
+- Atmospheric physics: the LLJ and inertial return are dynamic consequences of the model, not appended narratives.
+- GSPT structure: the model has a genuine one-fast, three-slow architecture with explicit fold and manifold language.
+- Numerical implementation: regularization, stiff-solver readiness, and closure semantics are now clearly separated between prognostic and diagnostic objects.
+
+The main remaining publication step is a dedicated theory section that states or sketches:
+
+1. existence of the critical manifold $\mathcal{M}_0$
+2. normal hyperbolicity for $\delta>0$ away from fold points
+3. fold characterization via $\mathcal{F}=0$ and $\partial_e\mathcal{F}=0$
+4. the Fenichel persistence argument for the attracting branch
+
+That addition would promote the note from a calibrated technical specification to a reviewer-ready mathematical framing.
