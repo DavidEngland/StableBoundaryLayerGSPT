@@ -122,7 +122,7 @@ run_dir = joinpath(outdir, "run_$(timestamp)")
 mkpath(run_dir)
 
 latest_dir = joinpath(outdir, "latest")
-if ispath(latest_dir)
+if ispath(latest_dir) || islink(latest_dir)
     rm(latest_dir; force=true, recursive=true)
 end
 

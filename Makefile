@@ -1,4 +1,4 @@
-.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all assemble-manuscript stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic test clean
+.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all assemble-manuscript paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic test clean
 
 bootstrap:
 	julia --project=. -e 'using Pkg; Pkg.instantiate()'
@@ -48,6 +48,15 @@ bifurcation-all:
 assemble-manuscript:
 	julia --project=. scripts/assemble_manuscript.jl --dataset CASES99
 
+paper-all:
+	$(MAKE) clean
+	$(MAKE) run-solver-all
+	$(MAKE) bifurcation-cases99
+	julia --project=. scripts/plot_4d_diagnostics.jl --solution results/CASES99/latest/solution.csv --out reports/generated/figures/4d_sbl_diagnostics.png
+	julia --project=. scripts/assemble_manuscript.jl --dataset CASES99
+	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
+	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
+
 stablebl-build:
 	bash scripts/stablebl build --dataset CASES99
 
@@ -75,7 +84,7 @@ test:
 clean:
 	find results -type d -name 'run_*' -prune -exec rm -rf {} +
 	find results -type d -name 'bifurcation_*' -prune -exec rm -rf {} +
-	find reports/generated -type f ! -name '.gitkeep' -delete
-	find figures -type f \( -name '*.md' -o -name '*.tex' -o -name '*.json' \) -delete
-	find tables -type f \( -name '*.md' -o -name '*.tex' -o -name '*.json' \) -delete
+	if [ -d reports/generated ]; then find reports/generated -type f ! -name '.gitkeep' -delete; fi
+	if [ -d figures ]; then find figures -type f \( -name '*.md' -o -name '*.tex' -o -name '*.json' \) -delete; fi
+	if [ -d tables ]; then find tables -type f \( -name '*.md' -o -name '*.tex' -o -name '*.json' \) -delete; fi
 	if [ -d bundle ]; then find bundle -mindepth 1 -maxdepth 1 -exec rm -rf -- {} \;; fi

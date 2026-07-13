@@ -1,0 +1,22 @@
+\section{Bifurcation Figures \& Comparative Metrics}
+\label{sec:comparative_metrics}
+
+To analyze the structural properties of the manifold across distinct microclimatic boundaries, the 4D solver pipeline was evaluated across three observational baseline regimes: CASES99 (flat open grassland), FLOSS (dense forest canopy), and SHEBA (perennial Arctic ice sheet).
+
+The root mean square error (RMSE) of the local quadratic surface approximation provides a compact signature of phase-space localization induced by frictional damping and thermodynamic trapping.
+
+\begin{table}[ht!]
+\centering
+\small
+\caption{Comparative Manifold Volatility and Approximation Fitness}
+\label{tab:rmse_comparisons}
+\begin{tabular}{llcl}
+\hline
+{\bfseries Dataset} & {\bfseries Physical Regime} & {\bfseries Fit RMSE} & {\bfseries Geometric Structure} \\
+\midrule
+CASES99 & Open Semi-Arid Grassland & ${{cases99_rmse}}$ & Broad phase-space exploration \\
+SHEBA & Perennial Polar Ice Sheet & ${{sheba_rmse}}$ & Radially pinned steady-state offset \\
+FLOSS & High-Roughness Canopy & ${{floss_rmse}}$ & Heavily damped planar relaxation \\
+\bottomrule
+\end{tabular}
+\end{table}

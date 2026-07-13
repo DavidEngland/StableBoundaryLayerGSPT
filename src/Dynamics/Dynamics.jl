@@ -6,6 +6,7 @@ export integrate_system
 export default_4d_parameters
 export closure_coefficients
 export stratification_function
+export hyperbolic_embedding_e
 export fast_vector_field_F
 export solve_4d_sbl
 export solution_to_rows
@@ -44,6 +45,8 @@ function default_4d_parameters()
         "C_skin" => 2.0e4,
         # Smooth positivity helper for e + delta.
         "smooth_eps" => _DEFAULT_SMOOTH_EPS,
+        # C-infinity embedding width for reduced-branch diagnostics.
+        "xi" => 1.0e-5,
         # Width for smoothly transitioning to the e floor limiter.
         "e_floor_transition" => 1.0e-5,
         # Smoothness for approximating min(de_dt, 0) near the floor.
@@ -69,6 +72,40 @@ end
 """Smooth C-infinity stratification closure G(Ts)."""
 function stratification_function(Ts::Real, Ta::Real, beta::Real)
     return exp(beta * (Ta - Ts) / Ta) - 1.0
+end
+
+function _production_minus_buoyancy(
+    U::Real,
+    V::Real,
+    Ts::Real,
+    p::AbstractDict{String,<:Real};
+    gamma_override::Union{Nothing,Real}=nothing,
+)
+    K = Float64(p["K"])
+    Ta = Float64(p["T_a"])
+    beta = Float64(p["beta"])
+    shear_eff = Float64(get(p, "shear_production_efficiency", 1.0))
+
+    gamma = isnothing(gamma_override) ? closure_coefficients(p)[1] : Float64(gamma_override)
+    G = stratification_function(Ts, Ta, beta)
+    return shear_eff * gamma * (U * U + V * V) - K * G
+end
+
+"""
+    hyperbolic_embedding_e(Delta, p)
+
+Return the C-infinity embedded reduced-branch equilibrium
+
+    e*_xi = 0.5 * (e_raw + sqrt(e_raw^2 + xi^2))
+
+where `e_raw = l0 * Delta - delta`.
+"""
+function hyperbolic_embedding_e(Delta::Real, p::AbstractDict{String,<:Real})
+    l0 = Float64(p["l0"])
+    delta = Float64(p["delta"])
+    xi = Float64(get(p, "xi", 1.0e-5))
+    e_raw = l0 * Float64(Delta) - delta
+    return 0.5 * (e_raw + sqrt(e_raw * e_raw + xi * xi))
 end
 
 function _regularized_positive(x::Real, eps_pos::Real)
@@ -100,19 +137,14 @@ function fast_vector_field_F(
     gamma_override::Union{Nothing,Real}=nothing,
 )
     delta = Float64(p["delta"])
-    K = Float64(p["K"])
     l0 = Float64(p["l0"])
-    Ta = Float64(p["T_a"])
-    beta = Float64(p["beta"])
     eps_pos = Float64(get(p, "smooth_eps", _DEFAULT_SMOOTH_EPS))
-    shear_eff = Float64(get(p, "shear_production_efficiency", 1.0))
 
     gamma = isnothing(gamma_override) ? closure_coefficients(p)[1] : Float64(gamma_override)
-    G = stratification_function(Ts, Ta, beta)
     e_plus = _regularized_positive(e + delta, eps_pos)
     sqrt_e = sqrt(e_plus)
 
-    production_minus_buoyancy = shear_eff * gamma * (U * U + V * V) - K * G
+    production_minus_buoyancy = _production_minus_buoyancy(U, V, Ts, p; gamma_override=gamma)
     dissipation = (e_plus^(1.5)) / l0
     return sqrt_e * production_minus_buoyancy - dissipation
 end
@@ -202,13 +234,16 @@ function solution_to_rows(sol, parameters::AbstractDict{String,<:Real})
 
         e_plus = _regularized_positive(e + delta, eps_pos)
         sqrt_e = sqrt(e_plus)
-        G = stratification_function(Ts, Ta, beta)
-        Delta = gamma * (U * U + V * V) - p["K"] * G
+        Delta = _production_minus_buoyancy(U, V, Ts, p; gamma_override=gamma)
+        e_star_smooth = hyperbolic_embedding_e(Delta, p)
+        sqrt_e_star = sqrt(_regularized_positive(e_star_smooth + delta, eps_pos))
 
         Km = gamma * sqrt_e
         Kh = C_H * sqrt_e
+        Km_star = gamma * sqrt_e_star
+        Kh_star = C_H * sqrt_e_star
 
-        push!(rows, (; t, e, U, V, Ts, Delta, Km, Kh))
+        push!(rows, (; t, e, U, V, Ts, Delta, e_star_smooth, Km, Kh, Km_star, Kh_star))
     end
     return rows
 end

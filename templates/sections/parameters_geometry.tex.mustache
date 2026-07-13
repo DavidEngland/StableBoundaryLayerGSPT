@@ -20,12 +20,15 @@ $f$ & Coriolis Parameter ($\sim 45^\circ\text{N}$) & $1.0 \times 10^{-4}$ & $\te
 \multicolumn{4}{l}{\textit{Turbulence and Boundary Layer Internals}} \\
 $\varepsilon$ & Singular Perturbation Parameter & $0.01$ & Dimensionless \\
 $\delta$ & Background Mixing Parameter & $1.0 \times 10^{-4}$ & $\text{m}^2\text{s}^{-2}$ \\
-$K$ & Buoyant Destruction Weight & $0.32$ & Dimensionless gain \\
+$K$ & Buoyant Destruction Acceleration Scale & $0.32$ & $\text{m s}^{-2}$ \\
 $\beta$ & Stratification Sensitivity Parameter & $15.0$ & Dimensionless \\
 $h$ & Coupling Bulk Scale Height & $50.0$ & $\text{m}$ \\
+$z_{0m}$ & Momentum Roughness Length & $0.02$ & $\text{m}$ \\
+$z_{0h}$ & Thermal Roughness Length & $0.005$ & $\text{m}$ \\
 $l_0$ & Master Turbulent Length Scale & $15.0$ & $\text{m}$ \\
 $\gamma_{\mathrm{eff}}$ & Drag Scaling Efficiency & $2.0$ & Dimensionless \\
-$\eta$ & Shear Production Efficiency & $15.0$ & Dimensionless \\ \hline
+$\eta$ & Shear Production Efficiency & $15.0$ & Dimensionless \\
+$\xi$ & Hyperbolic Embedding Scale & $1.0 \times 10^{-5}$ & Dimensionless \\ \hline
 \multicolumn{4}{l}{\textit{Thermal Properties (Surface Energy Budget)}} \\
 $\sigma_{\text{SB}}$ & Stefan-Boltzmann Constant & $5.67 \times 10^{-8}$ & $\text{W m}^{-2}\text{K}^{-4}$ \\
 $\lambda$ & Soil Thermal Conductivity & $1.2$ & $\text{W m}^{-1}\text{K}^{-1}$ \\
@@ -41,7 +44,7 @@ $C_{\text{skin}}$ & Thermal Capacity of Skin Layer & $2.0 \times 10^{4}$ & $\tex
 When analyzing this mathematical system, the geometric structures shift from previous lower-dimensional derivations in three important ways:
 
 \begin{enumerate}
-    \item \textbf{The Critical Manifold $\mathcal{M}_0$:} Defined strictly in the limit $\varepsilon \to 0$ by setting the fast equation to zero: $\mathcal{F}(e,U,V,T_s)=0$. On the active turbulent sheet, $e+\delta = l_0\Delta$ where $\Delta = \eta\,\gamma\,(U^2+V^2)-K\,G(T_s)$, so $e^* = l_0\Delta-\delta$.
-    \item \textbf{The Trapped Laminar State:} If $\Delta \le 0$, no active turbulent root exists. The regularization parameter $\delta$ then holds the system near the background mixing floor, so $e$ remains close to the laminar branch.
-    \item \textbf{The Fold Set ($\mathcal{C}_{\text{fold}}$):} The nonlinear surface energy budget (SEB) creates the parameter dependence required for the manifold to fold, but the geometric fold itself is defined by the simultaneous conditions $\mathcal{F}=0$ and $\partial_e\mathcal{F}=0$. Because $U^2 + V^2$ is circularly symmetric, the turbulent branch has paraboloid-of-revolution geometry in the $(U, V, e)$ coordinates for fixed $T_s$.
+    \item \textbf{The Critical Manifold $\mathcal{M}_0$:} Defined strictly in the limit $\varepsilon \to 0$ by setting the fast equation to zero: $\mathcal{F}(e,U,V,T_s)=0$. On the active turbulent branch, $e+\delta = l_0\Delta$ where $\Delta = \eta\,\gamma\,(U^2+V^2)-K\,G(T_s)$, so $e^* = l_0\Delta-\delta$.
+    \item \textbf{The Admissibility Threshold:} The active branch exists only when $e^* \ge 0$, equivalently when $\Delta \ge \delta/l_0$. In the present closure, $e^*$ depends affinely on $\Delta$, so the regime transition is a transversal boundary crossing at $e=0$, not an interior saddle-node fold of the critical manifold.
+    \item \textbf{The Regularized Laminar Floor:} For trajectories driven toward weak turbulence, the full numerical model uses a smooth floor limiter near $e=-\delta$ so that the drag and heat-exchange closures remain well-defined and the state stays in the admissible background-mixing regime. Because $U^2 + V^2$ is rotationally symmetric, the active branch has circular paraboloid geometry in the $(U, V, e)$ coordinates for fixed $T_s$.
 \end{enumerate}

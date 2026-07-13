@@ -12,6 +12,8 @@ The full state vector is defined as $\mathbf{x} = (e, U, V, T_s) \in \mathbb{R}^
 \label{eq:fast_subsystem}
 \end{equation}
 
+Here $K$ is a buoyancy-destruction acceleration scale with units of $\text{m s}^{-2}$, so the bracketed production-minus-buoyancy term is dimensionally consistent. In the numerical implementation, the factor $\sqrt{e+\delta}$ is evaluated with a positivity regularization and the fast tendency is smoothly gated as $e$ approaches the laminar floor. This prevents trajectories from crossing below the admissible background-mixing threshold in the full 4D integration.
+
 \subsubsection*{Slow Subsystem (Atmospheric Rotational Dynamics \& Surface Thermodynamics)}
 \begin{align}
 \frac{dU}{dt} &= f(V - V_g) - \gamma \sqrt{e + \delta} \cdot U \label{eq:slow_u} \\

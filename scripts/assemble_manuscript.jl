@@ -1,6 +1,22 @@
 #!/usr/bin/env julia
 
+using CSV
+using DataFrames
 using Dates
+using LinearAlgebra
+using Statistics
+
+function first_existing_dir(paths::Vector{String})
+	for path in paths
+		if isdir(path)
+			entries = filter(name -> name != ".gitkeep", readdir(path))
+			if !isempty(entries)
+				return path
+			end
+		end
+	end
+	return first(paths)
+end
 
 function parse_args(args::Vector{String})
 	dataset = "CASES99"
@@ -57,6 +73,7 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
 		"governing_equations.tex.mustache",
 		"closures.tex.mustache",
 		"parameters_geometry.tex.mustache",
+		"comparative_metrics.tex.mustache",
 	]
 
 	ordered_templates = String[]
@@ -126,22 +143,26 @@ function build_tex_figure_includes(fig_dir::String)
 	end
 
 	tex_files = sort(filter(name -> startswith(name, "figure_bifurcation_") && endswith(name, ".tex"), readdir(fig_dir)))
+	handled_stems = Set{String}()
 
 	blocks = String[]
 	for file in tex_files
 		stem = replace(file, ".tex" => "")
+		push!(handled_stems, stem)
 		title = prettify_figure_title(stem)
 		pdf_path = joinpath(fig_dir, "$(stem).pdf")
 		push!(blocks, "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(pdf_path)}\n\\caption{$(title)}\n\\end{figure}")
 	end
 
 	image_files = sort(filter(name -> (
-		(endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf")) &&
-		!startswith(name, "figure_bifurcation_")
+		(endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf"))
 	), readdir(fig_dir)))
 
 	for file in image_files
 		stem = replace(file, r"\.[^.]+$" => "")
+		if stem in handled_stems
+			continue
+		end
 		title = prettify_figure_title(stem)
 		img_path = joinpath(fig_dir, file)
 		push!(blocks, "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(img_path)}\n\\caption{$(title)}\n\\end{figure}")
@@ -181,6 +202,68 @@ function build_md_figure_includes(fig_dir::String)
 	return join(lines, "\n")
 end
 
+function format_metric(value)
+	return isnan(value) ? "\\mathrm{n/a}" : string(round(value; digits=4))
+end
+
+function quadratic_fit_rmse(solution_csv::String)
+	if !isfile(solution_csv)
+		return NaN
+	end
+
+	df = CSV.read(solution_csv, DataFrame)
+	if !all(name -> name in names(df), ["U", "V", "Ts"])
+		return NaN
+	end
+
+	U = Vector{Float64}(df.U)
+	V = Vector{Float64}(df.V)
+	Ts = Vector{Float64}(df.Ts)
+	X = hcat(ones(length(U)), U, V, U .^ 2, U .* V, V .^ 2)
+	coef = X \ Ts
+	residual = Ts - X * coef
+	return sqrt(mean(residual .^ 2))
+end
+
+function latest_solution_csv(dataset::String)
+	latest_path = joinpath("results", dataset, "latest", "solution.csv")
+	if isfile(latest_path)
+		return latest_path
+	end
+
+	run_root = joinpath("results", dataset)
+	if isdir(run_root)
+		run_dirs = sort(
+			filter(name -> startswith(name, "run_") && isdir(joinpath(run_root, name)), readdir(run_root));
+			rev=true,
+		)
+		for run_dir in run_dirs
+			candidate = joinpath(run_root, run_dir, "solution.csv")
+			if isfile(candidate)
+				return candidate
+			end
+		end
+	end
+
+	if dataset == "CASES99"
+		legacy_root = joinpath("results", "4d_sbl")
+		if isdir(legacy_root)
+			legacy_dirs = sort(
+				filter(name -> startswith(name, "run_") && isdir(joinpath(legacy_root, name)), readdir(legacy_root));
+				rev=true,
+			)
+			for run_dir in legacy_dirs
+				candidate = joinpath(legacy_root, run_dir, "solution.csv")
+				if isfile(candidate)
+					return candidate
+				end
+			end
+		end
+	end
+
+	return latest_path
+end
+
 dataset = parse_args(ARGS)
 
 mkpath("reports/generated")
@@ -198,7 +281,7 @@ theory_md = read_text("reports/generated/theory/01_state_space.md"; fallback="Th
 archive_md = read_text("reports/generated/theory/02_archive_synthesis.md"; fallback="Archive synthesis not generated yet.")
 diag_md = read_text("reports/generated/diagnostics/03_bifurcation_sweep.md"; fallback="Diagnostics section not generated yet.")
 
-fig_dir = "reports/generated/figures"
+fig_dir = first_existing_dir(["reports/generated/figures", "figures"])
 figure_tex_includes = build_tex_figure_includes(fig_dir)
 figure_md_includes = build_md_figure_includes(fig_dir)
 
@@ -209,6 +292,9 @@ section_context = Dict(
 	"dataset" => dataset,
 	"generated_timestamp" => timestamp,
 	"generated_date_human" => generated_date_human,
+	"cases99_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("CASES99"))),
+	"floss_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("FLOSS"))),
+	"sheba_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("SHEBA"))),
 )
 template_sections_tex = build_tex_template_sections("templates/sections", section_context)
 abstract_tex = build_optional_tex_template(

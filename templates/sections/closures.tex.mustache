@@ -10,6 +10,8 @@ G(T_s) = \exp\left( \beta \frac{T_a - T_s}{T_a} \right) - 1
 \label{eq:stratification_func}
 \end{equation}
 
+Because $G(T_s)$ is dimensionless, the coefficient $K$ in Equation~\eqref{eq:fast_subsystem} must carry units of acceleration. In the present formulation, $K$ is therefore interpreted as a \textbf{buoyant destruction acceleration scale} with units of $\text{m s}^{-2}$; it absorbs the gravitational and thermodynamic conversion factors that map stratification intensity into TKE destruction.
+
 \begin{description}
     \item[Behavior:] When $T_s = T_a$ (neutral stratification), $G(T_s) = 0$, and buoyant destruction vanishes. When $T_s < T_a$ (nocturnal cooling), $G(T_s) > 0$, rapidly accelerating the buoyant destruction of TKE.
 \end{description}
@@ -21,3 +23,52 @@ The momentum drag coefficient $\gamma$ and the surface thermodynamic sensible he
 \label{eq:drag_closures}
 \end{equation}
 Where $\kappa \approx 0.4$ is the von K\'arm\'an constant, $h$ is the bulk boundary layer height scale, and $z_{0m}, z_{0h}$ are the momentum and thermal roughness lengths. The parameter $l_0$ represents the \textbf{master turbulent length scale} (or asymptotic mixing length), which governs the maximum vertical scale of energy-containing eddies under neutral conditions. In highly stable regimes, $l_0$ acts as a geometric ceiling that bounds the turbulent dissipation rate $\epsilon \sim e^{3/2}/l_0$ and scales the magnitude of the eddy diffusivities.
+
+\subsubsection{\texorpdfstring{$C^\infty$}{C-infinity} Hyperbolic Embedding and Boundary Regularization}
+In the unregularized GSPT description, the fast turbulent kinetic energy (TKE) subsystem transitions from the active turbulent branch $\mathcal{M}_{\mathrm{act}}$ to the laminar floor through a transversal boundary crossing at the physical admissibility boundary $e = 0$. While this geometry is dynamically robust in the isolated 4D system, the resulting state-derived vertical eddy diffusivities can exhibit sharp kinks at collapse when they are passed directly into larger single-column atmospheric models. To preserve infinite differentiability across the boundary transit without altering the underlying non-folding geometry, we introduce a hyperbolic embedding parameterized by a small regularization scale $\xi > 0$.
+
+Let
+\begin{equation}
+\Delta = \eta\,\gamma\,(U^2 + V^2) - K\,G(T_s)
+\label{eq:delta_balance}
+\end{equation}
+denote the net balance between mechanical shear production and buoyant destruction in the fast subsystem. The unregularized active-branch equilibrium is
+\begin{equation}
+e^* = l_0\Delta - \delta,
+\end{equation}
+subject to the admissibility condition $e^* \ge 0$, which is equivalently represented by the positive-part continuation $\max(0, l_0\Delta - \delta)$ in reduced diagnostic closures. We smooth this sharp threshold by embedding the active branch into a $C^\infty$ hyperbolic surface:
+\begin{equation}
+e^*_{\xi}(\Delta) = \frac{1}{2}\left[(l_0\Delta - \delta) + \sqrt{(l_0\Delta - \delta)^2 + \xi^2}\right].
+\label{eq:hyperbolic_embedding}
+\end{equation}
+
+This construction satisfies three useful limits. First, for strongly active turbulent regimes where $(l_0\Delta - \delta) \gg \xi$,
+\begin{equation}
+e^*_{\xi}(\Delta) = (l_0\Delta - \delta) + \mathcal{O}\left(\frac{\xi^2}{l_0\Delta - \delta}\right),
+\end{equation}
+so the embedding rapidly recovers the unregularized active-branch physics away from the threshold. Second, at the exact admissibility boundary $l_0\Delta = \delta$,
+\begin{equation}
+e^*_{\xi}\!\left(\frac{\delta}{l_0}\right) = \frac{\xi}{2},
+\end{equation}
+which provides a strictly positive, differentiable anchor point for the reduced closures. Third, for deeply stratified subcritical regimes with $(\delta - l_0\Delta) \gg \xi$, the embedded branch decays smoothly toward $0^+$.
+
+In the diagnostic pipeline, the state-based vertical exchange metrics are
+\begin{equation}
+K_m = \gamma\sqrt{e + \delta}, \qquad K_h = C_H\sqrt{e + \delta},
+\end{equation}
+while the embedded diagnostic tracks are defined by
+\begin{equation}
+K_{m,\star} = \gamma\sqrt{e^*_{\xi} + \delta}, \qquad K_{h,\star} = C_H\sqrt{e^*_{\xi} + \delta}.
+\label{eq:embedded_diffusivities}
+\end{equation}
+The introduction of Eq.~\eqref{eq:embedded_diffusivities} also yields a bounded closure Jacobian in the slow variables:
+\begin{equation}
+J_K =
+\begin{pmatrix}
+\partial K_{m,\star}/\partial U & \partial K_{m,\star}/\partial V \\
+\partial K_{h,\star}/\partial U & \partial K_{h,\star}/\partial V
+\end{pmatrix},
+\qquad \|J_K\|_{\infty} < \infty \text{ on } \mathcal{X}.
+\label{eq:embedded_diffusivity_jacobian}
+\end{equation}
+The embedded diagnostics therefore remain localized to the collapse boundary while matching the state-derived values to leading order in the fully turbulent regime. In particular, Eq.~\eqref{eq:embedded_diffusivity_jacobian} formalizes that the derivatives $\partial K_{m,\star}/\partial U$, $\partial K_{m,\star}/\partial V$, and their heat-flux analogues remain finite and continuous across the boundary transit. This allows the larger macro-scale coupling layer to inherit a smooth gradient landscape even though the full ODE still enforces the physical admissibility barrier through its separate smooth floor gate.
