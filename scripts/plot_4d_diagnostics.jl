@@ -1,8 +1,10 @@
 #!/usr/bin/env julia
+# scripts/plot_4d_diagnostics.jl
 
 using CSV
 using DataFrames
 using Plots
+using Plots.PlotMeasures: mm
 using Statistics
 using LinearAlgebra
 
@@ -80,6 +82,9 @@ p3 = surface(
     ylabel="V",
     zlabel="Ts",
     title="3D Elliptic Paraboloid Fit",
+    bottom_margin=10mm,
+    left_margin=8mm,
+    right_margin=8mm,
     legend=false,
 )
 plot!(p3, U, V, Ts, linewidth=3, color=:black, label="")
@@ -95,6 +100,9 @@ p4 = scatter(
     xlabel="Time (h)",
     ylabel="Residual (K)",
     title="Quadratic Fit Residuals",
+    bottom_margin=10mm,
+    left_margin=8mm,
+    right_margin=8mm,
 )
 hline!(p4, [0.0], color=:black, linestyle=:dash, linewidth=1.5, label="")
 
@@ -114,7 +122,16 @@ annotate!(
 )
 
 layout = @layout [a b; c d]
-plt = plot(p1, p2, p3, p4; layout=layout, size=(1800, 980))
+plt = plot(
+    p1,
+    p2,
+    p3,
+    p4;
+    layout=layout,
+    size=(2000, 1180),
+    margin=6mm,
+    bottom_margin=12mm,
+)
 mkpath(dirname(out_path))
 savefig(plt, out_path)
 

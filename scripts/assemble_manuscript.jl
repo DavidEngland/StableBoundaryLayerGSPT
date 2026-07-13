@@ -53,6 +53,7 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
 	content_templates = filter(name -> (name != wrapper_name) && !(name in front_matter_templates), all_tex_templates)
 
 	preferred_order = [
+		"theory_gspt.tex.mustache",
 		"governing_equations.tex.mustache",
 		"closures.tex.mustache",
 		"parameters_geometry.tex.mustache",
@@ -95,12 +96,41 @@ function build_tex_figure_includes(fig_dir::String)
 		return "% No generated figures directory found."
 	end
 
+	function prettify_figure_title(stem::String)
+		special_titles = Dict(
+			"4d_sbl_diagnostics" => "4D Stable Boundary Layer Diagnostics",
+		)
+		if haskey(special_titles, stem)
+			return special_titles[stem]
+		end
+
+		parts = split(replace(stem, "-" => "_"), "_")
+		normalized = String[]
+		for part in parts
+			lw = lowercase(part)
+			if lw == "4d"
+				push!(normalized, "4D")
+			elseif lw == "sbl"
+				push!(normalized, "SBL")
+			elseif lw == "tke"
+				push!(normalized, "TKE")
+			elseif lw == "gspt"
+				push!(normalized, "GSPT")
+			elseif lw == "nwp"
+				push!(normalized, "NWP")
+			else
+				push!(normalized, uppercasefirst(lw))
+			end
+		end
+		return join(normalized, " ")
+	end
+
 	tex_files = sort(filter(name -> startswith(name, "figure_bifurcation_") && endswith(name, ".tex"), readdir(fig_dir)))
 
 	blocks = String[]
 	for file in tex_files
 		stem = replace(file, ".tex" => "")
-		title = replace(stem, "_" => " ")
+		title = prettify_figure_title(stem)
 		pdf_path = joinpath(fig_dir, "$(stem).pdf")
 		push!(blocks, "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(pdf_path)}\n\\caption{$(title)}\n\\end{figure}")
 	end
@@ -112,7 +142,7 @@ function build_tex_figure_includes(fig_dir::String)
 
 	for file in image_files
 		stem = replace(file, r"\.[^.]+$" => "")
-		title = replace(stem, "_" => " ")
+		title = prettify_figure_title(stem)
 		img_path = joinpath(fig_dir, file)
 		push!(blocks, "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(img_path)}\n\\caption{$(title)}\n\\end{figure}")
 	end

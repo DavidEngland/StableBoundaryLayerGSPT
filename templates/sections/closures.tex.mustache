@@ -3,7 +3,7 @@
 
 To close the system mathematically, the abstract couplings are mapped to physical planetary boundary layer functions:
 
-\subsubsection{The Stratification Function $G(T_s)$}
+\subsubsection{The Stratification Function \texorpdfstring{$G(T_s)$}{G(Ts)}}
 The stable stratification is driven by the vertical temperature inversion between the reference atmospheric layer ($T_a$) and the ground skin temperature ($T_s$). It is parameterized using a smooth, continuous exponential activation function to ensure it is $C^\infty$ everywhere:
 \begin{equation}
 G(T_s) = \exp\left( \beta \frac{T_a - T_s}{T_a} \right) - 1
@@ -20,4 +20,4 @@ The momentum drag coefficient $\gamma$ and the surface thermodynamic sensible he
 \gamma = \gamma_{\mathrm{eff}}\frac{\kappa^2}{\ln(h/z_{0m})^2} \cdot \frac{1}{h} \qquad C_H = \frac{\kappa^2}{\ln(h/z_{0m})\ln(h/z_{0h})}
 \label{eq:drag_closures}
 \end{equation}
-Where $\kappa$ is the von K\'arm\'an constant, $h$ is the bulk boundary layer height scale, and $z_{0m}, z_{0h}$ are the momentum and thermal roughness lengths.
+Where $\kappa \approx 0.4$ is the von K\'arm\'an constant, $h$ is the bulk boundary layer height scale, and $z_{0m}, z_{0h}$ are the momentum and thermal roughness lengths. The parameter $l_0$ represents the \textbf{master turbulent length scale} (or asymptotic mixing length), which governs the maximum vertical scale of energy-containing eddies under neutral conditions. In highly stable regimes, $l_0$ acts as a geometric ceiling that bounds the turbulent dissipation rate $\epsilon \sim e^{3/2}/l_0$ and scales the magnitude of the eddy diffusivities.

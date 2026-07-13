@@ -1,0 +1,59 @@
+\subsection{Geometric Singularity and State-Space Topologies}
+\label{subsec:gspt_topology}
+
+We model the non-equilibrium transitions of the nocturnal stable boundary layer (SBL) as a constrained vector field on a four-dimensional differentiable manifold with boundary. Let $\mathcal{X}$ denote the state space:
+\begin{equation}
+\mathcal{X}=\left\{\mathbf{x}=(e,U,V,T_s)^T\in\mathbb{R}_+\times\mathbb{R}\times\mathbb{R}\times\mathbb{R}_+\right\}\subset\mathbb{R}^4
+\end{equation}
+where $e$ represents the turbulent kinetic energy (TKE) density, $(U,V)$ denote the components of the horizontal velocity vector, and $T_s$ is the land surface skin temperature.
+
+\paragraph{Time-Scale Separation.}
+The system exhibits a natural time-scale separation governed by the singular perturbation parameter $\varepsilon$:
+\begin{equation}
+0<\varepsilon\ll1,\quad \varepsilon\coloneqq\frac{\tau_{\text{turb}}}{\tau_{\text{macro}}}
+\end{equation}
+where $\tau_{\text{turb}}$ is the rapid turbulent relaxation timescale ($\mathcal{O}(10^1\,\text{s})$) and $\tau_{\text{macro}}$ is the slow synoptic-thermodynamic forcing timescale ($\mathcal{O}(10^3\text{--}10^4\,\text{s})$). This partition yields the fast-slow decomposition:
+\begin{align}
+\varepsilon\dot{e}&=\mathcal{F}(e,U,V,T_s) \\
+\dot{\mathbf{y}}&=\mathbf{G}(e,\mathbf{y}),\quad \mathbf{y}\coloneqq(U,V,T_s)^T\in\mathbb{R}^3
+\end{align}
+
+\subsection{Critical Manifolds and Algebraic Regularization}
+
+In the singular limit $\varepsilon\to0$, the fast-slow flow collapses onto the critical manifold $\mathcal{M}_0$, defined as the algebraic subvariety:
+\begin{equation}
+\mathcal{M}_0\coloneqq\left\{\mathbf{x}\in\mathcal{X}\ \vert\ \mathcal{F}(e,U,V,T_s)=0\right\}
+\end{equation}
+
+\begin{theorem}[Manifold Geometry]
+The unperturbed critical manifold $\mathcal{M}_0$ contains an uncoupled active turbulent branch $\mathcal{M}_0^+$ satisfying the explicit algebraic condition:
+\begin{equation}
+e^*=l_0\Delta-\delta,\quad \Delta\coloneqq\eta\,\gamma\,(U^2+V^2)-K\,G(T_s)
+\end{equation}
+where $\mathcal{M}_0^+$ is non-degenerate and normally hyperbolic if and only if $\partial_e\mathcal{F}\neq0$.
+\end{theorem}
+
+\paragraph{Elliptic Paraboloid Interpretation and Blackadar Inertial Oscillations.}
+Geometrically, the state profile $\Delta(U,V;T_s)$ defines an elliptic paraboloid in the $(U,V,e)$ projection for any fixed thermodynamic state $T_s$. The principal curvatures of this manifold correspond directly to the eigenvalues ($\lambda_1,\lambda_2$) of the localized Hessian matrix:
+\begin{equation}
+H=\begin{pmatrix}
+\frac{\partial^2\Delta}{\partial U^2} & \frac{\partial^2\Delta}{\partial U\partial V} \\
+\frac{\partial^2\Delta}{\partial V\partial U} & \frac{\partial^2\Delta}{\partial V^2}
+\end{pmatrix}
+\end{equation}
+The rotational symmetry of the mechanical production term ensures $\lambda_1=\lambda_2=2\eta\gamma$, forming circular cross-sections centered about the non-turbulent wind core.
+
+This specific geometric framework explains how classic Blackadar-type nocturnal inertial oscillations emerge natively from the system's dynamics. When strong surface cooling drives $T_s \ll T_a$, the expansion of $G(T_s)$ shifts the paraboloid boundary upward. This triggers a sudden turbulence collapse, dropping trajectories from the active turbulent sheet $\mathcal{M}_0^+$ down to the regularized background floor $\delta$.
+
+As a result, the frictional drag components in Equations~\eqref{eq:slow_u} and \eqref{eq:slow_v} are abruptly suppressed:
+\begin{equation}
+\gamma\sqrt{e+\delta}\to\gamma\sqrt{\delta}\approx0
+\end{equation}
+Freed from turbulent friction, the slow momentum vector detaches from its steady-state balance and enters a clockwise inertial circuit around the geostrophic vector $(U_g,V_g)$ at frequency $f$. This mechanism shows how the model captures the circular hodograph overshoots and low-level jets observed in datasets like CASES99 and FLOSS.
+
+\paragraph{\texorpdfstring{$C^\infty$}{C-infinity} Regularization.}
+To prevent gradient discontinuities along the fold line $\mathcal{C}_{\text{fold}}\coloneqq\{\mathbf{x}\in\mathcal{M}_0\ \vert\ \Delta=0\}$, the sharp physical boundary is regularized via a smooth hyperbolic embedding parameterized by $0<\xi\ll1$:
+\begin{equation}
+e^*_{\xi}=\frac{1}{2}\left(e^*+\sqrt{(e^*)^2+\xi^2}\right)
+\end{equation}
+This formulation ensures that the geometric closures for momentum and heat exchange, $K_{m,h}\propto\sqrt{e^*_{\xi}+\delta}$, remain strictly $C^\infty$ over the entire domain. This maps a smooth transition between active shear-driven mixing and the residual laminar wave floor without allowing gradient blowup in variational data assimilation pipelines.

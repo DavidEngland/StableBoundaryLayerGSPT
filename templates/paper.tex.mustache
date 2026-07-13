@@ -1,10 +1,16 @@
+% templates/sections/paper.tex.mustache
 \documentclass{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
 \usepackage{standalone}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{hyperref}
+\usepackage{xcolor}
+
+\newtheorem{theorem}{Theorem}
 
 \title{Mathematical Structure of the 4D GSPT-SBL Governing System:\\
 Analysis of Nocturnal Boundary Layer Dynamics over {{dataset}}}
@@ -14,7 +20,7 @@ Analysis of Nocturnal Boundary Layer Dynamics over {{dataset}}}
     Research Engineer III \\
     University of Alabama in Huntsville (UAH) \\
     Email: \href{mailto:david.england@uah.edu}{david.england@uah.edu} \\
-    ORCID: \href{https://orcid.org/0000-0002-1825-0097}{0000-0002-1825-0097}
+    ORCID: \href{https://orcid.org/0009-0001-2095-6646}{0009-0001-2095-6646}
 }
 \date{\small Assembled Automatically: {{generated_date_human}}}
 
@@ -22,12 +28,19 @@ Analysis of Nocturnal Boundary Layer Dynamics over {{dataset}}}
 
 \maketitle
 
+\nopagebreak
+\begin{center}
+    \small\itshape\color{gray}
+    This manuscript is assembled automatically from version-controlled section templates,
+    generated diagnostics, and reproducible figure artifacts. \\
+    Source code and pipeline repository: \href{https://github.com/DavidEngland/StableBoundaryLayerGSPT}{github.com/DavidEngland/StableBoundaryLayerGSPT}
+\end{center}
+\vspace{1em}
+
 {{{abstract_tex}}}
 
-This manuscript is assembled automatically from version-controlled section templates, generated diagnostics, and reproducible figure artifacts.
-
 {{{template_sections_tex}}}
-
+\newpage
 \section{Bifurcation Figures}
 
 {{{figure_tex_includes}}}
