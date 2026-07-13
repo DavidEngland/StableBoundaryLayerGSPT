@@ -31,22 +31,78 @@ function render_template(template::String, context::Dict{String,String})
 	return rendered
 end
 
+function build_optional_tex_template(path::String, context::Dict{String,String}; fallback::String="")
+	if !isfile(path)
+		return fallback
+	end
+	return render_template(read_text(path), context)
+end
+
+function build_tex_template_sections(section_dir::String, context::Dict{String,String})
+	if !isdir(section_dir)
+		return "% No template sections directory found."
+	end
+
+	all_tex_templates = sort(filter(name -> endswith(name, ".tex.mustache"), readdir(section_dir)))
+	if isempty(all_tex_templates)
+		return "% No TeX section templates found."
+	end
+
+	wrapper_name = "section_theory.tex.mustache"
+	front_matter_templates = Set(["abstract.tex.mustache"])
+	content_templates = filter(name -> (name != wrapper_name) && !(name in front_matter_templates), all_tex_templates)
+
+	preferred_order = [
+		"governing_equations.tex.mustache",
+		"closures.tex.mustache",
+		"parameters_geometry.tex.mustache",
+	]
+
+	ordered_templates = String[]
+	for name in preferred_order
+		if name in content_templates
+			push!(ordered_templates, name)
+		end
+	end
+
+	for name in content_templates
+		if !(name in ordered_templates)
+			push!(ordered_templates, name)
+		end
+	end
+
+	content_blocks = String[]
+	for file in ordered_templates
+		template_path = joinpath(section_dir, file)
+		template_text = read_text(template_path)
+		push!(content_blocks, render_template(template_text, context))
+	end
+
+	content_joined = join(content_blocks, "\n\n")
+	if wrapper_name in all_tex_templates
+		wrapper_path = joinpath(section_dir, wrapper_name)
+		wrapper_text = read_text(wrapper_path)
+		wrapper_context = copy(context)
+		wrapper_context["content"] = content_joined
+		return render_template(wrapper_text, wrapper_context)
+	end
+
+	return content_joined
+end
+
 function build_tex_figure_includes(fig_dir::String)
 	if !isdir(fig_dir)
 		return "% No generated figures directory found."
 	end
 
 	tex_files = sort(filter(name -> startswith(name, "figure_bifurcation_") && endswith(name, ".tex"), readdir(fig_dir)))
-	if isempty(tex_files)
-		return "% No bifurcation TEX figures found."
-	end
 
 	blocks = String[]
 	for file in tex_files
 		stem = replace(file, ".tex" => "")
 		title = replace(stem, "_" => " ")
 		pdf_path = joinpath(fig_dir, "$(stem).pdf")
-		push!(blocks, "\\subsection*{$(title)}\n\\includegraphics[width=0.95\\linewidth]{$(pdf_path)}")
+		push!(blocks, "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(pdf_path)}\n\\caption{$(title)}\n\\end{figure}")
 	end
 
 	image_files = sort(filter(name -> (
@@ -58,7 +114,7 @@ function build_tex_figure_includes(fig_dir::String)
 		stem = replace(file, r"\.[^.]+$" => "")
 		title = replace(stem, "_" => " ")
 		img_path = joinpath(fig_dir, file)
-		push!(blocks, "\\subsection*{$(title)}\n\\includegraphics[width=0.95\\linewidth]{$(img_path)}")
+		push!(blocks, "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(img_path)}\n\\caption{$(title)}\n\\end{figure}")
 	end
 
 	if isempty(blocks)
@@ -74,9 +130,6 @@ function build_md_figure_includes(fig_dir::String)
 	end
 
 	md_files = sort(filter(name -> startswith(name, "figure_bifurcation_") && endswith(name, ".md"), readdir(fig_dir)))
-	if isempty(md_files)
-		return "No bifurcation markdown figure sidecars found."
-	end
 
 	lines = String[]
 	for file in md_files
@@ -115,22 +168,31 @@ theory_md = read_text("reports/generated/theory/01_state_space.md"; fallback="Th
 archive_md = read_text("reports/generated/theory/02_archive_synthesis.md"; fallback="Archive synthesis not generated yet.")
 diag_md = read_text("reports/generated/diagnostics/03_bifurcation_sweep.md"; fallback="Diagnostics section not generated yet.")
 
-theory_tex = "\\paragraph{Theory Source} See \\path{reports/generated/theory/01_state_space.md}"
-archive_tex = "\\paragraph{Archive Synthesis} See \\path{reports/generated/theory/02_archive_synthesis.md}"
-diag_tex = "\\paragraph{Diagnostics Source} See \\path{reports/generated/diagnostics/03_bifurcation_sweep.md}"
-
 fig_dir = "reports/generated/figures"
 figure_tex_includes = build_tex_figure_includes(fig_dir)
 figure_md_includes = build_md_figure_includes(fig_dir)
 
 timestamp = string(Dates.now())
+generated_date_human = Dates.format(Dates.now(), "U d, yyyy")
+
+section_context = Dict(
+	"dataset" => dataset,
+	"generated_timestamp" => timestamp,
+	"generated_date_human" => generated_date_human,
+)
+template_sections_tex = build_tex_template_sections("templates/sections", section_context)
+abstract_tex = build_optional_tex_template(
+	"templates/sections/abstract.tex.mustache",
+	section_context;
+	fallback="",
+)
 
 tex_context = Dict(
 	"dataset" => dataset,
 	"generated_timestamp" => timestamp,
-	"theory_section" => theory_tex,
-	"archive_synthesis_section" => archive_tex,
-	"diagnostics_section" => diag_tex,
+	"generated_date_human" => generated_date_human,
+	"abstract_tex" => abstract_tex,
+	"template_sections_tex" => template_sections_tex,
 	"figure_tex_includes" => figure_tex_includes,
 )
 

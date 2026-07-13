@@ -47,4 +47,4 @@ clean:
 	find reports/generated -type f ! -name '.gitkeep' -delete
 	find figures -type f \( -name '*.md' -o -name '*.tex' -o -name '*.json' \) -delete
 	find tables -type f \( -name '*.md' -o -name '*.tex' -o -name '*.json' \) -delete
-	find bundle -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
+	if [ -d bundle ]; then find bundle -mindepth 1 -maxdepth 1 -exec rm -rf -- {} \;; fi
