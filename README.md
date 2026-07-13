@@ -5,17 +5,17 @@ StableBoundaryLayerGSPT is a Julia-first, reproducible scientific pipeline where
 ## Milestone Focus
 
 - v0.1 Reference Theory (no observational datasets required)
-	- complete mathematical model contract scaffold
-	- stable API and stable CLI surface
-	- scientific validation tier definitions (L0-L4)
-	- canonical synthetic benchmark suite scaffold
-	- reproducible synthetic publication bundle
+  - complete mathematical model contract scaffold
+  - stable API and stable CLI surface
+  - scientific validation tier definitions (L0-L4)
+  - canonical synthetic benchmark suite scaffold
+  - reproducible synthetic publication bundle
 
 - Planned progression
-	- v0.2 CASES99
-	- v0.3 FLOSS
-	- v0.4 multi-campaign comparison
-	- v1.0 publication release
+  - v0.2 CASES99
+  - v0.3 FLOSS
+  - v0.4 multi-campaign comparison
+  - v1.0 publication release
 
 ## Principles
 
@@ -42,11 +42,38 @@ bash scripts/stablebl bundle --synthetic --dataset CASES99
 
 `scripts/stablebl paper` now auto-generates the 4D solver trajectory and diagnostic geometry plot, writes it under `reports/generated/figures/`, assembles `reports/generated/paper.tex`, and compiles the PDF so collaborators can reproduce manuscript figures without manual steps.
 
+## External Datasets & Local Directory Setup
+
+To run the pipeline on the full suite of observational datasets, this repository expects a peer analytics workspace layout rooted at `../SpectralBL-Analytics/data/`:
+
+```text
+Documents/GitHub/
+├── StableBoundaryLayerGSPT/     (this repository)
+└── SpectralBL-Analytics/
+  └── data/
+    ├── FLOSS/
+    └── SHEBA/
+```
+
+If your analytics workspace lives elsewhere, set the override before execution:
+
+```bash
+export SPECTRALBL_ANALYTICS_DATA_ROOT="/path/to/your/custom/analytics/data"
+```
+
+For the Arctic data path, you can run the full comparative paper loop with:
+
+```bash
+make stablebl-paper-sheba
+```
+
+If you are preparing a new dataset run, configure the baseline parameters file first in `spec/datasets/` so the dataset is explicitly versioned alongside the pipeline.
+
 ## Current Status
 
 - Phase -1 bootstrap complete: spec layer scaffolded
 - Phase 0/1 bootstrap complete: package skeleton, stage runner, and manifest/provenance writing in place
-- v1 dataset stubs configured: CASES99, FLOSS
+- v1 dataset stubs configured: CASES99, FLOSS, SHEBA
 
 ## Repository Layout
 

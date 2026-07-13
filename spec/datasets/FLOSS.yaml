@@ -6,3 +6,21 @@ required_variables:
   - theta
   - z
 time_resolution_seconds: 60
+four_d_solver:
+  solver: rodas5p
+  hours: 14
+  save_dt_seconds: 30
+  initial_state:
+    e: 0.9
+    U: 4.5
+    V: 0.0
+    Ts: 286.15
+  parameters:
+    U_g: 8.0
+    V_g: 0.0
+    T_a: 286.15
+    T_deep: 284.15
+    R_down: 255.0
+    z0m: 1.5
+    z0h: 0.2
+    h: 60.0

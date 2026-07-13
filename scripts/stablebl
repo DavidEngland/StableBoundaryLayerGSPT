@@ -177,10 +177,13 @@ case "$cmd" in
 
     ensure_julia_env
     mkdir -p reports/generated/figures
-    julia --project=. scripts/run_4d_solver.jl --solver "$solver" --hours "$hours" --save-dt "$save_dt"
-    latest_4d_run_dir="$(ls -td results/4d_sbl/run_* 2>/dev/null | head -n 1 || true)"
+    julia --project=. scripts/run_4d_solver.jl --dataset "$dataset" --solver "$solver" --hours "$hours" --save-dt "$save_dt"
+    latest_4d_run_dir="$(ls -td results/${dataset}/run_* 2>/dev/null | head -n 1 || true)"
+    if [[ -z "$latest_4d_run_dir" && "$dataset" == "CASES99" ]]; then
+      latest_4d_run_dir="$(ls -td results/4d_sbl/run_* 2>/dev/null | head -n 1 || true)"
+    fi
     if [[ -z "$latest_4d_run_dir" || ! -f "$latest_4d_run_dir/solution.csv" ]]; then
-      echo "4D solver output not found in results/4d_sbl/run_*/solution.csv" >&2
+      echo "4D solver output not found in results/${dataset}/run_*/solution.csv" >&2
       exit 1
     fi
     julia --project=. scripts/plot_4d_diagnostics.jl --solution "$latest_4d_run_dir/solution.csv" --out reports/generated/figures/4d_sbl_diagnostics.png
@@ -239,10 +242,13 @@ case "$cmd" in
 
     julia --project=. scripts/run_pipeline.jl --dataset "$dataset"
     julia --project=. scripts/sweep_bifurcation.jl --dataset "$dataset" --nsamples "$nsamples" --ngrid "$ngrid" --seed "$seed"
-    julia --project=. scripts/run_4d_solver.jl
-    latest_4d_run_dir="$(ls -td results/4d_sbl/run_* 2>/dev/null | head -n 1 || true)"
+    julia --project=. scripts/run_4d_solver.jl --dataset "$dataset"
+    latest_4d_run_dir="$(ls -td results/${dataset}/run_* 2>/dev/null | head -n 1 || true)"
+    if [[ -z "$latest_4d_run_dir" && "$dataset" == "CASES99" ]]; then
+      latest_4d_run_dir="$(ls -td results/4d_sbl/run_* 2>/dev/null | head -n 1 || true)"
+    fi
     if [[ -z "$latest_4d_run_dir" || ! -f "$latest_4d_run_dir/solution.csv" ]]; then
-      echo "4D solver output not found in results/4d_sbl/run_*/solution.csv" >&2
+      echo "4D solver output not found in results/${dataset}/run_*/solution.csv" >&2
       exit 1
     fi
     mkdir -p reports/generated/figures

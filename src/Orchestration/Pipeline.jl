@@ -15,10 +15,10 @@ using ..Provenance
 export run_pipeline
 
 """Run scaffolded stage pipeline with explicit validation gate and manifest emission."""
-function run_pipeline(; dataset::String, config_path::Union{Nothing,String}=nothing)
+function run_pipeline(; dataset::String, config_path::Union{Nothing,String}=nothing, data_root::Union{Nothing,String}=nothing)
     dataset_upper = uppercase(strip(dataset))
 
-    params = DataAdapters.ingest_dataset(dataset_upper)
+    params = data_root === nothing ? DataAdapters.ingest_dataset(dataset_upper) : DataAdapters.ingest_dataset(dataset_upper; data_root=data_root)
     if config_path !== nothing && isfile(config_path)
         overrides = YAML.load_file(config_path)
         for (k, v) in overrides

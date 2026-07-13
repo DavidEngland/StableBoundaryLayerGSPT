@@ -1,4 +1,4 @@
-dataset: CASES99
+dataset: SHEBA
 version: 0.1.0
 required_variables:
   - wind_u
@@ -11,15 +11,16 @@ four_d_solver:
   hours: 14
   save_dt_seconds: 30
   initial_state:
-    e: 1.0
-    U: 5.0
+    e: 0.8
+    U: 3.0
     V: 0.0
-    Ts: 285.15
+    Ts: 269.15
   parameters:
-    U_g: 10.0
+    U_g: 6.5
     V_g: 0.0
-    T_a: 285.15
-    T_deep: 283.15
-    R_down: 260.0
-    z0m: 0.02
-    z0h: 0.005
+    T_a: 269.15
+    T_deep: 268.15
+    R_down: 210.0
+    z0m: 0.0002
+    z0h: 0.00005
+    h: 40.0
