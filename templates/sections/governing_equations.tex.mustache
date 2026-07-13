@@ -1,0 +1,20 @@
+\section{The Complete 4D GSPT-SBL Governing System}
+\label{sec:governing_system}
+
+The full state vector is defined as $\mathbf{x} = (e, U, V, T_s) \in \mathbb{R}^4$, where $e$ is the fast turbulent coordinate, and $(U, V, T_s)$ are the slow environmental coordinates. The system is scaled using the small singular perturbation parameter $\varepsilon$, representing the ratio of the rapid turbulent allocation timescale to the slow macro-environmental thermodynamic forcing timescale ($0 < \varepsilon \ll 1$).
+
+\subsection{The Complete Fast-Slow Equations}
+\label{subsec:fast_slow_eqs}
+
+\subsubsection*{Fast Subsystem (Turbulence Mechanics)}
+\begin{equation}
+\varepsilon \frac{de}{dt} = \sqrt{e + \delta} \left[ \eta\,\gamma\,(U^2 + V^2) - K \cdot G(T_s) \right] - \frac{(e+\delta)^{3/2}}{l_0} = \mathcal{F}(e,U,V,T_s)
+\label{eq:fast_subsystem}
+\end{equation}
+
+\subsubsection*{Slow Subsystem (Atmospheric Rotational Dynamics \& Surface Thermodynamics)}
+\begin{align}
+\frac{dU}{dt} &= f(V - V_g) - \gamma \sqrt{e + \delta} \cdot U \label{eq:slow_u} \\
+\frac{dV}{dt} &= -f(U - U_g) - \gamma \sqrt{e + \delta} \cdot V \label{eq:slow_v} \\
+\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}} \left[ R_{\downarrow} - \sigma_{\text{SB}} T_s^4 - \lambda \frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H \sqrt{e + \delta} \cdot (T_s - T_a) \right] \label{eq:slow_ts}
+\end{align}

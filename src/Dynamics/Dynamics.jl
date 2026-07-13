@@ -44,6 +44,10 @@ function default_4d_parameters()
         "C_skin" => 2.0e4,
         # Smooth positivity helper for e + delta.
         "smooth_eps" => _DEFAULT_SMOOTH_EPS,
+        # Width for smoothly transitioning to the e floor limiter.
+        "e_floor_transition" => 1.0e-5,
+        # Smoothness for approximating min(de_dt, 0) near the floor.
+        "de_floor_smooth_eps" => 1.0e-10,
     )
 end
 
@@ -72,12 +76,29 @@ function _regularized_positive(x::Real, eps_pos::Real)
     return max(x, eps_pos)
 end
 
+function _smooth_min_zero(x::Real, eps_smooth::Real)
+    eps_local = max(Float64(eps_smooth), eps(Float64))
+    return 0.5 * (x - sqrt(x * x + eps_local * eps_local))
+end
+
+function _smooth_floor_gate(e::Real, e_floor::Real, transition::Real)
+    width = max(Float64(transition), eps(Float64))
+    return 0.5 * (1.0 + tanh((e - e_floor) / width))
+end
+
 """
 Energy-conserving fast vector field F(e, U, V, Ts) with drag-coupled production.
 
 F = sqrt(e + delta) * [gamma * (U^2 + V^2) - K * G(Ts)] - (e + delta)^(3/2) / l0
 """
-function fast_vector_field_F(e::Real, U::Real, V::Real, Ts::Real, p::AbstractDict{String,<:Real})
+function fast_vector_field_F(
+    e::Real,
+    U::Real,
+    V::Real,
+    Ts::Real,
+    p::AbstractDict{String,<:Real};
+    gamma_override::Union{Nothing,Real}=nothing,
+)
     delta = Float64(p["delta"])
     K = Float64(p["K"])
     l0 = Float64(p["l0"])
@@ -86,7 +107,7 @@ function fast_vector_field_F(e::Real, U::Real, V::Real, Ts::Real, p::AbstractDic
     eps_pos = Float64(get(p, "smooth_eps", _DEFAULT_SMOOTH_EPS))
     shear_eff = Float64(get(p, "shear_production_efficiency", 1.0))
 
-    gamma, _ = closure_coefficients(p)
+    gamma = isnothing(gamma_override) ? closure_coefficients(p)[1] : Float64(gamma_override)
     G = stratification_function(Ts, Ta, beta)
     e_plus = _regularized_positive(e + delta, eps_pos)
     sqrt_e = sqrt(e_plus)
@@ -113,18 +134,20 @@ function _rhs_4d!(du, u, p, t)
     rho_cp = Float64(p["rho_cp"])
     C_skin = Float64(p["C_skin"])
     eps_pos = Float64(get(p, "smooth_eps", _DEFAULT_SMOOTH_EPS))
+    e_floor_transition = Float64(get(p, "e_floor_transition", 1.0e-5))
+    de_floor_smooth_eps = Float64(get(p, "de_floor_smooth_eps", 1.0e-10))
 
     gamma, C_H = closure_coefficients(p)
     e_plus = _regularized_positive(e + delta, eps_pos)
     sqrt_e = sqrt(e_plus)
 
-    F = fast_vector_field_F(e, U, V, Ts, p)
+    F = fast_vector_field_F(e, U, V, Ts, p; gamma_override=gamma)
 
-    de_dt = F / epsilon
+    de_dt_raw = F / epsilon
     e_floor = -delta + eps_pos
-    if (e <= e_floor) && (de_dt < 0.0)
-        de_dt = 0.0
-    end
+    gate = _smooth_floor_gate(e, e_floor, e_floor_transition)
+    negative_part = _smooth_min_zero(de_dt_raw, de_floor_smooth_eps)
+    de_dt = de_dt_raw - (1.0 - gate) * negative_part
 
     du[1] = de_dt
     du[2] = f_coriolis * (V - Vg) - gamma * sqrt_e * U

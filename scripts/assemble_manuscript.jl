@@ -48,6 +48,23 @@ function build_tex_figure_includes(fig_dir::String)
 		pdf_path = joinpath(fig_dir, "$(stem).pdf")
 		push!(blocks, "\\subsection*{$(title)}\n\\includegraphics[width=0.95\\linewidth]{$(pdf_path)}")
 	end
+
+	image_files = sort(filter(name -> (
+		(endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf")) &&
+		!startswith(name, "figure_bifurcation_")
+	), readdir(fig_dir)))
+
+	for file in image_files
+		stem = replace(file, r"\.[^.]+$" => "")
+		title = replace(stem, "_" => " ")
+		img_path = joinpath(fig_dir, file)
+		push!(blocks, "\\subsection*{$(title)}\n\\includegraphics[width=0.95\\linewidth]{$(img_path)}")
+	end
+
+	if isempty(blocks)
+		return "% No generated figure assets found."
+	end
+
 	return join(blocks, "\n\n")
 end
 
@@ -65,6 +82,19 @@ function build_md_figure_includes(fig_dir::String)
 	for file in md_files
 		push!(lines, "- reports/generated/figures/$(file)")
 	end
+
+	image_files = sort(filter(name -> (
+		endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf")
+	), readdir(fig_dir)))
+
+	for file in image_files
+		push!(lines, "- reports/generated/figures/$(file)")
+	end
+
+	if isempty(lines)
+		return "No generated figure assets found."
+	end
+
 	return join(lines, "\n")
 end
 

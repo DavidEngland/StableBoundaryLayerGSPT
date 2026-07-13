@@ -4,6 +4,7 @@ using CSV
 using DataFrames
 using Plots
 using Statistics
+using LinearAlgebra
 
 function parse_args(args::Vector{String})
     solution_csv = ""
@@ -47,24 +48,73 @@ p2 = plot(t_hours, e, linewidth=2, color=:blue, label="e(t)", xlabel="Time (h)",
 p2r = twinx(p2)
 plot!(p2r, t_hours, Ts, linewidth=2, color=:red, label="Ts(t)", ylabel="Ts (K)")
 
-# Panel 3: 3D trajectory with fold-surface proxy of revolution.
-# Use an empirical quadratic fit Ts = a + b * (U^2 + V^2) to represent the local fold geometry.
-R2 = U .^ 2 .+ V .^ 2
-X = hcat(ones(length(R2)), R2)
+# Panel 3: 3D trajectory with fitted elliptic paraboloid geometry.
+# Fit Ts(U,V) = c0 + c1 U + c2 V + c3 U^2 + c4 UV + c5 V^2.
+X = hcat(ones(length(U)), U, V, U .^ 2, U .* V, V .^ 2)
 coef = X \ Ts
 Ts_fit = X * coef
+residual = Ts - Ts_fit
 
-theta = range(0.0, 2pi; length=80)
-r_grid = range(0.0, sqrt(maximum(R2) * 1.1); length=50)
-U_surf = [r * cos(th) for r in r_grid, th in theta]
-V_surf = [r * sin(th) for r in r_grid, th in theta]
-Ts_surf = [coef[1] + coef[2] * (r^2) for r in r_grid, th in theta]
+u_min, u_max = extrema(U)
+v_min, v_max = extrema(V)
+u_pad = 0.08 * max(abs(u_max - u_min), 1.0)
+v_pad = 0.08 * max(abs(v_max - v_min), 1.0)
+u_grid = range(u_min - u_pad, u_max + u_pad; length=70)
+v_grid = range(v_min - v_pad, v_max + v_pad; length=70)
 
-p3 = surface(U_surf, V_surf, Ts_surf, alpha=0.35, color=:lightgray, label="", xlabel="U", ylabel="V", zlabel="Ts", title="3D Phase Geometry", legend=false)
+U_surf = [u for u in u_grid, _ in v_grid]
+V_surf = [v for _ in u_grid, v in v_grid]
+Ts_surf = [
+    coef[1] + coef[2] * u + coef[3] * v + coef[4] * u^2 + coef[5] * u * v + coef[6] * v^2
+    for u in u_grid, v in v_grid
+]
+
+p3 = surface(
+    U_surf,
+    V_surf,
+    Ts_surf,
+    alpha=0.35,
+    color=:lightgray,
+    label="",
+    xlabel="U",
+    ylabel="V",
+    zlabel="Ts",
+    title="3D Elliptic Paraboloid Fit",
+    legend=false,
+)
 plot!(p3, U, V, Ts, linewidth=3, color=:black, label="")
 
-layout = @layout [a b c]
-plt = plot(p1, p2, p3; layout=layout, size=(1800, 520))
+# Panel 4: Residual diagnostics and curvature summary.
+p4 = scatter(
+    t_hours,
+    residual,
+    markersize=3,
+    alpha=0.7,
+    color=:darkgreen,
+    label="Ts - Ts_fit",
+    xlabel="Time (h)",
+    ylabel="Residual (K)",
+    title="Quadratic Fit Residuals",
+)
+hline!(p4, [0.0], color=:black, linestyle=:dash, linewidth=1.5, label="")
+
+# Hessian of the quadratic form gives principal curvatures in U-V coordinates.
+H = [2.0 * coef[4] coef[5]; coef[5] 2.0 * coef[6]]
+eigvals_H = eigvals(H)
+rmse = sqrt(mean(residual .^ 2))
+annotate!(
+    p4,
+    t_hours[1],
+    maximum(residual),
+    text(
+        "k1=$(round(eigvals_H[1], sigdigits=4)), k2=$(round(eigvals_H[2], sigdigits=4)), RMSE=$(round(rmse, sigdigits=4))",
+        :left,
+        8,
+    ),
+)
+
+layout = @layout [a b; c d]
+plt = plot(p1, p2, p3, p4; layout=layout, size=(1800, 980))
 mkpath(dirname(out_path))
 savefig(plt, out_path)
 

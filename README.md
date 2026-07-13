@@ -40,6 +40,8 @@ bash scripts/stablebl paper --dataset CASES99
 bash scripts/stablebl bundle --synthetic --dataset CASES99
 ```
 
+`scripts/stablebl paper` now auto-generates the 4D solver trajectory and diagnostic geometry plot, writes it under `reports/generated/figures/`, assembles `reports/generated/paper.tex`, and compiles the PDF so collaborators can reproduce manuscript figures without manual steps.
+
 ## Current Status
 
 - Phase -1 bootstrap complete: spec layer scaffolded

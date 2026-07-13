@@ -1,0 +1,46 @@
+\subsection{Physical Parameters and Baseline Scaling}
+\label{subsec:parameters}
+
+To run this model numerically (e.g., in Julia/SciML or Python's \texttt{solve\_ivp}), use the following verified baseline parameters scaled for a typical mid-latitude nocturnal boundary layer (resembling CASES99 conditions):
+
+\begin{table}[ht!]
+\centering
+\caption{Baseline Physical Parameter Specifications for the 4D GSPT-SBL System}
+\label{tab:baseline_parameters}
+\begin{tabular}{llll}
+\hline
+\textbf{Parameter} & \textbf{Description} & \textbf{Baseline Value} & \textbf{Units} \\ \hline
+\multicolumn{4}{l}{\textit{Environmental Controls and Geostrophic Forcing}} \\
+$U_g$ & Zonal Geostrophic Wind & $10.0$ & $\text{m s}^{-1}$ \\
+$V_g$ & Meridional Geostrophic Wind & $0.0$ & $\text{m s}^{-1}$ \\
+$T_a$ & Reference Air Temperature ($z = h$) & $285.15$ & $\text{K}\ (12^\circ\text{C})$ \\
+$T_{\text{deep}}$ & Deep Soil Core Temperature & $283.15$ & $\text{K}\ (10^\circ\text{C})$ \\
+$R_{\downarrow}$ & Downward Longwave Radiation & $260.0$ & $\text{W m}^{-2}$ \\
+$f$ & Coriolis Parameter ($\sim 45^\circ\text{N}$) & $1.0 \times 10^{-4}$ & $\text{s}^{-1}$ \\ \hline
+\multicolumn{4}{l}{\textit{Turbulence and Boundary Layer Internals}} \\
+$\varepsilon$ & Singular Perturbation Parameter & $0.01$ & Dimensionless \\
+$\delta$ & Background Mixing Parameter & $1.0 \times 10^{-4}$ & $\text{m}^2\text{s}^{-2}$ \\
+$K$ & Buoyant Destruction Weight & $0.32$ & Dimensionless gain \\
+$\beta$ & Stratification Sensitivity Parameter & $15.0$ & Dimensionless \\
+$h$ & Coupling Bulk Scale Height & $50.0$ & $\text{m}$ \\
+$\gamma_{\mathrm{eff}}$ & Drag Scaling Efficiency & $2.0$ & Dimensionless \\
+$\eta$ & Shear Production Efficiency & $15.0$ & Dimensionless \\ \hline
+\multicolumn{4}{l}{\textit{Thermal Properties (Surface Energy Budget)}} \\
+$\sigma_{\text{SB}}$ & Stefan-Boltzmann Constant & $5.67 \times 10^{-8}$ & $\text{W m}^{-2}\text{K}^{-4}$ \\
+$\lambda$ & Soil Thermal Conductivity & $1.2$ & $\text{W m}^{-1}\text{K}^{-1}$ \\
+$d_{\text{soil}}$ & Effective Soil Layer Depth & $0.5$ & $\text{m}$ \\
+$\rho c_p$ & Volumetric Heat Capacity of Air & $1200.0$ & $\text{J m}^{-3}\text{K}^{-1}$ \\
+$C_{\text{skin}}$ & Thermal Capacity of Skin Layer & $2.0 \times 10^{4}$ & $\text{J m}^{-2}\text{K}^{-1}$ \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Geometric Features of the 4D Phase Space}
+\label{subsec:geometry}
+
+When analyzing this mathematical system, the geometric structures shift from previous lower-dimensional derivations in three important ways:
+
+\begin{enumerate}
+    \item \textbf{The Critical Manifold $\mathcal{M}_0$:} Defined strictly in the limit $\varepsilon \to 0$ by setting the fast equation to zero: $\mathcal{F}(e,U,V,T_s)=0$. On the active turbulent sheet, $e+\delta = l_0\Delta$ where $\Delta = \eta\,\gamma\,(U^2+V^2)-K\,G(T_s)$, so $e^* = l_0\Delta-\delta$.
+    \item \textbf{The Trapped Laminar State:} If $\Delta \le 0$, no active turbulent root exists. The regularization parameter $\delta$ then holds the system near the background mixing floor, so $e$ remains close to the laminar branch.
+    \item \textbf{The Fold Set ($\mathcal{C}_{\text{fold}}$):} The nonlinear surface energy budget (SEB) creates the parameter dependence required for the manifold to fold, but the geometric fold itself is defined by the simultaneous conditions $\mathcal{F}=0$ and $\partial_e\mathcal{F}=0$. Because $U^2 + V^2$ is circularly symmetric, the turbulent branch has paraboloid-of-revolution geometry in the $(U, V, e)$ coordinates for fixed $T_s$.
+\end{enumerate}

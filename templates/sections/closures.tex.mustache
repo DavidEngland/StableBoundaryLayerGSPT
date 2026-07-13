@@ -1,0 +1,23 @@
+\subsection{Parameterization of Closures and Functions}
+\label{subsec:closures}
+
+To close the system mathematically, the abstract couplings are mapped to physical planetary boundary layer functions:
+
+\subsubsection{The Stratification Function $G(T_s)$}
+The stable stratification is driven by the vertical temperature inversion between the reference atmospheric layer ($T_a$) and the ground skin temperature ($T_s$). It is parameterized using a smooth, continuous exponential activation function to ensure it is $C^\infty$ everywhere:
+\begin{equation}
+G(T_s) = \exp\left( \beta \frac{T_a - T_s}{T_a} \right) - 1
+\label{eq:stratification_func}
+\end{equation}
+
+\begin{description}
+    \item[Behavior:] When $T_s = T_a$ (neutral stratification), $G(T_s) = 0$, and buoyant destruction vanishes. When $T_s < T_a$ (nocturnal cooling), $G(T_s) > 0$, rapidly accelerating the buoyant destruction of TKE.
+\end{description}
+
+\subsubsection{The Turbulent Diffusivity/Drag Closure}
+The momentum drag coefficient $\gamma$ and the surface thermodynamic sensible heat exchange coefficient $C_H$ are scaled with logarithmic roughness laws:
+\begin{equation}
+\gamma = \gamma_{\mathrm{eff}}\frac{\kappa^2}{\ln(h/z_{0m})^2} \cdot \frac{1}{h} \qquad C_H = \frac{\kappa^2}{\ln(h/z_{0m})\ln(h/z_{0h})}
+\label{eq:drag_closures}
+\end{equation}
+Where $\kappa$ is the von K\'arm\'an constant, $h$ is the bulk boundary layer height scale, and $z_{0m}, z_{0h}$ are the momentum and thermal roughness lengths.
