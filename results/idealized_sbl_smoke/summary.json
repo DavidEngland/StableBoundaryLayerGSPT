@@ -1,0 +1,49 @@
+{
+    "n_profiles": 1,
+    "arguments": {
+        "dz": 2,
+        "theta_top": null,
+        "case": "idealized_sbl",
+        "dt": 30,
+        "lambda_top": null,
+        "theta_top_bc": "neumann",
+        "duration_hours": 0.1,
+        "N": 80,
+        "profile_every_seconds": 1800,
+        "outdir": "results/idealized_sbl_smoke",
+        "save_jld2": false
+    },
+    "case": "idealized_sbl",
+    "n_times": 13,
+    "outdir": "results/idealized_sbl_smoke",
+    "verification": {
+        "min_diffusivity": 0.18456182223259043,
+        "max_diffusivity": 108.42645239171298,
+        "min_ri": 0.0341853125776047,
+        "max_ri": 34.722192931745184,
+        "max_surface_energy_closure_error": 0,
+        "fold_near_fraction": 0
+    },
+    "figure_manifest": [
+        "Time series of T_s, sensible heat flux, and friction velocity",
+        "Time-height contour of wind speed with LLJ evolution",
+        "Time-height contour of potential temperature and inversion growth",
+        "Vertical profiles of U, theta, and Km at representative times",
+        "Surface energy budget components (R_n, H, G, storage)",
+        "Phase portrait on regularized manifold (Delta vs e_xi)",
+        "Eddy diffusivity response (Km, Kh) versus stability/Richardson number",
+        "Fold proximity diagnostics versus time"
+    ],
+    "solver_summary": {
+        "algorithm": "OrdinaryDiffEqRosenbrock.Rodas5P{0, ADTypes.AutoFiniteDiff{Val{:forward}, Val{:forward}, Val{:hcentral}, Nothing, Nothing, Int64}, Nothing, typeof(OrdinaryDiffEqCore.DEFAULT_PRECS), Val{:forward}(), true, nothing, typeof(OrdinaryDiffEqCore.trivial_limiter!), typeof(OrdinaryDiffEqCore.trivial_limiter!)}",
+        "accepted_steps": 65,
+        "rejected_steps": 2,
+        "rhs_evaluations": 16333,
+        "retcode": "Success",
+        "abstol": 1.0e-8,
+        "reltol": 1.0e-6
+    },
+    "artifacts": {
+        "time_series_csv": "results/idealized_sbl_smoke/time_series.csv"
+    }
+}

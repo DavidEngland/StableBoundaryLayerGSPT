@@ -2,6 +2,9 @@
 
 using Dates
 using Printf
+import CSV
+import DataFrames
+import JSON3
 
 include(joinpath(@__DIR__, "scm_run.jl"))
 
@@ -34,17 +37,6 @@ struct SCMParameters{T,W}
     theta_top::T
     lambda_top::T
     workspace::W
-end
-
-function _require_csv_dataframe_json3()
-    try
-        @eval import CSV
-        @eval import DataFrames
-        @eval import JSON3
-    catch
-        error("CSV/DataFrames/JSON3 are not installed in the active environment. Run: using Pkg; Pkg.instantiate()")
-    end
-    return CSV, DataFrames, JSON3
 end
 
 function _usage()
@@ -294,8 +286,6 @@ function _scalar_timeseries_columns(time_series)
 end
 
 function _write_outputs(outdir::String, payload, case_name::String, args_cfg)
-    CSV, DataFrames, JSON3 = _require_csv_dataframe_json3()
-
     mkpath(outdir)
 
     ts_cols = _scalar_timeseries_columns(payload.time_series)

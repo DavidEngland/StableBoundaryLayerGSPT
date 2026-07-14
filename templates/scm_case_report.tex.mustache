@@ -1,0 +1,46 @@
+% templates/scm_case_report.tex.mustache
+\section{SCM Case Summary: {{case_name}}}
+\label{sec:scm_case_{{case_name_slug}}}
+
+This section was generated automatically from the SCM diagnostics artifact
+\texttt{ {{summary_path}} }. The simulation completed with \texttt{ {{solver_algorithm}} }
+and returned \texttt{ {{solver_retcode}} }.
+
+\subsection{Core Run Metadata}
+\begin{itemize}
+  \item Case identifier: \texttt{ {{case_name}} }
+  \item Output directory: \texttt{ {{outdir}} }
+  \item Number of saved time samples: {{n_times}}
+  \item Number of profile snapshots: {{n_profiles}}
+  \item Solver accepted/rejected steps: {{solver_accepted_steps}} / {{solver_rejected_steps}}
+  \item RHS evaluations: {{solver_rhs_evaluations}}
+  \item Solver tolerances: $\mathrm{abstol}={{solver_abstol}}$, $\mathrm{reltol}={{solver_reltol}}$
+\end{itemize}
+
+\subsection{Numerical Verification}
+\begin{itemize}
+  \item Maximum surface energy closure error:
+  ${{verification_max_surface_energy_closure_error}}\,\mathrm{W\,m^{-2}}$
+  \item Fold-proximity fraction:
+  ${{verification_fold_near_fraction_percent}}\%$
+  \item Diffusivity bounds:
+  $K_m \in [{{verification_min_diffusivity}},\,{{verification_max_diffusivity}}]~\mathrm{m^2\,s^{-1}}$
+  \item Richardson number bounds:
+  $Ri \in [{{verification_min_ri}},\,{{verification_max_ri}}]$
+\end{itemize}
+
+\subsection{Generated Artifacts}
+\begin{itemize}
+  \item Time-series CSV: \texttt{ {{artifact_time_series_csv}} }
+  \item Diagnostic summary JSON: \texttt{ {{artifact_summary_json}} }
+  \item Payload JLD2: \texttt{ {{artifact_payload_jld2}} }
+\end{itemize}
+
+\subsection{Figure Manifest}
+\begin{enumerate}
+{{figure_manifest_items}}
+\end{enumerate}
+
+\subsection{Included Plots}
+% Requires \usepackage{graphicx} in the parent document preamble.
+{{{plots_include_blocks}}}

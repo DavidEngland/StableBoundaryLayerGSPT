@@ -1,0 +1,50 @@
+{
+    "n_profiles": 1,
+    "arguments": {
+        "dz": 4,
+        "theta_top": null,
+        "case": "idealized_sbl",
+        "dt": 30,
+        "lambda_top": null,
+        "theta_top_bc": "neumann",
+        "duration_hours": 0.1,
+        "N": 40,
+        "profile_every_seconds": 1800,
+        "outdir": "results/scm_verify",
+        "save_jld2": true
+    },
+    "case": "idealized_sbl",
+    "n_times": 13,
+    "outdir": "results/scm_verify",
+    "verification": {
+        "min_diffusivity": 0.7190254201022866,
+        "max_diffusivity": 108.43194841651359,
+        "min_ri": 0.03557688384293044,
+        "max_ri": 29.752986302972797,
+        "max_surface_energy_closure_error": 0,
+        "fold_near_fraction": 0
+    },
+    "figure_manifest": [
+        "Time series of T_s, sensible heat flux, and friction velocity",
+        "Time-height contour of wind speed with LLJ evolution",
+        "Time-height contour of potential temperature and inversion growth",
+        "Vertical profiles of U, theta, and Km at representative times",
+        "Surface energy budget components (R_n, H, G, storage)",
+        "Phase portrait on regularized manifold (Delta vs e_xi)",
+        "Eddy diffusivity response (Km, Kh) versus stability/Richardson number",
+        "Fold proximity diagnostics versus time"
+    ],
+    "solver_summary": {
+        "algorithm": "OrdinaryDiffEqRosenbrock.Rodas5P{0, ADTypes.AutoFiniteDiff{Val{:forward}, Val{:forward}, Val{:hcentral}, Nothing, Nothing, Int64}, Nothing, typeof(OrdinaryDiffEqCore.DEFAULT_PRECS), Val{:forward}(), true, nothing, typeof(OrdinaryDiffEqCore.trivial_limiter!), typeof(OrdinaryDiffEqCore.trivial_limiter!)}",
+        "accepted_steps": 61,
+        "rejected_steps": 3,
+        "rhs_evaluations": 8017,
+        "retcode": "Success",
+        "abstol": 1.0e-8,
+        "reltol": 1.0e-6
+    },
+    "artifacts": {
+        "time_series_csv": "results/scm_verify/time_series.csv",
+        "payload_jld2": "results/scm_verify/payload.jld2"
+    }
+}

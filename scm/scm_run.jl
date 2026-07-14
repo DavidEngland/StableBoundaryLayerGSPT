@@ -1,18 +1,12 @@
 using LinearAlgebra
 using Statistics
 using Printf
+import OrdinaryDiffEq
+    import JLD2
+
 
 include(joinpath(@__DIR__, "scm.jl"))
 include(joinpath(@__DIR__, "scm_diagnostics.jl"))
-
-function _require_ordinarydiffeq()
-    try
-        @eval import OrdinaryDiffEq
-    catch
-        error("OrdinaryDiffEq is not installed in the active environment. Run: using Pkg; Pkg.add(\"OrdinaryDiffEq\")")
-    end
-    return OrdinaryDiffEq
-end
 
 """
     run_and_diagnose_scm(X0, p, t_span, dt; cfg=SCMDiagnosticConfig(), solver=Rodas5P(), abstol=1e-8, reltol=1e-6)
@@ -35,8 +29,7 @@ function run_and_diagnose_scm(
     t_end >= t_start || error("t_span must satisfy t_end >= t_start")
     dt > 0 || error("dt must be positive")
 
-    od = _require_ordinarydiffeq()
-    solver_alg = isnothing(solver) ? od.Rodas5P() : solver
+    solver_alg = isnothing(solver) ? OrdinaryDiffEq.Rodas5P(autodiff=false) : solver
 
     times = collect(t_start:dt:t_end)
     if isempty(times) || times[end] < t_end
@@ -46,8 +39,8 @@ function run_and_diagnose_scm(
     println("Starting SCM simulation trajectory...")
     @printf("  Grid points (N): %d | Time samples: %d | dt: %.1f s\n", p.N, length(times), dt)
 
-    prob = od.ODEProblem(scm_gspt_tendencies!, copy(X0), (t_start, t_end), p)
-    sol = od.solve(prob, solver_alg; saveat=times, abstol=abstol, reltol=reltol)
+    prob = OrdinaryDiffEq.ODEProblem(scm_gspt_tendencies!, copy(X0), (t_start, t_end), p)
+    sol = OrdinaryDiffEq.solve(prob, solver_alg; saveat=times, abstol=abstol, reltol=reltol)
 
     states = [Vector(u) for u in sol.u]
     times = collect(sol.t)
@@ -106,12 +99,6 @@ Persist the packaged payload to a JLD2 file.
 If `JLD2` is not installed in the active environment, throws with install guidance.
 """
 function save_scm_results(filepath::AbstractString, payload)
-    try
-        @eval import JLD2
-    catch
-        error("JLD2 is not installed. Run: using Pkg; Pkg.add(\"JLD2\")")
-    end
-
     mkpath(dirname(filepath))
     JLD2.jldsave(filepath; payload...)
     println("Saved packaged diagnostic payload to: $(filepath)")

@@ -3,6 +3,7 @@
 using CSV
 using DataFrames
 using Dates
+using JSON3
 using LinearAlgebra
 using Statistics
 
@@ -81,6 +82,7 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
         "closures.tex.mustache",
         "parameters_geometry.tex.mustache",
         "comparative_metrics.tex.mustache",
+        "numerical_verification_physical_interpretation.tex.mustache",
     ]
 
     ordered_templates = String[]
@@ -115,7 +117,7 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
     return content_joined
 end
 
-function build_tex_figure_includes(fig_dir::String)
+function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinpath("reports", "generated"))
     if !isdir(fig_dir)
         return "% No generated figures directory found."
     end
@@ -156,8 +158,9 @@ function build_tex_figure_includes(fig_dir::String)
     end
 
     function make_figure_block(path::String, caption::String, label::String)
+        rel_path = relpath(path, tex_output_dir)
         label_line = isempty(label) ? "" : "\n\\label{$(label)}"
-        return "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(path)}\n\\caption{$(caption)}$(label_line)\n\\end{figure}"
+        return "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(rel_path)}\n\\caption{$(caption)}$(label_line)\n\\end{figure}"
     end
 
     function prettify_figure_title(stem::String)
@@ -246,6 +249,211 @@ function format_metric(value)
     return isnan(value) ? "\\mathrm{n/a}" : string(round(value; digits=4))
 end
 
+function latex_escape(s::AbstractString)
+    out = s
+    out = replace(out, "\\" => "\\textbackslash{}")
+    out = replace(out, "{" => "\\{")
+    out = replace(out, "}" => "\\}")
+    out = replace(out, "_" => "\\_")
+    out = replace(out, "%" => "\\%")
+    out = replace(out, "#" => "\\#")
+    out = replace(out, "&" => "\\&")
+    out = replace(out, string('$') => "\\\$")
+    return out
+end
+
+function getnested(obj, keys::Vector{String}, default="n/a")
+    cur = obj
+    for k in keys
+        if cur isa AbstractDict
+            if haskey(cur, k)
+                cur = cur[k]
+            elseif haskey(cur, Symbol(k))
+                cur = cur[Symbol(k)]
+            else
+                return default
+            end
+        else
+            try
+                cur = getproperty(cur, Symbol(k))
+            catch
+                return default
+            end
+        end
+    end
+    return cur
+end
+
+function format_int_commas(x)
+    x isa Integer || return string(x)
+    s = reverse(string(abs(x)))
+    chunks = [reverse(s[i:min(i + 2, end)]) for i in 1:3:length(s)]
+    out = join(reverse(chunks), ",")
+    return x < 0 ? "-$(out)" : out
+end
+
+function format_float_digits(x, digits::Int; fallback="n/a")
+    x isa Number || return fallback
+    return string(round(Float64(x); digits=digits))
+end
+
+function format_percent(x; digits::Int=1, fallback="n/a")
+    x isa Number || return fallback
+    pct = round(100 * Float64(x); digits=digits)
+    if digits == 0
+        return string(Int(round(pct)))
+    end
+    return string(pct)
+end
+
+function compact_solver_name(s::AbstractString)
+    m = match(r"Rodas[0-9A-Za-z]+", s)
+    m === nothing && return s
+    return m.match
+end
+
+function find_scm_summary_path()
+    candidates = [
+        joinpath("results", "scm_verify", "summary.json"),
+        joinpath("results", "idealized_sbl", "summary.json"),
+        joinpath("results", "idealized_sbl_smoke", "summary.json"),
+    ]
+    for path in candidates
+        if isfile(path)
+            return path
+        end
+    end
+
+    # Fallback: discover newest results/*/summary.json that also has a plots directory.
+    discovered = String[]
+    if isdir("results")
+        for entry in readdir("results")
+            summary_path = joinpath("results", entry, "summary.json")
+            plots_dir = joinpath("results", entry, "plots")
+            if isfile(summary_path) && isdir(plots_dir)
+                push!(discovered, summary_path)
+            end
+        end
+    end
+    if !isempty(discovered)
+        sort!(discovered; by=path -> stat(path).mtime, rev=true)
+        return first(discovered)
+    end
+
+    return ""
+end
+
+function read_scm_summary_context()
+    path = find_scm_summary_path()
+    if isempty(path)
+        return Dict{String,String}(
+            "scm_case_name" => "n/a",
+            "scm_solver_name" => "n/a",
+            "scm_rhs_evaluations" => "n/a",
+            "scm_surface_energy_closure_error" => "n/a",
+            "scm_km_min" => "n/a",
+            "scm_km_max" => "n/a",
+            "scm_fold_fraction_percent" => "n/a",
+            "scm_phase_figure_block" => "% SCM phase portrait figure unavailable",
+            "scm_all_figures_block" => "% SCM figures unavailable",
+        )
+    end
+
+    raw = read(path, String)
+    summary = JSON3.read(raw)
+
+    solver_algorithm = string(getnested(summary, ["solver_summary", "algorithm"], "n/a"))
+    rhs_evals = getnested(summary, ["solver_summary", "rhs_evaluations"], "n/a")
+    max_surface_error = getnested(summary, ["verification", "max_surface_energy_closure_error"], "n/a")
+    km_min = getnested(summary, ["verification", "min_diffusivity"], "n/a")
+    km_max = getnested(summary, ["verification", "max_diffusivity"], "n/a")
+    fold_fraction = getnested(summary, ["verification", "fold_near_fraction"], "n/a")
+    case_name = string(getnested(summary, ["case"], "n/a"))
+    outdir = string(getnested(summary, ["outdir"], dirname(path)))
+
+    SCM_FIG_META = Dict(
+        "fig01" => (
+            caption="Time-series evolution of surface skin temperature \\(T_s\\), surface sensible heat flux \\(H\\), and friction velocity \\(u_*\\) over the course of the simulation.",
+            label="fig:scm_time_series",
+        ),
+        "fig02" => (
+            caption="Time-height contour map representing horizontal wind speed \\(U\\), demonstrating the gradual aloft development and consolidation of the nocturnal low-level jet (LLJ).",
+            label="fig:scm_wind_contour",
+        ),
+        "fig03" => (
+            caption="Time-height contour of potential temperature \\(\\theta\\), demonstrating surface-driven nocturnal radiative cooling and progressive boundary-layer inversion growth.",
+            label="fig:scm_theta_contour",
+        ),
+        "fig04" => (
+            caption="Representative vertical profiles of horizontal wind speed \\(U\\), potential temperature \\(\\theta\\), and momentum eddy diffusivity \\(K_m\\) at diagnostic times.",
+            label="fig:scm_profiles",
+        ),
+        "fig05" => (
+            caption="Surface energy budget (SEB) components illustrating the dynamic balance of net radiation \\(R_n\\), sensible heat flux \\(H\\), soil heat flux \\(G\\), and surface-storage thermal layers.",
+            label="fig:scm_surface_energy",
+        ),
+        "fig06" => (
+            caption="Regularized slow-manifold phase portrait mapping the net TKE production-buoyancy balance \\(\\Delta\\) against the regularized coordinate \\(e_\\xi^*\\) across characteristic height bands (surface, mid-BL jet core, and upper boundary layer). The vertical reference line shows the analytical critical transition condition \\(\\Delta = \\delta / \\ell_0\\).",
+            label="fig:scm_phase_delta_exi",
+        ),
+        "fig07" => (
+            caption="Momentum and heat eddy diffusivities (\\(K_m, K_h\\)) displayed against the local gradient Richardson stability metric (\\(Ri\\)).",
+            label="fig:scm_diffusivity",
+        ),
+        "fig08" => (
+            caption="Temporal evolution of the surface fold-proximity metric, showing the proximity of the surface state relative to the regularized manifold transition boundary.",
+            label="fig:scm_fold_proximity",
+        ),
+    )
+
+    phase_fig_path = joinpath(outdir, "plots", "fig06_phase_delta_exi.png")
+    phase_fig_block = "% SCM phase portrait figure unavailable"
+
+    scm_plots_dir = joinpath(outdir, "plots")
+    all_scm_blocks = String[]
+    if isdir(scm_plots_dir)
+        scm_image_files = sort(filter(name -> (
+            endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf")
+        ), readdir(scm_plots_dir)))
+
+        for file in scm_image_files
+            stem = replace(file, r"\.[^.]+$" => "")
+            prefix_match = match(r"fig\d+", stem)
+            prefix = prefix_match === nothing ? stem : prefix_match.match
+
+            caption, label = if haskey(SCM_FIG_META, prefix)
+                SCM_FIG_META[prefix].caption, SCM_FIG_META[prefix].label
+            else
+                fallback_label = "fig:scm_" * lowercase(replace(stem, r"[^A-Za-z0-9]+" => "_"))
+                prettify_figure_title(stem), fallback_label
+            end
+
+            img_path = joinpath(scm_plots_dir, file)
+            rel_img_path = relpath(img_path, joinpath("reports", "generated"))
+            fig_latex = "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{\\detokenize{$(rel_img_path)}}\n\\caption{$(caption)}\n\\label{$(label)}\n\\end{figure}"
+            push!(all_scm_blocks, fig_latex)
+
+            if prefix == "fig06"
+                phase_fig_block = fig_latex
+            end
+        end
+    end
+
+    scm_all_figures_block = isempty(all_scm_blocks) ? "% SCM figures unavailable" : join(all_scm_blocks, "\n\n")
+
+    return Dict{String,String}(
+        "scm_case_name" => latex_escape(case_name),
+        "scm_solver_name" => latex_escape(compact_solver_name(solver_algorithm)),
+        "scm_rhs_evaluations" => format_int_commas(rhs_evals),
+        "scm_surface_energy_closure_error" => format_float_digits(max_surface_error, 0),
+        "scm_km_min" => format_float_digits(km_min, 3),
+        "scm_km_max" => format_float_digits(km_max, 2),
+        "scm_fold_fraction_percent" => format_percent(fold_fraction; digits=0),
+        "scm_phase_figure_block" => phase_fig_block,
+        "scm_all_figures_block" => scm_all_figures_block,
+    )
+end
+
 function quadratic_fit_rmse(solution_csv::String)
     if !isfile(solution_csv)
         return NaN
@@ -322,7 +530,7 @@ archive_md = read_text("reports/generated/theory/02_archive_synthesis.md"; fallb
 diag_md = read_text("reports/generated/diagnostics/03_bifurcation_sweep.md"; fallback="Diagnostics section not generated yet.")
 
 fig_dir = first_existing_dir(["reports/generated/figures", "figures"])
-figure_tex_includes = build_tex_figure_includes(fig_dir)
+figure_tex_includes = build_tex_figure_includes(fig_dir; tex_output_dir=dirname(tex_out))
 figure_md_includes = build_md_figure_includes(fig_dir)
 
 timestamp = string(Dates.now())
@@ -335,6 +543,7 @@ section_context = Dict(
     "floss_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("FLOSS"))),
     "sheba_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("SHEBA"))),
 )
+merge!(section_context, read_scm_summary_context())
 template_sections_tex = build_tex_template_sections("templates/sections", section_context)
 abstract_tex = build_optional_tex_template(
     "templates/sections/abstract.tex.mustache",
