@@ -131,3 +131,19 @@ To prevent gradient discontinuities near the active-to-laminar transition, the r
 e^*_{\xi}=\frac{1}{2}\left(e^*+\sqrt{(e^*)^2+\xi^2}\right).
 \end{equation}
 This is a standard $C^\infty$ approximation to the positive-part map and ensures that the reduced closures for momentum and heat exchange, $K_{m,h}\propto\sqrt{e^*_{\xi}+\delta}$, remain strictly smooth over the diagnostic domain. In the full ODE, the implemented solver adds a separate smooth floor gate to the fast tendency as $e\to-\delta$, so the state remains numerically forward-invariant while still transitioning smoothly between active shear-driven mixing and the residual laminar floor.
+
+\subsection{Future Work and Geometric Extensions}
+The present 4D construction adopts a single thermodynamic slow coordinate $T_s$, which is sufficient to resolve the collapse geometry as a boundary-mediated fold catastrophe in the reduced fast-slow projection. A natural extension is to promote lower-atmospheric potential temperature to an autonomous slow variable, expanding the phase space to
+\begin{equation}
+\mathcal{X}_5\subset\mathbb{R}^5,\qquad \mathbf{x}_5=(e,U,V,T_s,\theta)^T,
+\end{equation}
+with coupled slow thermodynamic sheets $(T_s,\theta)$. In this setting, the former one-dimensional fold locus is unrolled into a two-dimensional folded critical surface, and the singular geometry admits richer partitions into normally hyperbolic sheets separated by codimension-one loss-of-hyperbolicity strata.
+
+A conceptual prognostic closure for $\theta$ can be posed as
+\begin{equation}
+\frac{d\theta}{dt}=\frac{1}{C_a}\left[\rho c_p C_H\sqrt{e+\delta}\,(T_s-\theta)-\Lambda_{\mathrm{rad}}(\theta-\theta_{\mathrm{top}})\right],
+\label{eq:future_theta_ode}
+\end{equation}
+where $C_a$ is an effective lower-air heat capacity, the first term represents vertical heat-flux convergence from the surface layer, and the second term captures local radiative relaxation toward an overlying reference potential temperature $\theta_{\mathrm{top}}$ with rate $\Lambda_{\mathrm{rad}}>0$. Coupling Equation~\eqref{eq:future_theta_ode} to the existing fast TKE balance transforms the reduced critical geometry from a folded curve family into a folded surface family parameterized by $(T_s,\theta)$.
+
+This 5D topology is the minimal geometric setting that supports folded nodes and associated canard solutions: trajectories may track an attracting sheet, pass through a folded-node neighborhood, and persist for finite slow time near a repelling branch before jump transition. The resulting canard-mediated transit structure provides a direct route to mixed-mode oscillations (MMOs) in turbulent intensity and thermodynamic state. Consequently, the 5D extension supplies the foundational first-principles framework required to derive intermittent turbulence, nocturnal cycling, and burst-suppression alternation natively from geometric singular perturbation structure rather than from imposed stochastic switching rules.

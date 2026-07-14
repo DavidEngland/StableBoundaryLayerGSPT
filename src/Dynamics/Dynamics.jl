@@ -21,6 +21,8 @@ function default_4d_parameters()
         "U_g" => 10.0,
         "V_g" => 0.0,
         "T_a" => 285.15,
+        "theta_top" => 285.15,
+        "alpha_air" => 0.85,
         "T_deep" => 283.15,
         "R_down" => 260.0,
         "f_coriolis" => 1.0e-4,
@@ -158,6 +160,9 @@ function _rhs_4d!(du, u, p, t)
     f_coriolis = Float64(p["f_coriolis"])
     delta = Float64(p["delta"])
     Ta = Float64(p["T_a"])
+    theta_top = Float64(get(p, "theta_top", Ta))
+    alpha_air = clamp(Float64(get(p, "alpha_air", 0.85)), 0.0, 1.0)
+    theta_air = muladd(alpha_air, Ts, (1.0 - alpha_air) * theta_top)
     Tdeep = Float64(p["T_deep"])
     Rdown = Float64(p["R_down"])
     sigma_sb = Float64(p["sigma_sb"])
@@ -184,10 +189,10 @@ function _rhs_4d!(du, u, p, t)
     du[1] = de_dt
     du[2] = f_coriolis * (V - Vg) - gamma * sqrt_e * U
     du[3] = -f_coriolis * (U - Ug) - gamma * sqrt_e * V
-    du[4] = (
-        Rdown - sigma_sb * Ts^4 - lambda_soil * (Ts - Tdeep) / d_soil +
-        rho_cp * C_H * sqrt_e * (Ta - Ts)
-    ) / C_skin
+    Rn = Rdown - sigma_sb * Ts^4
+    Gflux = lambda_soil * (Ts - Tdeep) / d_soil
+    H = rho_cp * C_H * sqrt_e * (Ts - theta_air)
+    du[4] = (Rn - H - Gflux) / C_skin
 
     return nothing
 end
