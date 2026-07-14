@@ -1,3 +1,22 @@
+\subsection{Nomenclature and Core Mathematical Notation}
+\begin{table}[ht!]
+\centering
+\small
+\begin{tabular}{lp{7.0cm}l}
+\hline
+\textbf{Symbol} & \textbf{Physical / Mathematical Meaning} & \textbf{State Space Status} \\ \hline
+$e$ & Turbulent Kinetic Energy (TKE) Density & Fast Coordinate \\
+$U, V$ & Horizontal Wind Velocity Components & Slow Coordinates \\
+$T_s$ & Land Surface Skin Temperature & Slow Coordinate \\
+$\varepsilon$ & Singular Perturbation Timescale Ratio ($\tau_{\text{turb}}/\tau_{\text{macro}}$) & Small Parameter \\
+$\Delta$ & Net Mechanical Production Minus Buoyancy Balance & Algebraic Metric \\
+$\mathcal{C}$ & Global Critical Constraint Set ($\mathcal{F}=0$) & Phase Space Subspace \\
+$\mathcal{M}_0$ & Normally Hyperbolic Critical Manifold ($\partial_e\mathcal{F}\neq0$) & Reduced Base Manifold \\
+$\mathcal{M}_\varepsilon$ & Fenichel-Perturbed Invariant Slow Manifold & Active Dynamical Track \\
+\hline
+\end{tabular}
+\end{table}
+
 \subsection{Geometric Singularity and State-Space Topologies}
 \label{subsec:gspt_topology}
 
@@ -20,44 +39,95 @@ Here $\tau_{\text{turb}}$ is the rapid turbulent relaxation timescale, typically
 
 \subsection{Critical Manifolds and Algebraic Regularization}
 
-In the singular limit $\varepsilon\to0$, the fast-slow flow collapses onto the critical manifold $\mathcal{M}_0$, defined as the algebraic subvariety:
+In the singular limit $\varepsilon\to0$, the fast-slow flow is first constrained to the algebraic critical set
 \begin{equation}
-\mathcal{M}_0\coloneqq\left\{\mathbf{x}\in\mathcal{X}\ \vert\ \mathcal{F}(e,U,V,T_s)=0\right\}
+\mathcal{C}\coloneqq\left\{\mathbf{x}\in\mathcal{X}\ \vert\ \mathcal{F}(e,U,V,T_s)=0\right\}.
+\end{equation}
+The normally hyperbolic critical manifold used in Fenichel theory is then the subset
+\begin{equation}
+\mathcal{M}_0\coloneqq\left\{\mathbf{x}\in\mathcal{C}\ \vert\ \partial_e\mathcal{F}(e,U,V,T_s)\neq0\right\}.
 \end{equation}
 
-\begin{theorem}[Active-Branch Geometry]
-The unperturbed critical manifold $\mathcal{M}_0$ contains a single admissible active turbulent branch $\mathcal{M}_{\mathrm{act}}$ satisfying the explicit algebraic condition:
-\begin{equation}
-e^*=l_0\Delta-\delta,\quad \Delta\coloneqq\eta\,\gamma\,(U^2+V^2)-K\,G(T_s)
-\end{equation}
-with admissibility condition $e^*\ge0$, equivalently $\Delta\ge\delta/l_0$. Along this branch,
-\begin{equation}
-\partial_e\mathcal{F}\big|_{\mathcal{M}_{\mathrm{act}}}=-\sqrt{\Delta/l_0}<0\qquad (\Delta>0),
-\end{equation}
-so $\mathcal{M}_{\mathrm{act}}$ is normally hyperbolic and attracting away from the threshold. Because $e^*$ depends affinely on $\Delta$, the present closure does not generate an interior saddle-node fold; the regime transition occurs at the admissibility boundary $e^*=0$.
+\paragraph{Singular Limit Decomposition.}
+Writing the system in slow time $t$ gives
+\begin{align}
+\varepsilon\dot e &= \mathcal{F}(e,U,V,T_s), \\
+\dot{\mathbf y} &= \mathbf G(e,\mathbf y),\qquad \mathbf y=(U,V,T_s)^T.
+\end{align}
+The reduced problem is obtained on $\mathcal{C}$ by enforcing $\mathcal{F}=0$ and evolving the slow variables tangentially. The layer problem is obtained in fast time $\tau=t/\varepsilon$:
+\begin{align}
+\frac{de}{d\tau} &= \mathcal{F}(e,U,V,T_s), \\
+\frac{d\mathbf y}{d\tau} &= \varepsilon\,\mathbf G(e,\mathbf y),
+\end{align}
+so at $\varepsilon=0$ the slow variables are frozen parameters in the fast subsystem.
+
+\begin{theorem}[Fenichel-Type Persistence]
+Let the vector fields $\mathcal{F}, \mathbf{G} \in C^r(\mathcal{X})$ with $r \ge 2$, and let $\mathcal{K} \subset \mathcal{M}_0$ be a compact, normally hyperbolic, and locally invariant submanifold for the reduced problem. Then for sufficiently small $0 < \varepsilon \ll 1$, there exists a locally invariant slow manifold $\mathcal{M}_\varepsilon$ that is $\mathcal{O}(\varepsilon)$ close to $\mathcal{K}$ in the $C^1$ topology, and the perturbed slow flow on $\mathcal{M}_\varepsilon$ is a regular perturbation of the reduced flow on $\mathcal{K}$.
 \end{theorem}
 
-\paragraph{Elliptic Paraboloid Interpretation and Frictional Regularization.}
-Geometrically, the state profile $\Delta(U,V;T_s)$ defines a circular elliptic paraboloid in the $(U,V,e)$ projection for any fixed thermodynamic state $T_s$. The principal curvatures of this manifold correspond directly to the eigenvalues ($\lambda_1,\lambda_2$) of the localized Hessian matrix:
+\begin{theorem}[Existence and Stability of the Active Branch]
+Let $\Delta \coloneqq \eta\,\gamma\,(U^2+V^2) - K\,G(T_s)$ define the net macro-environmental balance. If the admissibility criterion is satisfied:
 \begin{equation}
-H=\begin{pmatrix}
-\frac{\partial^2\Delta}{\partial U^2} & \frac{\partial^2\Delta}{\partial U\partial V} \\
-\frac{\partial^2\Delta}{\partial V\partial U} & \frac{\partial^2\Delta}{\partial V^2}
-\end{pmatrix}
+\Delta \ge \frac{\delta}{l_0}
 \end{equation}
-The rotational symmetry of the mechanical production term ensures $\lambda_1=\lambda_2=2\eta\gamma$, forming circular cross-sections centered about the non-turbulent wind core.
+then the fast subsystem admits a unique, physically admissible equilibrium $e^* = l_0\Delta - \delta$, which is strictly attracting with normal growth rate $\partial_e\mathcal{F} = -\sqrt{\Delta/l_0} < 0$. Conversely, if $\Delta < \delta/l_0$, no stable, physically admissible turbulent equilibrium exists on the critical set.
+\end{theorem}
 
-This geometric framework also clarifies why the local quadratic-fit RMSE behaves oppositely from a naive “rougher means more complex” intuition. High-roughness environments such as FLOSS increase the drag coefficient $\gamma$, which acts as a strong dynamical damper. The trajectory is then rapidly pulled toward a tight local neighborhood in phase space, so a single quadratic patch provides a low global fit error.
-
-By contrast, low-roughness environments such as CASES99 are weakly damped phase-space domains. When strong surface cooling drives $T_s \ll T_a$, the growth of $G(T_s)$ shifts the active branch downward in $e$ and expands the critical radius in the $(U,V)$ plane required to sustain turbulence, triggering a turbulence collapse toward the regularized background floor. As the active turbulence vanishes, the frictional drag components in Equations~\eqref{eq:slow_u} and \eqref{eq:slow_v} are suppressed:
+\paragraph{Remark (Alternative Fast Closures and Fold Topologies).}
+The closure formulation developed in this framework produces a clean transversal boundary-crossing termination at $e=0$. Alternative higher-order turbulence closures containing cubic production terms or nonlinear shear saturation can instead satisfy the simultaneous conditions:
 \begin{equation}
-\gamma\sqrt{e+\delta}\to\gamma\sqrt{\delta}\approx0
+\mathcal{F} = 0, \qquad \partial_e\mathcal{F} = 0
 \end{equation}
-Freed from turbulent friction, the slow momentum vector detaches from its steady-state balance and enters expansive clockwise Blackadar inertial circuits around the geostrophic vector $(U_g,V_g)$ at frequency $f$. These wide excursions sweep across more nonlinear regions of the manifold, so a single quadratic surface fit exhibits a larger geometric deviation. In this interpretation, the fit error measures unconstrained phase-space exploration rather than ambient observational noise.
+inside the interior of the state space. Such formulations lead to genuinely folded critical manifolds, relaxation oscillations, and canard dynamics. These alternative geometries are discussed in Figure~\ref{fig:fold_envelope} solely as a comparative benchmark; they are not generated by the mathematical system analyzed here.
+
+\begin{figure}[ht!]
+\centering
+\small
+\setlength{\unitlength}{1mm}
+\begin{picture}(100,75)
+  \put(23,70){\framebox(54,6){Atmospheric Forcing ($U_g, V_g, R_{\downarrow}$)}}
+  \put(50,70){\vector(0,-1){6}}
+
+  % Uses \shortstack to create a clean two-line wrap inside the 6mm tall box
+  \put(23,58){\framebox(54,6){\shortstack{Surface Energy Budget \\ \scriptsize(Equation~\eqref{eq:slow_ts})}}}
+  \put(50,58){\vector(0,-1){6}}
+
+  \put(23,46){\framebox(54,6){Slow State Variables ($U, V, T_s$)}}
+  \put(50,46){\vector(0,-1){6}}
+
+  \put(30,34){\framebox(40,6){Fast TKE Mechanics ($e$)}}
+  \put(50,34){\vector(0,-1){6}}
+
+  \put(30,22){\framebox(40,6){Critical Manifold $\mathcal{M}_0$}}
+  \put(50,22){\vector(0,-1){6}}
+
+  \put(28,10){\framebox(44,6){Reduced Admissible Flow}}
+\end{picture}
+\caption{Conceptual modeling hierarchy of the 4D GSPT-SBL structural framework.}
+\label{fig:modeling_hierarchy}
+\end{figure}
+
+\subsubsection{Geometry of the Critical Manifold}
+\paragraph{Elliptic Paraboloid Interpretation.}
+For a fixed surface skin temperature $T_s$, the active branch can be mapped explicitly as a graph over the horizontal velocity coordinates:
+\begin{equation}
+e=l_0\left[\eta\gamma(U^2+V^2)-K\,G(T_s)\right]-\delta.
+\end{equation}
+The Hessian eigenvalues determine the local principal curvatures of the graph. Due to the rotational symmetry of the mechanical production term, these eigenvalues are degenerate ($\lambda_1 = \lambda_2 = 2\eta\gamma$), forming perfectly circular cross-sections centered about the non-turbulent geostrophic core.
+
+\subsubsection{Physical and Dynamical Interpretation}
+In low-roughness environments such as CASES99, strong surface cooling ($T_s \ll T_a$) amplifies $G(T_s)$, shifts the active branch downward in $e$, and expands the critical radius in the $(U,V)$ plane required to sustain turbulence. As active turbulence vanishes, the frictional drag terms in Equations~\eqref{eq:slow_u} and \eqref{eq:slow_v} are suppressed:
+\begin{equation}
+\gamma\sqrt{e+\delta}\to\gamma\sqrt{\delta}\approx0,
+\end{equation}
+which detaches the slow momentum vector from steady frictional balance and permits expansive clockwise Blackadar inertial circuits around $(U_g,V_g)$ at frequency $f$. The model therefore derives inertial oscillations from the governing equations rather than prescribing them phenomenologically.
+
+\subsubsection{Numerical and Statistical Implications}
+The local quadratic-fit RMSE is interpreted as a geometric proxy for phase-space exploration. High-roughness regimes such as FLOSS increase drag damping, confining trajectories to a narrower neighborhood and reducing fit error, while lower-roughness regimes such as CASES99 permit broader excursions across nonlinear manifold sectors and therefore larger geometric approximation error.
 
 \paragraph{\texorpdfstring{$C^\infty$}{C-infinity} Regularization.}
 To prevent gradient discontinuities near the active-to-laminar transition, the reduced diagnostic branch can be regularized via a smooth hyperbolic embedding parameterized by $0<\xi\ll1$:
 \begin{equation}
-e^*_{\xi}=\frac{1}{2}\left(e^*+\sqrt{(e^*)^2+\xi^2}\right)
+e^*_{\xi}=\frac{1}{2}\left(e^*+\sqrt{(e^*)^2+\xi^2}\right).
 \end{equation}
-This formulation ensures that the reduced closures for momentum and heat exchange, $K_{m,h}\propto\sqrt{e^*_{\xi}+\delta}$, remain strictly $C^\infty$ over the entire diagnostic domain. In the full ODE, the implemented solver adds a separate smooth floor gate to the fast tendency as $e\to-\delta$, so the state remains numerically forward-invariant while still transitioning smoothly between active shear-driven mixing and the residual laminar floor.
+This is a standard $C^\infty$ approximation to the positive-part map and ensures that the reduced closures for momentum and heat exchange, $K_{m,h}\propto\sqrt{e^*_{\xi}+\delta}$, remain strictly smooth over the diagnostic domain. In the full ODE, the implemented solver adds a separate smooth floor gate to the fast tendency as $e\to-\delta$, so the state remains numerically forward-invariant while still transitioning smoothly between active shear-driven mixing and the residual laminar floor.

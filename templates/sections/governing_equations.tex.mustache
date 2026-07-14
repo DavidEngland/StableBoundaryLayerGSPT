@@ -12,11 +12,17 @@ The full state vector is defined as $\mathbf{x} = (e, U, V, T_s) \in \mathbb{R}^
 \label{eq:fast_subsystem}
 \end{equation}
 
-Here $K$ is a buoyancy-destruction acceleration scale with units of $\text{m s}^{-2}$, so the bracketed production-minus-buoyancy term is dimensionally consistent. In the numerical implementation, the factor $\sqrt{e+\delta}$ is evaluated with a positivity regularization and the fast tendency is smoothly gated as $e$ approaches the laminar floor. This prevents trajectories from crossing below the admissible background-mixing threshold in the full 4D integration.
+Here $K$ is a buoyancy-destruction acceleration scale with units of $\text{m~s}^{-2}$, so the bracketed production-minus-buoyancy term is dimensionally consistent. In the numerical implementation, the factor $\sqrt{e+\delta}$ is evaluated with a positivity regularization and the fast tendency is smoothly gated as $e$ approaches the laminar floor. This prevents trajectories from crossing below the admissible background-mixing threshold in the full 4D integration.
 
 \subsubsection*{Slow Subsystem (Atmospheric Rotational Dynamics \& Surface Thermodynamics)}
 \begin{align}
 \frac{dU}{dt} &= f(V - V_g) - \gamma \sqrt{e + \delta} \cdot U \label{eq:slow_u} \\
 \frac{dV}{dt} &= -f(U - U_g) - \gamma \sqrt{e + \delta} \cdot V \label{eq:slow_v} \\
-\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}} \left[ R_{\downarrow} - \sigma_{\text{SB}} T_s^4 - \lambda \frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H \sqrt{e + \delta} \cdot (T_s - T_a) \right] \label{eq:slow_ts}
+\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}} \left(R_n - H - G\right) \label{eq:slow_ts}
+\end{align}
+with
+\begin{align}
+R_n &\coloneqq R_{\downarrow} - \sigma_{\text{SB}}T_s^4, \\
+H &\coloneqq \rho c_p C_H\sqrt{e+\delta}\,(T_s-T_a), \\
+G &\coloneqq \lambda\frac{T_s-T_{\text{deep}}}{d_{\text{soil}}}.
 \end{align}

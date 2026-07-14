@@ -5,36 +5,38 @@ To run this model numerically (e.g., in Julia/SciML or Python's \texttt{solve\_i
 
 \begin{table}[ht!]
 \centering
+\setlength{\tabcolsep}{8pt}
+\small
 \caption{Baseline Physical Parameter Specifications for the 4D GSPT-SBL System}
 \label{tab:baseline_parameters}
-\begin{tabular}{llll}
+\begin{tabular}{lllll}
 \hline
-\textbf{Parameter} & \textbf{Description} & \textbf{Baseline Value} & \textbf{Units} \\ \hline
-\multicolumn{4}{l}{\textit{Environmental Controls and Geostrophic Forcing}} \\
-$U_g$ & Zonal Geostrophic Wind & $10.0$ & $\text{m s}^{-1}$ \\
-$V_g$ & Meridional Geostrophic Wind & $0.0$ & $\text{m s}^{-1}$ \\
-$T_a$ & Reference Air Temperature ($z = h$) & $285.15$ & $\text{K}\ (12^\circ\text{C})$ \\
-$T_{\text{deep}}$ & Deep Soil Core Temperature & $283.15$ & $\text{K}\ (10^\circ\text{C})$ \\
-$R_{\downarrow}$ & Downward Longwave Radiation & $260.0$ & $\text{W m}^{-2}$ \\
-$f$ & Coriolis Parameter ($\sim 45^\circ\text{N}$) & $1.0 \times 10^{-4}$ & $\text{s}^{-1}$ \\ \hline
-\multicolumn{4}{l}{\textit{Turbulence and Boundary Layer Internals}} \\
-$\varepsilon$ & Singular Perturbation Parameter & $0.01$ & Dimensionless \\
-$\delta$ & Background Mixing Parameter & $1.0 \times 10^{-4}$ & $\text{m}^2\text{s}^{-2}$ \\
-$K$ & Buoyant Destruction Acceleration Scale & $0.32$ & $\text{m s}^{-2}$ \\
-$\beta$ & Stratification Sensitivity Parameter & $15.0$ & Dimensionless \\
-$h$ & Coupling Bulk Scale Height & $50.0$ & $\text{m}$ \\
-$z_{0m}$ & Momentum Roughness Length & $0.02$ & $\text{m}$ \\
-$z_{0h}$ & Thermal Roughness Length & $0.005$ & $\text{m}$ \\
-$l_0$ & Master Turbulent Length Scale & $15.0$ & $\text{m}$ \\
-$\gamma_{\mathrm{eff}}$ & Drag Scaling Efficiency & $2.0$ & Dimensionless \\
-$\eta$ & Shear Production Efficiency & $15.0$ & Dimensionless \\
-$\xi$ & Hyperbolic Embedding Scale & $1.0 \times 10^{-5}$ & Dimensionless \\ \hline
-\multicolumn{4}{l}{\textit{Thermal Properties (Surface Energy Budget)}} \\
-$\sigma_{\text{SB}}$ & Stefan-Boltzmann Constant & $5.67 \times 10^{-8}$ & $\text{W m}^{-2}\text{K}^{-4}$ \\
-$\lambda$ & Soil Thermal Conductivity & $1.2$ & $\text{W m}^{-1}\text{K}^{-1}$ \\
-$d_{\text{soil}}$ & Effective Soil Layer Depth & $0.5$ & $\text{m}$ \\
-$\rho c_p$ & Volumetric Heat Capacity of Air & $1200.0$ & $\text{J m}^{-3}\text{K}^{-1}$ \\
-$C_{\text{skin}}$ & Thermal Capacity of Skin Layer & $2.0 \times 10^{4}$ & $\text{J m}^{-2}\text{K}^{-1}$ \\ \hline
+\textbf{Symbol} & \textbf{Description} & \textbf{Baseline Value} & \textbf{Units} & \textbf{Dynamical Role} \\ \hline
+\multicolumn{5}{l}{\textit{Environmental Controls and Geostrophic Forcing}} \\
+$U_g$ & Zonal Geostrophic Wind & $10.0$ & $\text{m s}^{-1}$ & Slow Forcing \\
+$V_g$ & Meridional Geostrophic Wind & $0.0$ & $\text{m s}^{-1}$ & Slow Forcing \\
+$T_a$ & Reference Air Temperature ($z = h$) & $285.15$ & $\text{K}\ (12^\circ\text{C})$ & Thermodynamic Reference \\
+$T_{\text{deep}}$ & Deep Soil Core Temperature & $283.15$ & $\text{K}\ (10^\circ\text{C})$ & Ground Boundary State \\
+$R_{\downarrow}$ & Downward Longwave Radiation & $260.0$ & $\text{W m}^{-2}$ & Radiative Forcing \\
+$f$ & Coriolis Parameter ($\sim 45^\circ\text{N}$) & $1.0 \times 10^{-4}$ & $\text{s}^{-1}$ & Rotational Coupling \\ \hline
+\multicolumn{5}{l}{\textit{Turbulence and Boundary Layer Internals}} \\
+$\varepsilon$ & Singular Perturbation Parameter & $0.01$ & Dimensionless & Timescale Separation \\
+$\delta$ & Background Mixing Parameter & $1.0 \times 10^{-4}$ & $\text{m}^2\text{s}^{-2}$ & Boundary Regularization \\
+$K$ & Buoyant Destruction Acceleration Scale & $0.32$ & $\text{m s}^{-2}$ & Stratification Coupling \\
+$\beta$ & Stratification Sensitivity Parameter & $15.0$ & Dimensionless & Stability Activation \\
+$h$ & Coupling Bulk Scale Height & $50.0$ & $\text{m}$ & Surface-Layer Geometry \\
+$z_{0m}$ & Momentum Roughness Length & $0.02$ & $\text{m}$ & Drag Closure Control \\
+$z_{0h}$ & Thermal Roughness Length & $0.005$ & $\text{m}$ & Heat-Flux Closure Control \\
+$l_0$ & Master Turbulent Length Scale & $15.0$ & $\text{m}$ & Fast Turbulence Closure \\
+$\gamma_{\mathrm{eff}}$ & Drag Scaling Efficiency & $2.0$ & Dimensionless & Momentum Dissipation Scaling \\
+$\eta$ & Shear Production Efficiency & $15.0$ & Dimensionless & Production Scaling \\
+$\xi$ & Hyperbolic Embedding Scale & $1.0 \times 10^{-5}$ & Dimensionless & Diagnostic Smoothing \\ \hline
+\multicolumn{5}{l}{\textit{Thermal Properties (Surface Energy Budget)}} \\
+$\sigma_{\text{SB}}$ & Stefan-Boltzmann Constant & $5.67 \times 10^{-8}$ & $\text{W m}^{-2}\text{K}^{-4}$ & Radiative Cooling \\
+$\lambda$ & Soil Thermal Conductivity & $1.2$ & $\text{W m}^{-1}\text{K}^{-1}$ & Ground Heat Flux \\
+$d_{\text{soil}}$ & Effective Soil Layer Depth & $0.5$ & $\text{m}$ & Ground Coupling Depth \\
+$\rho c_p$ & Volumetric Heat Capacity of Air & $1200.0$ & $\text{J m}^{-3}\text{K}^{-1}$ & Sensible Heat Exchange \\
+$C_{\text{skin}}$ & Thermal Capacity of Skin Layer & $2.0 \times 10^{4}$ & $\text{J m}^{-2}\text{K}^{-1}$ & Surface Thermodynamics \\ \hline
 \end{tabular}
 \end{table}
 
