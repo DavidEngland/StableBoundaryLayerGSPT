@@ -6,6 +6,9 @@ using Dates
 using LinearAlgebra
 using Statistics
 
+const DEFAULT_DATASET = "CASES99"
+const DEFAULT_GENERATED_DATE_HUMAN = "July 13, 2026"
+
 function first_existing_dir(paths::Vector{String})
 	for path in paths
 		if isdir(path)
@@ -19,7 +22,8 @@ function first_existing_dir(paths::Vector{String})
 end
 
 function parse_args(args::Vector{String})
-	dataset = "CASES99"
+	dataset = DEFAULT_DATASET
+	generated_date_human = DEFAULT_GENERATED_DATE_HUMAN
 
 	i = 1
 	while i <= length(args)
@@ -27,11 +31,14 @@ function parse_args(args::Vector{String})
 		if arg == "--dataset" && i < length(args)
 			dataset = args[i + 1]
 			i += 2
+		elseif arg == "--date" && i < length(args)
+			generated_date_human = args[i + 1]
+			i += 2
 		else
 			error("Unknown or incomplete argument: $(arg)")
 		end
 	end
-	return uppercase(strip(dataset))
+	return uppercase(String(strip(dataset))), String(strip(generated_date_human))
 end
 
 function read_text(path::String; fallback::String="")
@@ -113,14 +120,47 @@ function build_tex_figure_includes(fig_dir::String)
 		return "% No generated figures directory found."
 	end
 
-	function prettify_figure_title(stem::String)
-		special_titles = Dict(
-			"4d_sbl_diagnostics" => "4D Stable Boundary Layer Diagnostics",
-		)
-		if haskey(special_titles, stem)
-			return special_titles[stem]
-		end
+	FIGURE_METADATA = Dict(
+		"figure_bifurcation_fold_envelope" => (
+			title="Bifurcation envelope under a classical fold scenario, illustrating the structural stability boundaries where the active turbulent branch \$\\mathcal{M}_{\\mathrm{act}}\$ loses normal hyperbolicity as a function of the macro-environmental forcing parameters.",
+			label="fig:fold_envelope",
+		),
+		"figure_bifurcation_fold_map" => (
+			title="Topological phase-space map of the fold bifurcation regime. Vector fields highlight the rapid attraction toward the stable manifold branch and the catastrophic jump dynamics occurring at the interior fold point.",
+			label="fig:fold_map",
+		),
+		"figure_bifurcation_transcritical_envelope" => (
+			title="Transcritical bifurcation envelope corresponding to the transversal boundary crossing regime (\$e=0\$). The diagram illustrates the smooth transition tracking the physical admissibility threshold \$\\Delta = \\delta / l_0\$.",
+			label="fig:transcritical_envelope",
+		),
+		"figure_bifurcation_transcritical_map" => (
+			title="Trajectory flow field mapping the non-folding boundary crossing. The phase portraits confirm that the system transitions smoothly onto the regularized background laminar floor without undergoing an interior saddle-node collapse.",
+			label="fig:transcritical_map",
+		),
+		"4d_sbl_diagnostics" => (
+			title="Complete 4D time-series trajectories and phase-space projections for the nocturnal stable boundary layer simulated under CASES99 conditions. The panels illustrate the rapid initial turbulent decay followed by the slow ageostrophic development of the nocturnal low-level jet.",
+			label="fig:sbl_diagnostics",
+		),
+		"diagnostic_regularization_comparison" => (
+			title="Comparative analysis of the state-derived vertical eddy diffusivities (\$K_m, K_h\$) versus the \$C^\\infty\$ regularized hyperbolic embedded tracks (\$K_{m,\\star}, K_{h,\\star}\$) defined in Eq.~\\eqref{eq:embedded_diffusivities}. The comparison illustrates how the smooth embedding smooths out the sharp gradient kinks at the collapse threshold while ensuring a bounded closure Jacobian \$J_K\$.",
+			label="fig:regularization_comparison",
+		),
+	)
 
+	function figure_caption_and_label(stem::String)
+		if haskey(FIGURE_METADATA, stem)
+			meta = FIGURE_METADATA[stem]
+			return meta.title, meta.label
+		end
+		return prettify_figure_title(stem), ""
+	end
+
+	function make_figure_block(path::String, caption::String, label::String)
+		label_line = isempty(label) ? "" : "\n\\label{$(label)}"
+		return "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(path)}\n\\caption{$(caption)}$(label_line)\n\\end{figure}"
+	end
+
+	function prettify_figure_title(stem::String)
 		parts = split(replace(stem, "-" => "_"), "_")
 		normalized = String[]
 		for part in parts
@@ -149,9 +189,9 @@ function build_tex_figure_includes(fig_dir::String)
 	for file in tex_files
 		stem = replace(file, ".tex" => "")
 		push!(handled_stems, stem)
-		title = prettify_figure_title(stem)
+		title, label = figure_caption_and_label(stem)
 		pdf_path = joinpath(fig_dir, "$(stem).pdf")
-		push!(blocks, "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(pdf_path)}\n\\caption{$(title)}\n\\end{figure}")
+		push!(blocks, make_figure_block(pdf_path, title, label))
 	end
 
 	image_files = sort(filter(name -> (
@@ -163,9 +203,9 @@ function build_tex_figure_includes(fig_dir::String)
 		if stem in handled_stems
 			continue
 		end
-		title = prettify_figure_title(stem)
+		title, label = figure_caption_and_label(stem)
 		img_path = joinpath(fig_dir, file)
-		push!(blocks, "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(img_path)}\n\\caption{$(title)}\n\\end{figure}")
+		push!(blocks, make_figure_block(img_path, title, label))
 	end
 
 	if isempty(blocks)
@@ -264,7 +304,7 @@ function latest_solution_csv(dataset::String)
 	return latest_path
 end
 
-dataset = parse_args(ARGS)
+dataset, generated_date_human = parse_args(ARGS)
 
 mkpath("reports/generated")
 
@@ -286,7 +326,6 @@ figure_tex_includes = build_tex_figure_includes(fig_dir)
 figure_md_includes = build_md_figure_includes(fig_dir)
 
 timestamp = string(Dates.now())
-generated_date_human = Dates.format(Dates.now(), "U d, yyyy")
 
 section_context = Dict(
 	"dataset" => dataset,
