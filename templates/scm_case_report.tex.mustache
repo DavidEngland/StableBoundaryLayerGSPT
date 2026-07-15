@@ -17,6 +17,33 @@ and returned \texttt{ {{solver_retcode}} }.
   \item Solver tolerances: $\mathrm{abstol}={{solver_abstol}}$, $\mathrm{reltol}={{solver_reltol}}$
 \end{itemize}
 
+\subsection{Forcing and Boundary Conditions}
+\begin{table}[htbp]
+\centering
+\caption{Forcing and Boundary Condition Parameters}
+\label{tab:scm_parameters_{{report_slug}}}
+\begin{tabular}{lll}
+\hline
+{\bfseries Parameter} & {\bfseries Symbol} & {\bfseries Value} \\
+\hline
+Zonal geostrophic wind & $U_g$ & {{param_Ug}}\,m\,s$^{-1}$ \\
+Meridional geostrophic wind & $V_g$ & {{param_Vg}}\,m\,s$^{-1}$ \\
+Surface roughness (momentum) & $z_{0m}$ & {{param_z0m}}\,m \\
+Surface roughness (heat) & $z_{0h}$ & {{param_z0h}}\,m \\
+Coriolis parameter & $f$ & {{param_f}}\,s$^{-1}$ \\
+Reference potential temperature & $\theta_a$ & {{param_theta_a}}\,K \\
+Deep soil temperature & $T_{deep}$ & {{param_T_deep}}\,K \\
+Downward longwave forcing & $R_{\downarrow}$ & {{param_R_down}}\,W\,m$^{-2}$ \\
+Soil conductivity proxy & $\lambda_s$ & {{param_lambda_s}} \\
+Soil slab depth & $d_{soil}$ & {{param_d_soil}}\,m \\
+Surface diffusivity floor & $k_{\min,\mathrm{surf}}$ & {{param_k_min_surf}}\,m$^2$\,s$^{-1}$ \\
+Top thermal BC type & --- & {{param_theta_top_bc}} \\
+Top boundary potential temperature & $\theta_{top}$ & {{param_theta_top}}\,K \\
+Top relaxation coefficient & $\lambda_{top}$ & {{param_lambda_top}}\,s$^{-1}$ \\
+\hline
+\end{tabular}
+\end{table}
+
 \subsection{Numerical Verification}
 \begin{itemize}
   \item Maximum surface energy closure error:

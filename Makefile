@@ -35,10 +35,8 @@ pipeline-floss:
 pipeline-sheba:
 	julia --project=. scripts/run_pipeline.jl --dataset SHEBA
 
-pipeline-all:
-	$(MAKE) pipeline-cases99
-	$(MAKE) pipeline-floss
-	$(MAKE) pipeline-sheba
+# Optimized: Parallelization-friendly prerequisite tree
+pipeline-all: pipeline-cases99 pipeline-floss pipeline-sheba
 
 run-solver-cases99:
 	julia --project=. scripts/run_4d_solver.jl --dataset CASES99
@@ -49,10 +47,8 @@ run-solver-floss:
 run-solver-sheba:
 	julia --project=. scripts/run_4d_solver.jl --dataset SHEBA
 
-run-solver-all:
-	$(MAKE) run-solver-cases99
-	$(MAKE) run-solver-floss
-	$(MAKE) run-solver-sheba
+# Optimized: Parallelization-friendly prerequisite tree
+run-solver-all: run-solver-cases99 run-solver-floss run-solver-sheba
 
 bifurcation-cases99:
 	julia --project=. scripts/sweep_bifurcation.jl --dataset CASES99
@@ -63,10 +59,8 @@ bifurcation-floss:
 bifurcation-sheba:
 	julia --project=. scripts/sweep_bifurcation.jl --dataset SHEBA
 
-bifurcation-all:
-	$(MAKE) bifurcation-cases99
-	$(MAKE) bifurcation-floss
-	$(MAKE) bifurcation-sheba
+# Optimized: Parallelization-friendly prerequisite tree
+bifurcation-all: bifurcation-cases99 bifurcation-floss bifurcation-sheba
 
 assemble-manuscript:
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET)
@@ -110,7 +104,7 @@ scm-plot:
 scm-report:
 	@echo "Rendering semantic report: $(SCM_REPORT_PATH)"
 	julia --project=. scm/render_case_report.jl --summary $(SCM_OUTDIR)/summary.json --template $(SCM_REPORT_TEMPLATE) --out $(SCM_REPORT_PATH)
-	@printf '%s\n' '\documentclass{article}' '\usepackage[T1]{fontenc}' '\usepackage{lmodern}' '\usepackage{graphicx}' '\begin{document}' '\input{$(SCM_REPORT_NAME)}' '\end{document}' > $(SCM_WRAPPER_TEX_PATH)
+	@printf '%s\n' '\documentclass{article}' '\usepackage[T1]{fontenc}' '\usepackage{lmodern}' '\usepackage{graphicx}' '\usepackage{booktabs}' '\usepackage{amsmath}' '\begin{document}' '\input{$(SCM_REPORT_NAME)}' '\end{document}' > $(SCM_WRAPPER_TEX_PATH)
 	@pdflatex -interaction=nonstopmode -halt-on-error -output-directory $(SCM_OUTDIR) $(SCM_WRAPPER_TEX_PATH) >/dev/null
 	@cp $(SCM_REPORT_PATH) $(SCM_OUTDIR)/scm_case_report.tex
 	@echo "Updated compatibility copy: $(SCM_OUTDIR)/scm_case_report.tex"
@@ -150,7 +144,7 @@ compile-scm-reports:
 		echo "No compiled SCM report wrapper PDFs found under results/."; \
 		exit 1; \
 	fi; \
-	graphpaths="$$(for pdf in $$reports; do tex="$${pdf%_wrapper.pdf}.tex"; dir="$$(dirname "$$tex")"; printf '{%s/}{%s/plots/}\n' "$$dir" "$$dir"; done | awk '!seen[$$0]++')"; \
+	graphpaths=$$(for pdf in $$reports; do tex="$${pdf%_wrapper.pdf}.tex"; dir="$$(dirname "$$tex")"; printf '{%s/}{%s/plots/}\n' "$$dir" "$$dir"; done | awk '!seen[$$0]++'); \
 	{ \
 		printf '%s\n' '\documentclass{article}'; \
 		printf '%s\n' '\usepackage[T1]{fontenc}'; \

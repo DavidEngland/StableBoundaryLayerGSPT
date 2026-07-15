@@ -358,7 +358,28 @@ function _scalar_timeseries_columns(time_series)
     return cols
 end
 
-function _write_outputs(outdir::String, payload, case_name::String, args_cfg)
+function _parameter_snapshot(p::SCMParameters)
+    return Dict(
+        "Ug" => p.Ug,
+        "Vg" => p.Vg,
+        "f" => p.f,
+        "theta_a" => p.theta_a,
+        "T_deep" => p.T_deep,
+        "R_down" => p.R_down,
+        "lambda_s" => p.lambda_s,
+        "d_soil" => p.d_soil,
+        "k_min_surf" => p.k_min_surf,
+        "ts_min" => p.ts_min,
+        "ts_max" => p.ts_max,
+        "theta_top_bc" => string(p.theta_top_bc),
+        "theta_top" => p.theta_top,
+        "lambda_top" => p.lambda_top,
+        "N" => p.N,
+        "dz" => p.dz,
+    )
+end
+
+function _write_outputs(outdir::String, payload, case_name::String, args_cfg, p::SCMParameters)
     mkpath(outdir)
 
     ts_cols = _scalar_timeseries_columns(payload.time_series)
@@ -375,6 +396,7 @@ function _write_outputs(outdir::String, payload, case_name::String, args_cfg)
         "verification" => payload.verification,
         "figure_manifest" => payload.figure_manifest,
         "arguments" => args_cfg,
+        "parameters" => _parameter_snapshot(p),
         "artifacts" => Dict("time_series_csv" => ts_csv),
     )
 
@@ -392,13 +414,14 @@ function _write_outputs(outdir::String, payload, case_name::String, args_cfg)
     return (time_series_csv=ts_csv, summary_json=summary_path)
 end
 
-function _write_failure_summary(outdir::String, case_name::String, args_cfg, e::SurfaceAnomalyException)
+function _write_failure_summary(outdir::String, case_name::String, args_cfg, p::SCMParameters, e::SurfaceAnomalyException)
     mkpath(outdir)
     summary = Dict(
         "status" => "failed",
         "case" => case_name,
         "outdir" => outdir,
         "arguments" => args_cfg,
+        "parameters" => _parameter_snapshot(p),
         "failure" => Dict(
             "type" => "SurfaceAnomalyException",
             "failure_time_hours" => e.t / 3600.0,
@@ -445,14 +468,14 @@ function main(args)
             showerror(stdout, e)
             println()
             println(repeat("=", 80))
-            summary_path = _write_failure_summary(outdir, case_name, cfg, e)
+            summary_path = _write_failure_summary(outdir, case_name, cfg, p, e)
             @printf("Failure summary written to: %s\n", summary_path)
             exit(1)
         end
         rethrow(e)
     end
 
-    paths = _write_outputs(outdir, payload, case_name, cfg)
+    paths = _write_outputs(outdir, payload, case_name, cfg, p)
 
     println("Run complete")
     @printf("  case       : %s\n", case_name)
