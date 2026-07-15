@@ -1,5 +1,23 @@
 {
-    "n_profiles": 19,
+    "n_profiles": 4,
+    "parameters": {
+        "theta_top": 265,
+        "f": 0.0001,
+        "dz": 2,
+        "d_soil": 0.1,
+        "ts_max": 350,
+        "k_min_surf": 0.001,
+        "lambda_top": 0,
+        "theta_top_bc": "neumann",
+        "lambda_s": 1.2,
+        "T_deep": 276,
+        "N": 80,
+        "R_down": 300,
+        "theta_a": 280,
+        "ts_min": 180,
+        "Ug": 10,
+        "Vg": 0
+    },
     "arguments": {
         "dz": 2,
         "theta_top": null,
@@ -12,7 +30,7 @@
         "theta_top_bc": "neumann",
         "duration_hours": 9,
         "N": 80,
-        "profile_every_seconds": 1800,
+        "profile_every_seconds": 10800,
         "outdir": "results/idealized_sbl",
         "ts_min": 180,
         "save_jld2": true

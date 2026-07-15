@@ -8,14 +8,8 @@
 \usepackage[margin=1in]{geometry}
 \usepackage[hidelinks]{hyperref}
 \graphicspath{
-{results/bistable_dt10/}{results/bistable_dt10/plots/}
-{results/bistable_dt60/}{results/bistable_dt60/plots/}
-{results/collapse_test/}{results/collapse_test/plots/}
 {results/gabls1/}{results/gabls1/plots/}
 {results/idealized_sbl/}{results/idealized_sbl/plots/}
-{results/idealized_sbl_smoke/}{results/idealized_sbl_smoke/plots/}
-{results/llj_regime/}{results/llj_regime/plots/}
-{results/scm_verify/}{results/scm_verify/plots/}
 }
 
 \title{Single Column Model (SCM) Diagnostic Runs}
@@ -30,31 +24,7 @@
 This document compiles every current SCM case report under results/ that has a compiled wrapper PDF.
 
 \newpage
-\section{Case 1: idealized sbl 100x2m 9h report}
-\IfFileExists{\detokenize{results/bistable_dt10/idealized_sbl_100x2m_9h_report.tex}}{%
-  \input{\detokenize{results/bistable_dt10/idealized_sbl_100x2m_9h_report.tex}}
-}{%
-  \textbf{Report not found:} \texttt{results/bistable\_dt10/idealized\_sbl\_100x2m\_9h\_report.tex}
-}
-
-\newpage
-\section{Case 2: idealized sbl 100x2m 9h report}
-\IfFileExists{\detokenize{results/bistable_dt60/idealized_sbl_100x2m_9h_report.tex}}{%
-  \input{\detokenize{results/bistable_dt60/idealized_sbl_100x2m_9h_report.tex}}
-}{%
-  \textbf{Report not found:} \texttt{results/bistable\_dt60/idealized\_sbl\_100x2m\_9h\_report.tex}
-}
-
-\newpage
-\section{Case 3: idealized sbl 120x1m 12h report}
-\IfFileExists{\detokenize{results/collapse_test/idealized_sbl_120x1m_12h_report.tex}}{%
-  \input{\detokenize{results/collapse_test/idealized_sbl_120x1m_12h_report.tex}}
-}{%
-  \textbf{Report not found:} \texttt{results/collapse\_test/idealized\_sbl\_120x1m\_12h\_report.tex}
-}
-
-\newpage
-\section{Case 4: gabls1 80x2m 0h report}
+\section{Case 1: gabls1 80x2m 0h report}
 \IfFileExists{\detokenize{results/gabls1/gabls1_80x2m_0h_report.tex}}{%
   \input{\detokenize{results/gabls1/gabls1_80x2m_0h_report.tex}}
 }{%
@@ -62,7 +32,7 @@ This document compiles every current SCM case report under results/ that has a c
 }
 
 \newpage
-\section{Case 5: gabls1 80x2m 9h report}
+\section{Case 2: gabls1 80x2m 9h report}
 \IfFileExists{\detokenize{results/gabls1/gabls1_80x2m_9h_report.tex}}{%
   \input{\detokenize{results/gabls1/gabls1_80x2m_9h_report.tex}}
 }{%
@@ -70,7 +40,7 @@ This document compiles every current SCM case report under results/ that has a c
 }
 
 \newpage
-\section{Case 6: scm case report}
+\section{Case 3: scm case report}
 \IfFileExists{\detokenize{results/gabls1/scm_case_report.tex}}{%
   \input{\detokenize{results/gabls1/scm_case_report.tex}}
 }{%
@@ -78,7 +48,7 @@ This document compiles every current SCM case report under results/ that has a c
 }
 
 \newpage
-\section{Case 7: idealized sbl 80x2m 9h report}
+\section{Case 4: idealized sbl 80x2m 9h report}
 \IfFileExists{\detokenize{results/idealized_sbl/idealized_sbl_80x2m_9h_report.tex}}{%
   \input{\detokenize{results/idealized_sbl/idealized_sbl_80x2m_9h_report.tex}}
 }{%
@@ -86,35 +56,11 @@ This document compiles every current SCM case report under results/ that has a c
 }
 
 \newpage
-\section{Case 8: idealized sbl 80x2m 0h report}
-\IfFileExists{\detokenize{results/idealized_sbl_smoke/idealized_sbl_80x2m_0h_report.tex}}{%
-  \input{\detokenize{results/idealized_sbl_smoke/idealized_sbl_80x2m_0h_report.tex}}
+\section{Case 5: scm case report}
+\IfFileExists{\detokenize{results/idealized_sbl/scm_case_report.tex}}{%
+  \input{\detokenize{results/idealized_sbl/scm_case_report.tex}}
 }{%
-  \textbf{Report not found:} \texttt{results/idealized\_sbl\_smoke/idealized\_sbl\_80x2m\_0h\_report.tex}
-}
-
-\newpage
-\section{Case 9: gabls1 150x2m 18h report}
-\IfFileExists{\detokenize{results/llj_regime/gabls1_150x2m_18h_report.tex}}{%
-  \input{\detokenize{results/llj_regime/gabls1_150x2m_18h_report.tex}}
-}{%
-  \textbf{Report not found:} \texttt{results/llj\_regime/gabls1\_150x2m\_18h\_report.tex}
-}
-
-\newpage
-\section{Case 10: idealized sbl 40x4m 0h report}
-\IfFileExists{\detokenize{results/scm_verify/idealized_sbl_40x4m_0h_report.tex}}{%
-  \input{\detokenize{results/scm_verify/idealized_sbl_40x4m_0h_report.tex}}
-}{%
-  \textbf{Report not found:} \texttt{results/scm\_verify/idealized\_sbl\_40x4m\_0h\_report.tex}
-}
-
-\newpage
-\section{Case 11: scm verify 40x4m 0h report}
-\IfFileExists{\detokenize{results/scm_verify/scm_verify_40x4m_0h_report.tex}}{%
-  \input{\detokenize{results/scm_verify/scm_verify_40x4m_0h_report.tex}}
-}{%
-  \textbf{Report not found:} \texttt{results/scm\_verify/scm\_verify\_40x4m\_0h\_report.tex}
+  \textbf{Report not found:} \texttt{results/idealized\_sbl/scm\_case\_report.tex}
 }
 
 \end{document}
