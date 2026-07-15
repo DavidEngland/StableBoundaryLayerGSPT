@@ -176,7 +176,7 @@ $$
 \left(R_{\mathrm{down}} - \sigma T_s^4 + \rho C_p\,\mathrm{flux}_{H,\mathrm{surf}} - \frac{\lambda_s(T_s - T_{\mathrm{deep}})}{d_{\mathrm{soil}}}\right)
 $$
 
-Here `flux_{H,\mathrm{surf}}` is positive downward toward the surface. A positive sensible heat flux therefore warms the skin layer.
+Here $\mathrm{flux}_{H,\mathrm{surf}}$ is positive downward toward the surface. A positive sensible heat flux therefore warms the skin layer.
 
 This coupling is integrated in the same stiff solve as momentum and thermal profiles, improving numerical robustness during strongly stable transitions.
 

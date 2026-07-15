@@ -67,16 +67,16 @@ function parse_args(args::Vector{String})
             _usage()
             exit(0)
         elseif a == "--input" && i < length(args)
-            cfg["input"] = args[i + 1]
+            cfg["input"] = args[i+1]
             i += 2
         elseif a == "--outdir" && i < length(args)
-            cfg["outdir"] = args[i + 1]
+            cfg["outdir"] = args[i+1]
             i += 2
         elseif a == "--format" && i < length(args)
-            cfg["format"] = lowercase(args[i + 1])
+            cfg["format"] = lowercase(args[i+1])
             i += 2
         elseif a == "--dpi" && i < length(args)
-            cfg["dpi"] = parse(Int, args[i + 1])
+            cfg["dpi"] = parse(Int, args[i+1])
             i += 2
         else
             error("Unknown or incomplete argument: $(a). Use --help for options.")
@@ -153,7 +153,9 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     hov_theta = Array{Float64}(undef, size(_getkey(hov, :theta))...)
     hov_theta .= _getkey(hov, :theta)
 
-    # Figure 1: Time series (Ts, H, u*)
+    # =========================================================================
+    # Figure 1: Time series (Ts, H, u*) [Merged Dual-Axis Legend]
+    # =========================================================================
     p1 = Plots.plot(
         t_hours,
         T_s;
@@ -166,9 +168,13 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         dpi=dpi,
         title="Figure 1: Surface Thermodynamic Evolution",
     )
+    # Register twinx lines on the primary plot with empty coordinates so they merge nicely
+    Plots.plot!(p1, [], []; label="H (right axis)", linewidth=2, color=:red)
+    Plots.plot!(p1, [], []; label="u_* (right axis)", linewidth=2, color=:black, linestyle=:dash)
+
     p1r = Plots.twinx(p1)
-    Plots.plot!(p1r, t_hours, H; label="H (right axis)", linewidth=2, color=:red, ylabel="H (W m^-2)")
-    Plots.plot!(p1r, t_hours, ustar; label="u_* (right axis)", linewidth=2, color=:black, linestyle=:dash, ylabel="H / u_*")
+    Plots.plot!(p1r, t_hours, H; label="", linewidth=2, color=:red, ylabel="H (W m^-2)")
+    Plots.plot!(p1r, t_hours, ustar; label="", linewidth=2, color=:black, linestyle=:dash, ylabel="H / u_*")
     _savefig(Plots, p1, outdir, "fig01_timeseries_ts_h_ustar", fmt)
 
     # Figure 2: Hovmoller wind speed
@@ -197,13 +203,15 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     )
     _savefig(Plots, p3, outdir, "fig03_hovmoller_theta", fmt)
 
-    # Figure 4: Vertical profiles U, theta, Km, and Ri_g at representative times
+    # =========================================================================
+    # Figure 4: Vertical profiles [Consolidated Legend Only on Panel A]
+    # =========================================================================
     target_hours = unique([min(3.0, t_end_h), min(6.0, t_end_h), min(9.0, t_end_h)])
     t_idx = [_nearest_index(t_hours, th) for th in target_hours]
 
-    p4a = Plots.plot(xlabel="U (m s^-1)", ylabel="z (m)", title="U(z)", dpi=dpi)
-    p4b = Plots.plot(xlabel="theta (K)", ylabel="z (m)", title="theta(z)", dpi=dpi)
-    p4c = Plots.plot(xlabel="K_m (m^2 s^-1)", ylabel="z_face (m)", title="K_m(z)", dpi=dpi)
+    p4a = Plots.plot(xlabel="U (m s^-1)", ylabel="z (m)", title="U(z)", dpi=dpi, legend=:topleft)
+    p4b = Plots.plot(xlabel="theta (K)", ylabel="z (m)", title="theta(z)", dpi=dpi, legend=:none)
+    p4c = Plots.plot(xlabel="K_m (m^2 s^-1)", ylabel="z_face (m)", title="K_m(z)", dpi=dpi, legend=:none)
     p4d = Plots.plot(
         xlabel="Ri_g",
         ylabel="z_face (m)",
@@ -211,6 +219,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         dpi=dpi,
         xscale=:asinh,
         xguidefontsize=9,
+        legend=:topright, # Preserve separate legend here for the Ri_crit threshold
     )
 
     for idx in t_idx
@@ -218,9 +227,9 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         tt = t_hours[idx]
         lbl = @sprintf("t=%.1f h", tt)
         Plots.plot!(p4a, _getkey(row, :U), zc; label=lbl, linewidth=2)
-        Plots.plot!(p4b, _getkey(row, :theta), zc; label=lbl, linewidth=2)
-        Plots.plot!(p4c, _getkey(row, :Km_faces), zf[2:end-1]; label=lbl, linewidth=2)
-        Plots.plot!(p4d, _getkey(row, :Ri_faces), zf[2:end-1]; label=lbl, linewidth=2)
+        Plots.plot!(p4b, _getkey(row, :theta), zc; label="", linewidth=2)
+        Plots.plot!(p4c, _getkey(row, :Km_faces), zf[2:(end-1)]; label="", linewidth=2)
+        Plots.plot!(p4d, _getkey(row, :Ri_faces), zf[2:(end-1)]; label=lbl, linewidth=2)
     end
 
     Plots.vline!(p4d, [0.25]; color=:black, linestyle=:dash, linewidth=2, label="Ri_crit = 0.25")
@@ -228,7 +237,9 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     p4 = Plots.plot(p4a, p4b, p4c, p4d; layout=(1, 4), size=(1760, 420))
     _savefig(Plots, p4, outdir, "fig04_profiles_u_theta_km", fmt)
 
-    # Figure 5: Surface energy budget and skin/radiative-equilibrium temperatures
+    # =========================================================================
+    # Figure 5: Surface energy budget [Merged Dual-Axis Legend]
+    # =========================================================================
     p5 = Plots.plot(
         t_hours,
         Rn;
@@ -237,18 +248,26 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         xlabel="Time (h)",
         ylabel="Flux (W m^-2)",
         title="Figure 5: Surface Energy Budget",
+        legend=:topright,
         dpi=dpi,
     )
     Plots.plot!(p5, t_hours, H; label="H", linewidth=2)
     Plots.plot!(p5, t_hours, G; label="G", linewidth=2)
     Plots.plot!(p5, t_hours, storage; label="Storage", linewidth=2, linestyle=:dash)
+
+    # Register right-axis labels as empty series to bring them into the unified legend box
+    Plots.plot!(p5, [], []; label="T_s (right axis)", linewidth=2, color=:black)
+    Plots.plot!(p5, [], []; label="T_rad (right axis)", linewidth=2, color=:gray35, linestyle=:dot)
+
     p5r = Plots.twinx(p5)
-    Plots.plot!(p5r, t_hours, T_s; label="T_s", linewidth=2, color=:black, ylabel="Temperature (K)")
-    Plots.plot!(p5r, t_hours, T_rad; label="T_rad", linewidth=2, color=:gray35, linestyle=:dot, ylabel="Temperature (K)")
+    Plots.plot!(p5r, t_hours, T_s; label="", linewidth=2, color=:black, ylabel="Temperature (K)")
+    Plots.plot!(p5r, t_hours, T_rad; label="", linewidth=2, color=:gray35, linestyle=:dot)
     _savefig(Plots, p5, outdir, "fig05_surface_energy_budget", fmt)
 
+    # =========================================================================
     # Figure 6: Manifold phase portrait Delta vs e_xi, colored by height band
-    z_face_mid = zf[2:end-1]
+    # =========================================================================
+    z_face_mid = zf[2:(end-1)]
     z_top = maximum(zf)
     z_surface_max = 0.2 * z_top
     z_mid_max = 0.6 * z_top
@@ -288,6 +307,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         ylabel="e_xi",
         title="Figure 6: Regularized Slow-Manifold Phase Portrait",
         label="surface band (z <= 0.2 z_top)",
+        legend=:topleft,
         dpi=dpi,
     )
     Plots.scatter!(
@@ -313,7 +333,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     Plots.vline!(p6, [delta_crit]; color=:black, linestyle=:dash, linewidth=2, label="Delta = delta / l_0")
     _savefig(Plots, p6, outdir, "fig06_phase_delta_exi", fmt)
 
-    # Figure 7: Diffusivity response vs Ri (zoomed to near-neutral stability)
+    # Figure 7: Diffusivity response vs Ri
     ri_all = _flatten_field(ts, :Ri_faces)
     km_all = _flatten_field(ts, :Km_faces)
     kh_all = _flatten_field(ts, :Kh_faces)
@@ -342,6 +362,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         bottom_margin=8Plots.mm,
         left_margin=6Plots.mm,
         label="",
+        legend=:none,
         dpi=dpi,
     )
     p7b = Plots.scatter(
@@ -356,6 +377,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         bottom_margin=8Plots.mm,
         left_margin=6Plots.mm,
         label="",
+        legend=:none,
         dpi=dpi,
     )
     p7 = Plots.plot(p7a, p7b; layout=(1, 2), size=(1280, 460))
@@ -371,6 +393,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         ylabel="Delta_surface",
         title="Figure 8: Fold Proximity Diagnostic",
         label="Delta_surface",
+        legend=:topright,
         dpi=dpi,
     )
     Plots.plot!(p8, t_hours, fold_ref; linewidth=2, linestyle=:dash, label="delta / l_0")
