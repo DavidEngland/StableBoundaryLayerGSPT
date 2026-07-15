@@ -1,0 +1,57 @@
+{
+    "n_profiles": 25,
+    "arguments": {
+        "dz": 1,
+        "theta_top": null,
+        "debug_print": false,
+        "case": "idealized_sbl",
+        "k_min_surf": 0.001,
+        "ts_max": 350,
+        "dt": 30,
+        "lambda_top": null,
+        "theta_top_bc": "neumann",
+        "duration_hours": 12,
+        "N": 120,
+        "profile_every_seconds": 1800,
+        "outdir": "results/collapse_test",
+        "ts_min": 180,
+        "save_jld2": true
+    },
+    "case": "idealized_sbl",
+    "n_times": 1441,
+    "outdir": "results/collapse_test",
+    "verification": {
+        "min_diffusivity": 0.04854205457012757,
+        "max_diffusivity": 106.70203299173868,
+        "min_ri": 0.0012716902044116758,
+        "max_ri": 86.67500790333241,
+        "max_surface_energy_closure_error": 0,
+        "fold_near_fraction": 0,
+        "radiative_floor_breach_fraction": 0,
+        "min_surface_minus_radiative_equilibrium": 4.707618391841663,
+        "min_surface_kh": 0.00397399312464391
+    },
+    "figure_manifest": [
+        "Time series of T_s, sensible heat flux, and friction velocity",
+        "Time-height contour of wind speed with LLJ evolution",
+        "Time-height contour of potential temperature and inversion growth",
+        "Vertical profiles of U, theta, and Km at representative times",
+        "Surface energy budget components (R_n, H, G, storage)",
+        "Phase portrait on regularized manifold (Delta vs e_xi)",
+        "Eddy diffusivity response (Km, Kh) versus stability/Richardson number",
+        "Fold proximity diagnostics versus time"
+    ],
+    "solver_summary": {
+        "algorithm": "OrdinaryDiffEqRosenbrock.Rodas5P{0, ADTypes.AutoFiniteDiff{Val{:forward}, Val{:forward}, Val{:hcentral}, Nothing, Nothing, Int64}, Nothing, typeof(OrdinaryDiffEqCore.DEFAULT_PRECS), Val{:forward}(), true, nothing, typeof(OrdinaryDiffEqCore.trivial_limiter!), typeof(OrdinaryDiffEqCore.trivial_limiter!)}",
+        "accepted_steps": 1073,
+        "rejected_steps": 7,
+        "rhs_evaluations": 398141,
+        "retcode": "Success",
+        "abstol": 1.0e-8,
+        "reltol": 1.0e-6
+    },
+    "artifacts": {
+        "time_series_csv": "results/collapse_test/time_series.csv",
+        "payload_jld2": "results/collapse_test/payload.jld2"
+    }
+}

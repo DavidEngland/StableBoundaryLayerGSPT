@@ -15,6 +15,8 @@ Base.@kwdef struct SCMDiagnosticConfig{T<:Real}
     monin_eps::T = 1.0e-10
     bl_threshold_fraction::T = 0.05
     delta_near_tol::T = 1.0e-4
+    k_min_surf::T = 1.0e-3
+    radiative_floor_margin_k::T = 20.0
 end
 
 """Finite-volume mixing length used by the SCM closure."""
@@ -106,7 +108,8 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     Delta_surf = eta * (ell_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * G_surf
     A_surf = l0 * Delta_surf - delta
     e_surf = 0.5 * (A_surf + hypot(A_surf, p.xi))
-    K_m_surf = ell_surf * sqrt(e_surf + delta)
+    # Maintain a smooth background floor in surface exchange coefficients.
+    K_m_surf = cfg.k_min_surf + ell_surf * sqrt(e_surf + delta)
     Pr_t = 1.0
     K_h_surf = K_m_surf / Pr_t
 
@@ -120,7 +123,11 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     R_net = p.R_down - cfg.sigma_sb * (T_s^4)
     H = cfg.rho_cp * flux_H_surf
     G = p.lambda_s * (T_s - p.T_deep) / p.d_soil
-    storage = R_net - H - G
+    # H is positive downward toward the surface in this SCM, so it contributes
+    # to warming the skin layer alongside positive net radiation.
+    storage = R_net + H - G
+    T_rad = (p.R_down / cfg.sigma_sb)^0.25
+    below_radiative_floor = T_s < (T_rad - cfg.radiative_floor_margin_k)
 
     # Stability diagnostics.
     speed = sqrt.(U .^ 2 .+ V .^ 2)
@@ -147,6 +154,8 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
         ground_heat_flux=G,
         net_radiation=R_net,
         storage=storage,
+        radiative_equilibrium_temperature=T_rad,
+        below_radiative_floor=below_radiative_floor,
         u_star=u_star,
         boundary_layer_depth=bl_depth,
         ri_min=ri_min,
@@ -269,8 +278,11 @@ function compute_numerical_verification(time_series)
     km_maxs = [maximum(row.Km_faces) for row in time_series]
     ri_mins = [row.ri_min for row in time_series]
     ri_maxs = [row.ri_max for row in time_series]
-    closure_errors = [row.net_radiation - row.sensible_heat_flux - row.ground_heat_flux - row.storage for row in time_series]
+    closure_errors = [row.net_radiation + row.sensible_heat_flux - row.ground_heat_flux - row.storage for row in time_series]
     fold_hits = count(row -> row.near_fold, time_series)
+    radiative_breach_hits = count(row -> row.below_radiative_floor, time_series)
+    min_rad_margin = minimum([row.T_s - row.radiative_equilibrium_temperature for row in time_series])
+    kh_surf_min = minimum([row.kh_surface for row in time_series])
 
     return (
         min_diffusivity=minimum(km_mins),
@@ -279,6 +291,9 @@ function compute_numerical_verification(time_series)
         max_ri=maximum(ri_maxs),
         max_surface_energy_closure_error=maximum(abs.(closure_errors)),
         fold_near_fraction=fold_hits / length(time_series),
+        radiative_floor_breach_fraction=radiative_breach_hits / length(time_series),
+        min_surface_minus_radiative_equilibrium=min_rad_margin,
+        min_surface_kh=kh_surf_min,
     )
 end
 

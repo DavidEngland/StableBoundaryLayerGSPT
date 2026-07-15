@@ -31,9 +31,14 @@ struct SCMParameters{T,W}
     R_down::T
     lambda_s::T
     d_soil::T
+    k_min_surf::T
+    ts_min::T
+    ts_max::T
     theta_top_bc::Symbol
     theta_top::T
     lambda_top::T
+    debug_print::Bool
+    profile_every::T
     workspace::W
 end
 
@@ -136,6 +141,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     Rn = [Float64(_getkey(r, :net_radiation)) for r in ts]
     G = [Float64(_getkey(r, :ground_heat_flux)) for r in ts]
     storage = [Float64(_getkey(r, :storage)) for r in ts]
+    T_rad = [Float64(_getkey(r, :radiative_equilibrium_temperature)) for r in ts]
 
     delta_surface = [Float64(_getkey(r, :surface_delta)) for r in ts]
 
@@ -153,15 +159,16 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         T_s;
         xlabel="Time (h)",
         ylabel="T_s (K)",
-        label="T_s",
+        label="T_s (left axis)",
+        color=:royalblue,
         linewidth=2,
         legend=:topright,
         dpi=dpi,
         title="Figure 1: Surface Thermodynamic Evolution",
     )
     p1r = Plots.twinx(p1)
-    Plots.plot!(p1r, t_hours, H; label="H", linewidth=2, color=:red, ylabel="H (W m^-2)")
-    Plots.plot!(p1r, t_hours, ustar; label="u_*", linewidth=2, color=:black, linestyle=:dash, ylabel="H / u_*")
+    Plots.plot!(p1r, t_hours, H; label="H (right axis)", linewidth=2, color=:red, ylabel="H (W m^-2)")
+    Plots.plot!(p1r, t_hours, ustar; label="u_* (right axis)", linewidth=2, color=:black, linestyle=:dash, ylabel="H / u_*")
     _savefig(Plots, p1, outdir, "fig01_timeseries_ts_h_ustar", fmt)
 
     # Figure 2: Hovmoller wind speed
@@ -190,13 +197,21 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     )
     _savefig(Plots, p3, outdir, "fig03_hovmoller_theta", fmt)
 
-    # Figure 4: Vertical profiles U, theta, Km at representative times
+    # Figure 4: Vertical profiles U, theta, Km, and Ri_g at representative times
     target_hours = unique([min(3.0, t_end_h), min(6.0, t_end_h), min(9.0, t_end_h)])
     t_idx = [_nearest_index(t_hours, th) for th in target_hours]
 
     p4a = Plots.plot(xlabel="U (m s^-1)", ylabel="z (m)", title="U(z)", dpi=dpi)
     p4b = Plots.plot(xlabel="theta (K)", ylabel="z (m)", title="theta(z)", dpi=dpi)
     p4c = Plots.plot(xlabel="K_m (m^2 s^-1)", ylabel="z_face (m)", title="K_m(z)", dpi=dpi)
+    p4d = Plots.plot(
+        xlabel="Ri_g",
+        ylabel="z_face (m)",
+        title="Ri_g(z)",
+        dpi=dpi,
+        xscale=:asinh,
+        xguidefontsize=9,
+    )
 
     for idx in t_idx
         row = ts[idx]
@@ -205,12 +220,15 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         Plots.plot!(p4a, _getkey(row, :U), zc; label=lbl, linewidth=2)
         Plots.plot!(p4b, _getkey(row, :theta), zc; label=lbl, linewidth=2)
         Plots.plot!(p4c, _getkey(row, :Km_faces), zf[2:end-1]; label=lbl, linewidth=2)
+        Plots.plot!(p4d, _getkey(row, :Ri_faces), zf[2:end-1]; label=lbl, linewidth=2)
     end
 
-    p4 = Plots.plot(p4a, p4b, p4c; layout=(1, 3), size=(1400, 420))
+    Plots.vline!(p4d, [0.25]; color=:black, linestyle=:dash, linewidth=2, label="Ri_crit = 0.25")
+
+    p4 = Plots.plot(p4a, p4b, p4c, p4d; layout=(1, 4), size=(1760, 420))
     _savefig(Plots, p4, outdir, "fig04_profiles_u_theta_km", fmt)
 
-    # Figure 5: Surface energy budget
+    # Figure 5: Surface energy budget and skin/radiative-equilibrium temperatures
     p5 = Plots.plot(
         t_hours,
         Rn;
@@ -224,6 +242,9 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     Plots.plot!(p5, t_hours, H; label="H", linewidth=2)
     Plots.plot!(p5, t_hours, G; label="G", linewidth=2)
     Plots.plot!(p5, t_hours, storage; label="Storage", linewidth=2, linestyle=:dash)
+    p5r = Plots.twinx(p5)
+    Plots.plot!(p5r, t_hours, T_s; label="T_s", linewidth=2, color=:black, ylabel="Temperature (K)")
+    Plots.plot!(p5r, t_hours, T_rad; label="T_rad", linewidth=2, color=:gray35, linestyle=:dot, ylabel="Temperature (K)")
     _savefig(Plots, p5, outdir, "fig05_surface_energy_budget", fmt)
 
     # Figure 6: Manifold phase portrait Delta vs e_xi, colored by height band
@@ -292,13 +313,52 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     Plots.vline!(p6, [delta_crit]; color=:black, linestyle=:dash, linewidth=2, label="Delta = delta / l_0")
     _savefig(Plots, p6, outdir, "fig06_phase_delta_exi", fmt)
 
-    # Figure 7: Diffusivity response vs Ri
+    # Figure 7: Diffusivity response vs Ri (zoomed to near-neutral stability)
     ri_all = _flatten_field(ts, :Ri_faces)
     km_all = _flatten_field(ts, :Km_faces)
     kh_all = _flatten_field(ts, :Kh_faces)
-    p7a = Plots.scatter(ri_all, km_all; markersize=2, alpha=0.5, xlabel="Ri_g", ylabel="K_m", title="K_m vs Ri_g", label="", dpi=dpi)
-    p7b = Plots.scatter(ri_all, kh_all; markersize=2, alpha=0.5, xlabel="Ri_g", ylabel="K_h", title="K_h vs Ri_g", label="", dpi=dpi)
-    p7 = Plots.plot(p7a, p7b; layout=(1, 2), size=(1200, 420))
+
+    ri_max_display = 5.0
+    ri_min_display = max(minimum(ri_all), -0.5)
+    keep = [
+        isfinite(ri_all[i]) && isfinite(km_all[i]) && isfinite(kh_all[i]) &&
+        (ri_all[i] >= ri_min_display) && (ri_all[i] <= ri_max_display)
+        for i in eachindex(ri_all)
+    ]
+
+    ri_zoom = ri_all[keep]
+    km_zoom = km_all[keep]
+    kh_zoom = kh_all[keep]
+
+    p7a = Plots.scatter(
+        ri_zoom,
+        km_zoom;
+        markersize=2,
+        alpha=0.5,
+        xlabel="Ri_g",
+        ylabel="K_m",
+        title="K_m vs Ri_g (Ri_g <= 5)",
+        xlims=(ri_min_display, ri_max_display),
+        bottom_margin=8Plots.mm,
+        left_margin=6Plots.mm,
+        label="",
+        dpi=dpi,
+    )
+    p7b = Plots.scatter(
+        ri_zoom,
+        kh_zoom;
+        markersize=2,
+        alpha=0.5,
+        xlabel="Ri_g",
+        ylabel="K_h",
+        title="K_h vs Ri_g (Ri_g <= 5)",
+        xlims=(ri_min_display, ri_max_display),
+        bottom_margin=8Plots.mm,
+        left_margin=6Plots.mm,
+        label="",
+        dpi=dpi,
+    )
+    p7 = Plots.plot(p7a, p7b; layout=(1, 2), size=(1280, 460))
     _savefig(Plots, p7, outdir, "fig07_diffusivity_vs_ri", fmt)
 
     # Figure 8: Fold proximity diagnostic vs time

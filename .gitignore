@@ -23,3 +23,15 @@ tables/*.tex
 tables/*.md
 
 bundle/**
+
+# Generated SCM portfolio compile artifacts
+compile_reports.aux
+compile_reports.log
+compile_reports.out
+compile_reports.toc
+
+# Per-case wrapper compile byproducts
+results/**/*_report_wrapper.aux
+results/**/*_report_wrapper.log
+results/**/scm_case_report_wrapper.aux
+results/**/scm_case_report_wrapper.log

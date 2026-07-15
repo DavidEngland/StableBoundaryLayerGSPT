@@ -13,6 +13,7 @@ Traditional SBL closures often suffer from abrupt regime switches near high Rich
 - Zero-allocation RHS design in `scm_gspt_tendencies!` with preallocated workspace buffers.
 - Smooth regularization of the transition manifold through $(\delta, \xi)$.
 - Vertically resolved momentum and thermal diffusion with consistent surface coupling.
+- Fail-fast anomaly guard for non-physical skin temperatures with structured failure summaries.
 - End-to-end pipeline for run, diagnostics, plotting, and LaTeX report generation.
 
 ## Governing Embedded Closure
@@ -75,6 +76,10 @@ julia --project=. scm/run_case.jl \
     --dt 30.0 \
     --grid-size 100 \
     --dz 5.0 \
+    --k-min-surf 1e-3 \
+    --ts-min 180.0 \
+    --ts-max 350.0 \
+    --debug-print false \
     --outdir results/idealized_sbl
 ```
 
@@ -93,7 +98,13 @@ julia --project=. scm/plot_case.jl \
 julia --project=. scm/render_case_report.jl \
     --summary results/idealized_sbl/summary.json \
     --template templates/scm_case_report.tex.mustache \
-    --out results/idealized_sbl/scm_case_report.tex
+    --out results/idealized_sbl/idealized_sbl_100x5m_12h_report.tex
+```
+
+4. Compile combined SCM portfolio from all current semantic report wrappers under `results/`:
+
+```bash
+make compile-scm-reports
 ```
 
 ## Minimal Programmatic Example
@@ -133,9 +144,14 @@ Base.@kwdef struct SCMParameters{W}
         R_down::Float64 = 150.0
         lambda_s::Float64 = 1.0
         d_soil::Float64 = 1.0
+        k_min_surf::Float64 = 1e-3
+        ts_min::Float64 = 180.0
+        ts_max::Float64 = 350.0
         theta_top_bc::Symbol = :relaxation
         theta_top::Float64 = 275.0
         lambda_top::Float64 = 0.01
+        debug_print::Bool = false
+        profile_every::Float64 = 1800.0
 end
 
 ws = SCMWorkspace(zeros(N - 1), zeros(N - 1))
@@ -157,8 +173,10 @@ The atmosphere is coupled to the land skin temperature through the surface energ
 
 $$
 \frac{dT_s}{dt} = \frac{1}{C_{\mathrm{skin}}}
-\left(R_{\mathrm{down}} - \sigma T_s^4 - \rho C_p\,\mathrm{flux}_{H,\mathrm{surf}} - \frac{\lambda_s(T_s - T_{\mathrm{deep}})}{d_{\mathrm{soil}}}\right)
+\left(R_{\mathrm{down}} - \sigma T_s^4 + \rho C_p\,\mathrm{flux}_{H,\mathrm{surf}} - \frac{\lambda_s(T_s - T_{\mathrm{deep}})}{d_{\mathrm{soil}}}\right)
 $$
+
+Here `flux_{H,\mathrm{surf}}` is positive downward toward the surface. A positive sensible heat flux therefore warms the skin layer.
 
 This coupling is integrated in the same stiff solve as momentum and thermal profiles, improving numerical robustness during strongly stable transitions.
 
@@ -167,7 +185,9 @@ This coupling is integrated in the same stiff solve as momentum and thermal prof
 Each run produces:
 
 - `summary.json`: solver and verification metrics.
+- `summary.json` (failed run): structured anomaly metadata if the guard aborts integration.
 - `time_series.csv`: scalar diagnostic time series.
 - `payload.jld2`: full diagnostic payload for figure generation.
 - `plots/`: figure suite (`fig01` through `fig08` by default).
-- `scm_case_report.tex`: auto-rendered SCM report section.
+- `<semantic>_report.tex`: auto-rendered SCM report section with namespaced labels.
+- `<semantic>_report_wrapper.{tex,pdf}`: standalone wrapper for case-level PDF compile.

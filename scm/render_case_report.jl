@@ -170,6 +170,8 @@ function main(args)
 
     case_name = string(getnested(summary, ["case"], "unknown_case"))
     outdir = string(getnested(summary, ["outdir"], dirname(summary_path)))
+    outdir_slug = slugify(basename(outdir))
+    report_slug = string(outdir_slug, "_", slugify(splitext(basename(out_path))[1]))
 
     figure_manifest = getnested(summary, ["figure_manifest"], Any[])
     figure_items = String[]
@@ -189,6 +191,7 @@ function main(args)
         "summary_path" => latex_escape(summary_path),
         "case_name" => latex_escape(case_name),
         "case_name_slug" => slugify(case_name),
+        "report_slug" => report_slug,
         "outdir" => latex_escape(outdir),
         "n_times" => string(getnested(summary, ["n_times"], "n/a")),
         "n_profiles" => string(getnested(summary, ["n_profiles"], "n/a")),

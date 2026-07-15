@@ -3,7 +3,10 @@
     "arguments": {
         "dz": 4,
         "theta_top": null,
+        "debug_print": false,
         "case": "idealized_sbl",
+        "k_min_surf": 0.001,
+        "ts_max": 350,
         "dt": 30,
         "lambda_top": null,
         "theta_top_bc": "neumann",
@@ -11,6 +14,7 @@
         "N": 40,
         "profile_every_seconds": 1800,
         "outdir": "results/scm_verify",
+        "ts_min": 180,
         "save_jld2": true
     },
     "case": "idealized_sbl",
@@ -20,9 +24,12 @@
         "min_diffusivity": 0.7190254201022866,
         "max_diffusivity": 108.43194841651359,
         "min_ri": 0.03557688384293044,
-        "max_ri": 29.752986302972797,
+        "max_ri": 10.52706585159091,
         "max_surface_energy_closure_error": 0,
-        "fold_near_fraction": 0
+        "fold_near_fraction": 0,
+        "radiative_floor_breach_fraction": 0,
+        "min_surface_minus_radiative_equilibrium": 8.297762809926269,
+        "min_surface_kh": 0.013062664594994555
     },
     "figure_manifest": [
         "Time series of T_s, sensible heat flux, and friction velocity",
@@ -36,9 +43,9 @@
     ],
     "solver_summary": {
         "algorithm": "OrdinaryDiffEqRosenbrock.Rodas5P{0, ADTypes.AutoFiniteDiff{Val{:forward}, Val{:forward}, Val{:hcentral}, Nothing, Nothing, Int64}, Nothing, typeof(OrdinaryDiffEqCore.DEFAULT_PRECS), Val{:forward}(), true, nothing, typeof(OrdinaryDiffEqCore.trivial_limiter!), typeof(OrdinaryDiffEqCore.trivial_limiter!)}",
-        "accepted_steps": 61,
+        "accepted_steps": 60,
         "rejected_steps": 3,
-        "rhs_evaluations": 8017,
+        "rhs_evaluations": 7886,
         "retcode": "Success",
         "abstol": 1.0e-8,
         "reltol": 1.0e-6

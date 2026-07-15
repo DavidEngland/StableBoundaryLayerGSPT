@@ -1,4 +1,4 @@
-.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all assemble-manuscript paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl test clean
+.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all assemble-manuscript paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl compile-scm-reports test clean
 
 DATASET ?= CASES99
 
@@ -12,6 +12,16 @@ SCM_OUTDIR ?= results/$(SCM_CASE)
 SCM_PLOT_FORMAT ?= png
 SCM_PLOT_DPI ?= 200
 SCM_REPORT_TEMPLATE ?= templates/scm_case_report.tex.mustache
+SCM_DZ_TAG ?= $(shell echo "$(SCM_DZ)" | sed 's/\.0$$//')
+SCM_DURATION_H ?= $(shell echo "$(SCM_DURATION)" | cut -d. -f1)
+SCM_REPORT_NAME ?= $(SCM_CASE)_$(SCM_GRID_SIZE)x$(SCM_DZ_TAG)m_$(SCM_DURATION_H)h_report.tex
+SCM_REPORT_PATH ?= $(SCM_OUTDIR)/$(SCM_REPORT_NAME)
+SCM_REPORT_BASE ?= $(basename $(SCM_REPORT_NAME))
+SCM_WRAPPER_TEX_NAME ?= $(SCM_REPORT_BASE)_wrapper.tex
+SCM_WRAPPER_PDF_NAME ?= $(SCM_REPORT_BASE)_wrapper.pdf
+SCM_WRAPPER_TEX_PATH ?= $(SCM_OUTDIR)/$(SCM_WRAPPER_TEX_NAME)
+SCM_WRAPPER_PDF_PATH ?= $(SCM_OUTDIR)/$(SCM_WRAPPER_PDF_NAME)
+SCM_WRITE_COMPAT_WRAPPER ?= 0
 
 bootstrap:
 	julia --project=. -e 'using Pkg; Pkg.instantiate()'
@@ -98,7 +108,15 @@ scm-plot:
 	julia --project=. scm/plot_case.jl --input $(SCM_OUTDIR)/payload.jld2 --outdir $(SCM_OUTDIR)/plots --format $(SCM_PLOT_FORMAT) --dpi $(SCM_PLOT_DPI)
 
 scm-report:
-	julia --project=. scm/render_case_report.jl --summary $(SCM_OUTDIR)/summary.json --template $(SCM_REPORT_TEMPLATE) --out $(SCM_OUTDIR)/scm_case_report.tex
+	@echo "Rendering semantic report: $(SCM_REPORT_PATH)"
+	julia --project=. scm/render_case_report.jl --summary $(SCM_OUTDIR)/summary.json --template $(SCM_REPORT_TEMPLATE) --out $(SCM_REPORT_PATH)
+	@printf '%s\n' '\documentclass{article}' '\usepackage[T1]{fontenc}' '\usepackage{lmodern}' '\usepackage{graphicx}' '\begin{document}' '\input{$(SCM_REPORT_NAME)}' '\end{document}' > $(SCM_WRAPPER_TEX_PATH)
+	@pdflatex -interaction=nonstopmode -halt-on-error -output-directory $(SCM_OUTDIR) $(SCM_WRAPPER_TEX_PATH) >/dev/null
+	@cp $(SCM_REPORT_PATH) $(SCM_OUTDIR)/scm_case_report.tex
+	@echo "Updated compatibility copy: $(SCM_OUTDIR)/scm_case_report.tex"
+	@if [ "$(SCM_WRITE_COMPAT_WRAPPER)" = "1" ]; then cp $(SCM_WRAPPER_TEX_PATH) $(SCM_OUTDIR)/scm_case_report_wrapper.tex; cp $(SCM_WRAPPER_PDF_PATH) $(SCM_OUTDIR)/scm_case_report_wrapper.pdf; echo "Updated compatibility wrapper copies in $(SCM_OUTDIR)"; fi
+	@echo "Rendered semantic wrapper: $(SCM_WRAPPER_TEX_PATH)"
+	@echo "Rendered semantic wrapper PDF: $(SCM_WRAPPER_PDF_PATH)"
 
 scm-all: scm-run scm-plot scm-report
 
@@ -118,9 +136,66 @@ scm-verify:
 	@echo "Rendering verification plots..."
 	@julia --project=. scm/plot_case.jl --input results/scm_verify/payload.jld2 --format png --outdir results/scm_verify/plots
 	@[ -s results/scm_verify/plots/fig01_timeseries_ts_h_ustar.png ] || (echo "Verification FAILED: expected figure missing or empty"; exit 1)
-	@julia --project=. scm/render_case_report.jl --summary results/scm_verify/summary.json --template $(SCM_REPORT_TEMPLATE) --out results/scm_verify/scm_case_report.tex
+	@julia --project=. scm/render_case_report.jl --summary results/scm_verify/summary.json --template $(SCM_REPORT_TEMPLATE) --out results/scm_verify/scm_verify_40x4m_0h_report.tex
+	@[ -s results/scm_verify/scm_verify_40x4m_0h_report.tex ] || (echo "Verification FAILED: semantic verify report missing or empty"; exit 1)
+	@cp results/scm_verify/scm_verify_40x4m_0h_report.tex results/scm_verify/scm_case_report.tex
 	@[ -s results/scm_verify/scm_case_report.tex ] || (echo "Verification FAILED: scm_case_report.tex missing or empty"; exit 1)
 	@echo "Verification PASSED: SCM pipeline is end-to-end healthy."
+
+compile-scm-reports:
+	@echo "Compiling dynamic SCM report portfolio..."
+	@rm -f compile_reports.aux compile_reports.log compile_reports.out compile_reports.toc
+	@reports="$$(find results -path 'results/_archived*' -prune -o -type f -name '*_report_wrapper.pdf' -print | sort)"; \
+	if [ -z "$$reports" ]; then \
+		echo "No compiled SCM report wrapper PDFs found under results/."; \
+		exit 1; \
+	fi; \
+	graphpaths="$$(for pdf in $$reports; do tex="$${pdf%_wrapper.pdf}.tex"; dir="$$(dirname "$$tex")"; printf '{%s/}{%s/plots/}\n' "$$dir" "$$dir"; done | awk '!seen[$$0]++')"; \
+	{ \
+		printf '%s\n' '\documentclass{article}'; \
+		printf '%s\n' '\usepackage[T1]{fontenc}'; \
+		printf '%s\n' '\usepackage{lmodern}'; \
+		printf '%s\n' '\usepackage{graphicx}'; \
+		printf '%s\n' '\usepackage{booktabs}'; \
+		printf '%s\n' '\usepackage{amsmath}'; \
+		printf '%s\n' '\usepackage{microtype}'; \
+		printf '%s\n' '\usepackage[margin=1in]{geometry}'; \
+		printf '%s\n' '\usepackage[hidelinks]{hyperref}'; \
+		printf '%s\n' '\graphicspath{'; \
+		printf '%s\n' "$$graphpaths"; \
+		printf '%s\n' '}'; \
+		printf '%s\n' ''; \
+		printf '%s\n' '\title{Single Column Model (SCM) Diagnostic Runs}'; \
+		printf '%s\n' '\author{GSPT Simulation Pipeline}'; \
+		printf '%s\n' '\date{\today}'; \
+		printf '%s\n' ''; \
+		printf '%s\n' '\begin{document}'; \
+		printf '%s\n' ''; \
+		printf '%s\n' '\maketitle'; \
+		printf '%s\n' ''; \
+		printf '%s\n' '\section{Overview}'; \
+		printf '%s\n' 'This document compiles every current SCM case report under results/ that has a compiled wrapper PDF.'; \
+		printf '%s\n' ''; \
+		n=1; \
+		for pdf in $$reports; do \
+			tex="$${pdf%_wrapper.pdf}.tex"; \
+			base="$$(basename "$${tex%.tex}")"; \
+			title="$$(printf '%s' "$$base" | sed 's/_/ /g')"; \
+			printf '%s\n' '\newpage'; \
+			printf '\section{Case %d: %s}\n' "$$n" "$$title"; \
+			printf '\\IfFileExists{\\detokenize{%s}}{%%\n' "$$tex"; \
+			printf '  \\input{\\detokenize{%s}}\n' "$$tex"; \
+			printf '%s\n' '}{%'; \
+			printf '  \\textbf{Report not found:} \\texttt{%s}\n' "$$(printf '%s' "$$tex" | sed 's/_/\\_/g')"; \
+			printf '%s\n' '}'; \
+			printf '%s\n' ''; \
+			n=$$((n + 1)); \
+		done; \
+		printf '%s\n' '\end{document}'; \
+	} > compile_reports.tex
+	pdflatex -interaction=nonstopmode -halt-on-error compile_reports.tex
+	pdflatex -interaction=nonstopmode -halt-on-error compile_reports.tex
+	@echo "Success! Combined portfolio available at compile_reports.pdf"
 
 test:
 	julia --project=. -e 'using Pkg; Pkg.test()'

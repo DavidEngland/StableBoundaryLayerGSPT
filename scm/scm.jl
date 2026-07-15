@@ -1,4 +1,19 @@
 using LinearAlgebra
+using Printf
+
+struct SurfaceAnomalyException <: Exception
+    t::Float64
+    Ts::Float64
+    reason::String
+    state_summary::String
+end
+
+function Base.showerror(io::IO, e::SurfaceAnomalyException)
+    print(io, "SurfaceAnomalyException: Simulation aborted at t = $(round(e.t / 3600.0, digits=2)) hours.\n")
+    print(io, "  Surface Temperature (T_s) = $(round(e.Ts, digits=2)) K breached physical limits!\n")
+    print(io, "  Reason: $(e.reason)\n")
+    print(io, "  Column State at failure:\n$(e.state_summary)")
+end
 
 # Enforce preallocated workspace check at startup, not inside RHS loop
 function _get_face_diffusivity_buffers(p)
@@ -51,6 +66,9 @@ function scm_gspt_tendencies!(dX, X, p, t)
     rho_cp = 1200.0
     lambda_s = p.lambda_s
     d_soil = p.d_soil
+    K_min_surf = hasproperty(p, :k_min_surf) ? p.k_min_surf : 1.0e-3
+    Ts_min = hasproperty(p, :ts_min) ? p.ts_min : 180.0
+    Ts_max = hasproperty(p, :ts_max) ? p.ts_max : 350.0
 
     # Extract optional BC configuration once (avoid hasproperty checks in hot code)
     # Ideally, define these strictly on p's type so they resolve at compile time.
@@ -131,8 +149,38 @@ function scm_gspt_tendencies!(dX, X, p, t)
     A_surf = l_0 * Δ_surf - δ
     e_star_surf = 0.5 * (A_surf + hypot(A_surf, ξ))
 
-    K_m_surf = ell_surf * sqrt(e_star_surf + δ)
+    # Smooth nonzero background transport at the surface. This preserves coupling
+    # even when ell_surf -> 0 and e_star_surf -> 0.
+    K_m_surf = K_min_surf + ell_surf * sqrt(e_star_surf + δ)
     K_h_surf = K_m_surf / Pr_t
+
+    if T_s < Ts_min || T_s > Ts_max
+        reason = if T_s < Ts_min
+            "Severe radiative cooling decoupling spiral (T_s fell below $(Ts_min) K)."
+        else
+            "Catastrophic thermal runaway / numerical bounce (T_s exceeded $(Ts_max) K)."
+        end
+
+        theta_1 = theta[1]
+        theta_2 = N >= 2 ? theta[2] : theta[1]
+        u_1 = U[1]
+        v_1 = V[1]
+        wind_1 = hypot(u_1, v_1)
+        T_rad = (R_down / sigma_SB)^0.25
+        state_summary = @sprintf(
+            "  - Skin Temp (T_s): %.2f K\n  - Radiative Equilibrium (T_rad): %.2f K\n  - Air Temp (theta_1): %.2f K (z=%.2f m)\n  - Air Temp (theta_2): %.2f K\n  - Wind (U_1,V_1): (%.2f, %.2f) m/s | |V|=%.2f m/s\n  - Surface K_h: %.6f m^2/s",
+            T_s,
+            T_rad,
+            theta_1,
+            z_centers[1],
+            theta_2,
+            u_1,
+            v_1,
+            wind_1,
+            K_h_surf,
+        )
+        throw(SurfaceAnomalyException(Float64(t), Float64(T_s), reason, state_summary))
+    end
 
     flux_U_surf = K_m_surf * (U[1] - 0.0) / dz
     flux_V_surf = K_m_surf * (V[1] - 0.0) / dz
@@ -165,7 +213,34 @@ function scm_gspt_tendencies!(dX, X, p, t)
         H_sensible = rho_cp * flux_H_surf
         G_ground = lambda_s * (T_s - T_deep) / d_soil
 
-        dX[1] = (1.0 / C_skin) * (R_net - H_sensible - G_ground)
+        # flux_H_surf is defined positive downward toward the surface, so it
+        # warms the skin layer when the first atmospheric level is warmer.
+        dX[1] = (1.0 / C_skin) * (R_net + H_sensible - G_ground)
+
+        # Optional runtime diagnostics for SEB runaway detection.
+        if hasproperty(p, :debug_print) && p.debug_print && hasproperty(p, :profile_every)
+            profile_every = p.profile_every
+            if profile_every > 0
+                phase = mod(t, profile_every)
+                at_print_step = (phase < 1.0e-9) || ((profile_every - phase) < 1.0e-9)
+                if at_print_step
+                    T_rad = (R_down / sigma_SB)^0.25
+                    @printf(
+                        "t=%7.1f | Ts=%6.2f K | Trad=%6.2f K | Rnet=%7.2f W/m^2 | H=%7.2f W/m^2 | G=%7.2f W/m^2 | Kh_surf=%9.6f\n",
+                        t,
+                        T_s,
+                        T_rad,
+                        R_net,
+                        H_sensible,
+                        G_ground,
+                        K_h_surf,
+                    )
+                    if T_s < (T_rad - 20.0)
+                        @warn "Physical anomaly: T_s has dropped more than 20 K below radiative equilibrium floor."
+                    end
+                end
+            end
+        end
     end
 
     return nothing

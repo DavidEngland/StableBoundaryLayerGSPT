@@ -33,9 +33,14 @@ struct SCMParameters{T,W}
     R_down::T
     lambda_s::T
     d_soil::T
+    k_min_surf::T
+    ts_min::T
+    ts_max::T
     theta_top_bc::Symbol
     theta_top::T
     lambda_top::T
+    debug_print::Bool
+    profile_every::T
     workspace::W
 end
 
@@ -52,6 +57,10 @@ function _usage()
     println("  --theta-top-bc <neumann|dirichlet|relaxation>  Upper thermal BC")
     println("  --theta-top <K>                    Upper boundary reference theta")
     println("  --lambda-top <1/s>                 Relaxation coefficient for top BC")
+    println("  --k-min-surf <m2/s>                Background surface diffusivity floor")
+    println("  --ts-min <K>                       Lower anomaly-guard surface temperature")
+    println("  --ts-max <K>                       Upper anomaly-guard surface temperature")
+    println("  --debug-print <true|false>         Emit periodic SEB diagnostics")
     println("  --save-jld2 <true|false>           Save payload.jld2 (default: true)")
     println("  --help                             Show this help message")
 end
@@ -79,6 +88,10 @@ function parse_args(args::Vector{String})
         "theta_top_bc" => "neumann",
         "theta_top" => nothing,
         "lambda_top" => nothing,
+        "k_min_surf" => 1.0e-3,
+        "ts_min" => 180.0,
+        "ts_max" => 350.0,
+        "debug_print" => false,
         "save_jld2" => true,
     )
 
@@ -117,6 +130,18 @@ function parse_args(args::Vector{String})
             i += 2
         elseif a == "--lambda-top" && i < length(args)
             cfg["lambda_top"] = parse(Float64, args[i + 1])
+            i += 2
+        elseif a == "--k-min-surf" && i < length(args)
+            cfg["k_min_surf"] = parse(Float64, args[i + 1])
+            i += 2
+        elseif a == "--ts-min" && i < length(args)
+            cfg["ts_min"] = parse(Float64, args[i + 1])
+            i += 2
+        elseif a == "--ts-max" && i < length(args)
+            cfg["ts_max"] = parse(Float64, args[i + 1])
+            i += 2
+        elseif a == "--debug-print" && i < length(args)
+            cfg["debug_print"] = _parse_bool(args[i + 1])
             i += 2
         elseif a == "--save-jld2" && i < length(args)
             cfg["save_jld2"] = _parse_bool(args[i + 1])
@@ -158,9 +183,14 @@ function _base_case_params(N::Int, dz::Float64)
         "R_down" => 240.0,
         "lambda_s" => 1.2,
         "d_soil" => 0.10,
+        "k_min_surf" => 1.0e-3,
+        "ts_min" => 180.0,
+        "ts_max" => 350.0,
         "theta_top_bc" => :neumann,
         "theta_top" => 265.0,
         "lambda_top" => 0.0,
+        "debug_print" => false,
+        "profile_every" => 1800.0,
         "workspace" => ws,
     )
 end
@@ -217,9 +247,14 @@ function build_case(case_name::String, N::Int, dz::Float64)
         d["R_down"],
         d["lambda_s"],
         d["d_soil"],
+        d["k_min_surf"],
+        d["ts_min"],
+        d["ts_max"],
         d["theta_top_bc"],
         d["theta_top"],
         d["lambda_top"],
+        d["debug_print"],
+        d["profile_every"],
         d["workspace"],
     )
 
@@ -259,9 +294,47 @@ function _apply_top_bc_overrides!(p::SCMParameters, theta_top_bc::String, theta_
         p.R_down,
         p.lambda_s,
         p.d_soil,
+        p.k_min_surf,
+        p.ts_min,
+        p.ts_max,
         bc,
         theta_top,
         lambda_top,
+        p.debug_print,
+        p.profile_every,
+        p.workspace,
+    )
+end
+
+function _apply_runtime_overrides!(p::SCMParameters, cfg)
+    return SCMParameters(
+        p.N,
+        p.dz,
+        p.z_centers,
+        p.z_faces,
+        p.f,
+        p.Ug,
+        p.Vg,
+        p.theta_a,
+        p.T_deep,
+        p.delta,
+        p.K_buoy,
+        p.beta,
+        p.l_0,
+        p.eta,
+        p.xi,
+        p.C_skin,
+        p.R_down,
+        p.lambda_s,
+        p.d_soil,
+        Float64(cfg["k_min_surf"]),
+        Float64(cfg["ts_min"]),
+        Float64(cfg["ts_max"]),
+        p.theta_top_bc,
+        p.theta_top,
+        p.lambda_top,
+        Bool(cfg["debug_print"]),
+        Float64(cfg["profile_every_seconds"]),
         p.workspace,
     )
 end
@@ -319,6 +392,28 @@ function _write_outputs(outdir::String, payload, case_name::String, args_cfg)
     return (time_series_csv=ts_csv, summary_json=summary_path)
 end
 
+function _write_failure_summary(outdir::String, case_name::String, args_cfg, e::SurfaceAnomalyException)
+    mkpath(outdir)
+    summary = Dict(
+        "status" => "failed",
+        "case" => case_name,
+        "outdir" => outdir,
+        "arguments" => args_cfg,
+        "failure" => Dict(
+            "type" => "SurfaceAnomalyException",
+            "failure_time_hours" => e.t / 3600.0,
+            "failure_Ts" => e.Ts,
+            "reason" => e.reason,
+            "state_snapshot" => e.state_summary,
+        ),
+    )
+    summary_path = joinpath(outdir, "summary.json")
+    open(summary_path, "w") do io
+        JSON3.pretty(io, summary)
+    end
+    return summary_path
+end
+
 function main(args)
     cfg = parse_args(args)
 
@@ -330,16 +425,32 @@ function main(args)
     outdir = cfg["outdir"] == "" ? joinpath("results", case_name) : cfg["outdir"]
 
     X0, p0 = build_case(case_name, N, dz)
-    p = _apply_top_bc_overrides!(p0, cfg["theta_top_bc"], cfg["theta_top"], cfg["lambda_top"])
+    p1 = _apply_top_bc_overrides!(p0, cfg["theta_top_bc"], cfg["theta_top"], cfg["lambda_top"])
+    p = _apply_runtime_overrides!(p1, cfg)
 
     t_span = (0.0, duration_hours * 3600.0)
-    payload = run_and_diagnose_scm(
-        X0,
-        p,
-        t_span,
-        dt;
-        profile_every_seconds=cfg["profile_every_seconds"],
-    )
+    payload = try
+        run_and_diagnose_scm(
+            X0,
+            p,
+            t_span,
+            dt;
+            profile_every_seconds=cfg["profile_every_seconds"],
+        )
+    catch e
+        if e isa SurfaceAnomalyException
+            println(repeat("=", 80))
+            println("SIMULATION ABORTED VIA ANOMALY GUARD")
+            println(repeat("=", 80))
+            showerror(stdout, e)
+            println()
+            println(repeat("=", 80))
+            summary_path = _write_failure_summary(outdir, case_name, cfg, e)
+            @printf("Failure summary written to: %s\n", summary_path)
+            exit(1)
+        end
+        rethrow(e)
+    end
 
     paths = _write_outputs(outdir, payload, case_name, cfg)
 
