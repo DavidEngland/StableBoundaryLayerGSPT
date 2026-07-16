@@ -29,7 +29,7 @@ In the singular limit $\varepsilon \to 0$, the fast-slow flow is constrained to 
 
 For our physical model, setting Equation~\eqref{eq:fast_tke} to zero yields the algebraic constraint:
 \begin{equation}
-\sqrt{e + \delta} \left[ l_0 \Delta(\mathbf{y}) - (e + \delta) \right] = 0,
+l_0 \Delta(\mathbf{y}) \sqrt{e + \delta} - (e + \delta) = 0,
 \label{eq:critical_constraint}
 \end{equation}
 where $\Delta(\mathbf{y}) \coloneqq \eta \gamma (U^2 + V^2) - K G(T_s)$ acts as the net macro-environmental forcing metric. The critical set $\mathcal{C}$ immediately bifurcates into two distinct, intersecting sheets:
@@ -37,7 +37,7 @@ where $\Delta(\mathbf{y}) \coloneqq \eta \gamma (U^2 + V^2) - K G(T_s)$ acts as 
     \item \textbf{The Laminar/Residual Sheet ($\mathcal{M}_0^{\text{lam}}$):} Given by $e + \delta = 0$ (or physically $e = -\delta$, representing the background residual molecular dissipation limit).
     \item \textbf{The Active Turbulent Sheet ($\mathcal{M}_0^{\text{act}}$):} Given by the non-trivial root:
     \begin{equation}
-    e^*(\mathbf{y}) = l_0 \Delta(\mathbf{y}) - \delta.
+    e^*(\mathbf{y}) = \left(l_0 \Delta(\mathbf{y})\right)^2 - \delta.
     \label{eq:active_branch_gspt}
     \end{equation}
 \end{enumerate}
@@ -45,7 +45,7 @@ where $\Delta(\mathbf{y}) \coloneqq \eta \gamma (U^2 + V^2) - K G(T_s)$ acts as 
 \begin{theorem}[Fenichel-Type Persistence of the Active Branch]
 Let $\mathcal{K} \subset \mathcal{M}_0^{\text{act}}$ be a compact subset of the active turbulent sheet where the normal hyperbolicity condition is strictly satisfied:
 \begin{equation}
-\partial_e \mathcal{F}(e, \mathbf{y}; 0)\Big|_{\mathcal{K}} = -\frac{3}{2}\frac{\sqrt{e^* + \delta}}{l_0} + \frac{\Delta(\mathbf{y})}{2\sqrt{e^* + \delta}} < 0.
+\partial_e \mathcal{F}(e, \mathbf{y}; 0)\Big|_{\mathcal{K}} = -\frac{1}{2} < 0.
 \end{equation}
 Then, for a sufficiently small perturbation parameter $0 < \varepsilon \ll 1$, there exists a locally invariant, smooth slow manifold $\mathcal{M}_\varepsilon$ that lies within $\mathcal{O}(\varepsilon)$ of $\mathcal{K}$ in the $C^1$ topology. The perturbed slow flow on $\mathcal{M}_\varepsilon$ is a regular perturbation of the reduced flow on $\mathcal{K}$.
 \end{theorem}

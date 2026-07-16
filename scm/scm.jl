@@ -109,8 +109,8 @@ function scm_gspt_tendencies!(dX, X, p, t)
         Δ_local = η * (ell_z^2) * (dU_dz^2 + dV_dz^2) - K_buoy * G_local
 
         # England's Regularized C^∞ Hyperbolic Embedding Engine
-        term_affine = l_0 * Δ_local - δ
-        e_star_xi = 0.5 * (term_affine + hypot(term_affine, ξ))
+        term_quadratic = (l_0 * Δ_local)^2 - δ
+        e_star_xi = 0.5 * (term_quadratic + hypot(term_quadratic, ξ))
 
         # Evaluate Local Exchange Strengths
         K_m_faces[i] = ell_z * sqrt(e_star_xi + δ)
@@ -146,8 +146,8 @@ function scm_gspt_tendencies!(dX, X, p, t)
     G_surf = expm1(stability_arg_surf)
     Δ_surf = η * (ell_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * G_surf
 
-    A_surf = l_0 * Δ_surf - δ
-    e_star_surf = 0.5 * (A_surf + hypot(A_surf, ξ))
+    Q_surf = (l_0 * Δ_surf)^2 - δ
+    e_star_surf = 0.5 * (Q_surf + hypot(Q_surf, ξ))
 
     # Smooth nonzero background transport at the surface. This preserves coupling
     # even when ell_surf -> 0 and e_star_surf -> 0.

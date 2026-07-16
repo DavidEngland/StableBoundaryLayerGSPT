@@ -5,7 +5,7 @@ We model the non-equilibrium thermodynamic and mechanical state of the nocturnal
 
 The governing system is given by:
 \begin{align}
-\varepsilon \frac{de}{dt} &= \eta \gamma (U^2 + V^2) \sqrt{e + \delta} - K G(T_s) \sqrt{e + \delta} - \frac{(e + \delta)^{3/2}}{l_0} \label{eq:fast_tke} \\
+\varepsilon \frac{de}{dt} &= l_0\left[\eta \gamma (U^2 + V^2) - K G(T_s)\right] \sqrt{e + \delta} - (e + \delta) \label{eq:fast_tke} \\
 \frac{dU}{dt} &= f(V - V_g) - \gamma \sqrt{e + \delta} \, U \label{eq:slow_u} \\
 \frac{dV}{dt} &= -f(U - U_g) - \gamma \sqrt{e + \delta} \, V \label{eq:slow_v} \\
 \frac{dT_s}{dt} &= \frac{1}{C_s} \left[ R_{\downarrow} - \sigma T_s^4 - \rho c_p C_H \sqrt{e + \delta} (T_s - T_a) - \frac{K_g}{d_g} (T_s - T_g) \right] \label{eq:slow_ts}

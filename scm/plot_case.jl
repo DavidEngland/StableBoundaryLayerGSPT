@@ -300,13 +300,13 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     ri_max_display = 1.0
 
     ri_surface_band = Float64[]
-    a_surface_band = Float64[]
+    q_surface_band = Float64[]
     exi_surface_band = Float64[]
     ri_mid_band = Float64[]
-    a_mid_band = Float64[]
+    q_mid_band = Float64[]
     exi_mid_band = Float64[]
     ri_upper_band = Float64[]
-    a_upper_band = Float64[]
+    q_upper_band = Float64[]
     exi_upper_band = Float64[]
 
     for row in ts
@@ -315,21 +315,21 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         evec = _getkey(row, :e_xi_faces)
         for j in eachindex(dvec)
             zloc = z_face_mid[j]
-            a_val = Float64(_getkey(p, :l_0)) * dvec[j] - Float64(_getkey(p, :delta))
+            q_val = (Float64(_getkey(p, :l_0)) * dvec[j])^2 - Float64(_getkey(p, :delta))
             ri_val = ri_vec[j]
             if ri_val < ri_min_display || ri_val > ri_max_display
                 continue
             elseif zloc <= z_surface_max
                 push!(ri_surface_band, ri_vec[j])
-                push!(a_surface_band, a_val)
+                push!(q_surface_band, q_val)
                 push!(exi_surface_band, evec[j])
             elseif zloc <= z_mid_max
                 push!(ri_mid_band, ri_vec[j])
-                push!(a_mid_band, a_val)
+                push!(q_mid_band, q_val)
                 push!(exi_mid_band, evec[j])
             else
                 push!(ri_upper_band, ri_vec[j])
-                push!(a_upper_band, a_val)
+                push!(q_upper_band, q_val)
                 push!(exi_upper_band, evec[j])
             end
         end
@@ -337,13 +337,13 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
 
     p6a = Plots.scatter(
         ri_surface_band,
-        a_surface_band;
+        q_surface_band;
         markersize=2,
         alpha=0.5,
         color=:royalblue,
         xlabel="Ri_g",
-        ylabel="A = l_0 \\Delta - \\delta",
-        title="A vs Ri_g",
+        ylabel="Q = (l_0 \\Delta)^2 - \\delta",
+        title="Q vs Ri_g",
         label="surface band (z <= 0.2 z_top)",
         legend=:topright,
         xlims=(ri_min_display, ri_max_display),
@@ -352,7 +352,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     Plots.scatter!(
         p6a,
         ri_mid_band,
-        a_mid_band;
+        q_mid_band;
         markersize=2,
         alpha=0.5,
         color=:darkorange,
@@ -361,14 +361,14 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     Plots.scatter!(
         p6a,
         ri_upper_band,
-        a_upper_band;
+        q_upper_band;
         markersize=2,
         alpha=0.5,
         color=:seagreen,
         label="upper band (z > 0.6 z_top)",
     )
 
-    Plots.hline!(p6a, [0.0]; color=:black, linestyle=:dash, linewidth=2, label="A = 0")
+    Plots.hline!(p6a, [0.0]; color=:black, linestyle=:dash, linewidth=2, label="Q = 0")
 
     p6b = Plots.scatter(
         ri_surface_band,
@@ -456,20 +456,20 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     p7 = Plots.plot(p7a, p7b; layout=(1, 2), size=(1280, 460))
     _savefig(Plots, p7, outdir, "fig07_diffusivity_vs_ri", fmt)
 
-    # Figure 8: Affine fold-distance diagnostic vs time
-    fold_distance = [Float64(_getkey(p, :l_0)) * Float64(val) - Float64(_getkey(p, :delta)) for val in delta_surface]
+    # Figure 8: Quadratic fold-distance diagnostic vs time
+    fold_distance = [(Float64(_getkey(p, :l_0)) * Float64(val))^2 - Float64(_getkey(p, :delta)) for val in delta_surface]
     p8 = Plots.plot(
         t_hours,
         fold_distance;
         linewidth=2,
         xlabel="Time (h)",
-        ylabel="A = l_0 \\Delta_{surface} - \\delta",
-        title="Figure 8: Affine Fold-Distance Diagnostic",
-        label="A(t)",
+        ylabel="Q = (l_0 \\Delta_{surface})^2 - \\delta",
+        title="Figure 8: Quadratic Fold-Distance Diagnostic",
+        label="Q(t)",
         legend=:topright,
         dpi=dpi,
     )
-    Plots.hline!(p8, [0.0]; linewidth=2, linestyle=:dash, label="fold threshold A = 0")
+    Plots.hline!(p8, [0.0]; linewidth=2, linestyle=:dash, label="fold threshold Q = 0")
     _savefig(Plots, p8, outdir, "fig08_fold_proximity", fmt)
 
     manifest_path = joinpath(outdir, "figure_manifest.txt")

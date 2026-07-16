@@ -29,7 +29,7 @@ In the singular limit $\varepsilon \to 0$, the fast subsystem defines the critic
 
 Solving for the non-trivial active branch yields:
 \begin{equation}
-e^* = l_0\Delta - \delta, \qquad \text{where} \quad \Delta(U,V,T_s) = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
+e^* = (l_0\Delta)^2 - \delta, \qquad \text{where} \quad \Delta(U,V,T_s) = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
 \label{eq:critical_branch}
 \end{equation}
 
@@ -46,13 +46,13 @@ Geometrically, this stability increase physically dampens TKE production, transl
 
 To eliminate non-differentiable $C^1$ boundaries introduced by typical algebraic clipping functions (e.g., $\max(0, \Delta)$), we regularize the transition between the active and laminar states using a smooth hyperbolic embedding parameterized by the regularization scale $\xi \ll 1$:
 \begin{equation}
-e^*_{\xi}(U,V,T_s) = \frac{1}{2}\left( (l_0\Delta - \delta) + \sqrt{(l_0\Delta - \delta)^2 + \xi^2}\right).
+e^*_{\xi}(U,V,T_s) = \frac{1}{2}\left( \left((l_0\Delta)^2 - \delta\right) + \sqrt{\left((l_0\Delta)^2 - \delta\right)^2 + \xi^2}\right).
 \label{eq:smooth_embedding}
 \end{equation}
 
 This regularization satisfies:
 \begin{enumerate}
-    \item $\lim_{\xi \to 0} e^*_{\xi} = \max(0, l_0\Delta - \delta) - \delta$ (uniform convergence to the clipped limit),
+    \item $\lim_{\xi \to 0} e^*_{\xi} = \max\left(0, (l_0\Delta)^2 - \delta\right)$ (uniform convergence to the clipped limit),
     \item $e^*_{\xi} \in C^\infty(\mathbb{R}^3)$ for any fixed $\xi > 0$.
 \end{enumerate}
 

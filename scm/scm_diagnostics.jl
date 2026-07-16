@@ -60,8 +60,8 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
         G = expm1(arg)
 
         delta_local = eta * (ell^2) * s2 - K_buoy * G
-        A = l0 * delta_local - delta
-        e_star = 0.5 * (A + hypot(A, xi))
+        Q = (l0 * delta_local)^2 - delta
+        e_star = 0.5 * (Q + hypot(Q, xi))
 
         Km[i] = ell * sqrt(e_star + delta)
         Kh[i] = Km[i] / Pr_t
@@ -106,8 +106,8 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     ell_surf = mixing_length(z_centers[1], l0; kappa=cfg.kappa)
     G_surf = expm1(clamp(beta * dth_dz_surf * ell_surf / theta_a, -40.0, 40.0))
     Delta_surf = eta * (ell_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * G_surf
-    A_surf = l0 * Delta_surf - delta
-    e_surf = 0.5 * (A_surf + hypot(A_surf, p.xi))
+    Q_surf = (l0 * Delta_surf)^2 - delta
+    e_surf = 0.5 * (Q_surf + hypot(Q_surf, p.xi))
     # Maintain a smooth background floor in surface exchange coefficients.
     K_m_surf = cfg.k_min_surf + ell_surf * sqrt(e_surf + delta)
     Pr_t = 1.0
@@ -144,7 +144,7 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     bl_idx = findfirst(x -> x < km_threshold, closure.Km)
     bl_depth = isnothing(bl_idx) ? z_centers[end] : z_centers[bl_idx]
 
-    near_fold = abs(Delta_surf - delta / l0) <= cfg.delta_near_tol
+    near_fold = abs(Delta_surf - sqrt(delta) / l0) <= cfg.delta_near_tol
 
     return (
         t=t,

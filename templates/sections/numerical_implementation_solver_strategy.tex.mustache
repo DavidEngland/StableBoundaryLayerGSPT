@@ -8,14 +8,14 @@ The reduced GSPT-SBL system in Equation~\eqref{eq:mathematical_full_system} is s
 
 Let $\varphi \coloneqq e + \delta$ represent the shifted TKE coordinate. Under classical mixing-length theory, the fast subsystem in Equation~\eqref{eq:fast_tke} can be written in terms of $\varphi$ as:
 \begin{equation}
-\varepsilon \frac{d\varphi}{dt} = \sqrt{\varphi} \, \Delta(\mathbf{y}) - \frac{\varphi^{3/2}}{l_0} = \sqrt{\varphi} \left( \Delta(\mathbf{y}) - \frac{\varphi}{l_0} \right),
+\varepsilon \frac{d\varphi}{dt} = l_0\,\Delta(\mathbf{y})\,\sqrt{\varphi} - \varphi = \sqrt{\varphi} \left( l_0\,\Delta(\mathbf{y}) - \sqrt{\varphi} \right),
 \label{eq:shifted_fast_ode}
 \end{equation}
 where $\mathbf{y} = (U, V, T_s)^T$ is the slow state vector, and $\Delta(\mathbf{y}) = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s)$ is the net macro-environmental forcing balance.
 
 The Jacobian of this fast subsystem with respect to the shifted TKE coordinate is:
 \begin{equation}
-\frac{\partial}{\partial \varphi} \left( \varepsilon \frac{d\varphi}{dt} \right) = \frac{\Delta(\mathbf{y})}{2\sqrt{\varphi}} - \frac{3\sqrt{\varphi}}{2l_0}.
+\frac{\partial}{\partial \varphi} \left( \varepsilon \frac{d\varphi}{dt} \right) = \frac{l_0\,\Delta(\mathbf{y})}{2\sqrt{\varphi}} - 1.
 \label{eq:fast_jacobian}
 \end{equation}
 
@@ -45,7 +45,7 @@ where $\alpha > 0$ is a small, user-defined numerical safety scale (typically ch
 
 Incorporating this gate into the fast dynamics yields:
 \begin{equation}
-\varepsilon\frac{de}{dt} = \Psi(e+\delta;\alpha)\,\sqrt{e+\delta}\,\Delta(\mathbf{y}) - \frac{(e+\delta)^{3/2}}{l_0},
+\varepsilon\frac{de}{dt} = \Psi(e+\delta;\alpha)\,l_0\,\sqrt{e+\delta}\,\Delta(\mathbf{y}) - (e+\delta),
 \label{eq:gated_fast_system}
 \end{equation}
 where $\Phi_m(e) = \sqrt{e + \delta}$. This ensures that the solver sees a differentiable right-hand side even when the system is approaching a turbulent-to-laminar transition.
@@ -153,7 +153,7 @@ function gspt_sbl_dynamics!(dx, x, p, t)
 
     # 2.3 Evaluated Tendencies
     # Fast TKE Equation (with smooth safeguard gate)
-    dx[1] = (1.0 / epsilon) * (psi * sqrt(max(phi, 1.0e-12)) * Delta - (phi^(1.5)) / l0)
+    dx[1] = (1.0 / epsilon) * (psi * l0 * sqrt(max(phi, 1.0e-12)) * Delta - phi)
 
     # Slow Momentum and Thermodynamic Equations
     dx[2] = f_cor * (V - Vg) - gamma * sqrt(max(phi, 1.0e-12)) * U
