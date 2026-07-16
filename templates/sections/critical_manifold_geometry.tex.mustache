@@ -1,0 +1,50 @@
+\subsection{Critical Manifold Geometry}
+\label{subsec:critical_manifold_geometry}
+
+Define the slow variable bundle $\mathbf{y}=(U,V,T_s)$ and forcing metric
+\begin{equation}
+\Delta(\mathbf{y}) = \eta\gamma(U^2+V^2)-K G(T_s).
+\end{equation}
+In the singular limit $\varepsilon \to 0$, the fast equation \eqref{eq:gspt_fast} yields
+\begin{equation}
+l_0\Delta(\mathbf{y})\sqrt{e+\delta} - (e+\delta) = 0.
+\label{eq:critical_constraint_unified}
+\end{equation}
+Hence the critical manifold splits into
+\begin{align}
+\mathcal{M}_0^{\mathrm{lam}} &: e+\delta=0,\\
+\mathcal{M}_0^{\mathrm{act}} &: e^*(\mathbf{y})=(l_0\Delta(\mathbf{y}))^2-\delta.
+\label{eq:active_branch_quadratic_unified}
+\end{align}
+
+\begin{proposition}[Thermal Shift Paradox]
+\label{prop:thermal_shift_paradox}
+Assume $\partial_{T_s}G(T_s)<0$. During nocturnal cooling ($T_s\downarrow$), $G(T_s)$ increases, so $\Delta(\mathbf{y})$ decreases. Consequently the active branch \eqref{eq:active_branch_quadratic_unified} translates downward in $e$, shrinking the admissible active-turbulence volume and increasing the wind magnitude required to sustain $e>0$.
+\end{proposition}
+
+\paragraph{Proof.}
+From $\partial_{T_s}G<0$, cooling implies $G\uparrow$ and thus
+\begin{equation}
+\partial_{T_s}\Delta = -K\partial_{T_s}G < 0.
+\end{equation}
+Differentiating \eqref{eq:active_branch_quadratic_unified} gives
+\begin{equation}
+\partial_{T_s}e^* = 2l_0^2\Delta\,\partial_{T_s}\Delta.
+\end{equation}
+In the active branch of interest ($\Delta>0$), this is negative, so $e^*$ shifts downward as $T_s$ cools.
+
+\begin{theorem}[Uniform Normal Hyperbolicity on the Active Branch]
+\label{thm:uniform_normal_hyperbolicity}
+On compact subsets of $\mathcal{M}_0^{\mathrm{act}}$ with $\Delta>0$, the fast-direction derivative is
+\begin{equation}
+\partial_e\mathcal{F}\big|_{\mathcal{M}_0^{\mathrm{act}}} = -\frac{1}{2}<0,
+\end{equation}
+so the active branch is uniformly normally attracting.
+\end{theorem}
+
+\paragraph{Proof.}
+For $\mathcal{F}(e,\mathbf{y};0)=l_0\Delta\sqrt{e+\delta}-(e+\delta)$,
+\begin{equation}
+\partial_e\mathcal{F} = \frac{l_0\Delta}{2\sqrt{e+\delta}}-1.
+\end{equation}
+Substituting $e+\delta=(l_0\Delta)^2$ from \eqref{eq:active_branch_quadratic_unified} gives $\partial_e\mathcal{F}=\frac{1}{2}-1=-\frac{1}{2}$.

@@ -1,0 +1,18 @@
+\subsection{Governing System}
+\label{subsec:governing_system_unified}
+
+We model the nocturnal stable boundary layer as a four-dimensional fast-slow system on
+\begin{equation}
+\mathcal{X} = \left\{(e,U,V,T_s) \in \mathbb{R}^4 \mid e \ge -\delta,\; T_s > 0\right\}.
+\end{equation}
+The state variables are turbulent kinetic energy coordinate $e$, horizontal wind components $(U,V)$, and skin temperature $T_s$.
+
+The governing ODEs are
+\begin{align}
+\varepsilon \frac{de}{dt} &= l_0\left[\eta\gamma(U^2+V^2) - K G(T_s)\right]\sqrt{e+\delta} - (e+\delta), \label{eq:gspt_fast}\
+\frac{dU}{dt} &= f(V-V_g) - \gamma\sqrt{e+\delta}\,U, \label{eq:gspt_slow_u}\
+\frac{dV}{dt} &= -f(U-U_g) - \gamma\sqrt{e+\delta}\,V, \label{eq:gspt_slow_v}\
+\frac{dT_s}{dt} &= \frac{1}{C_s}\left[R_{\downarrow} - \sigma T_s^4 - \rho c_p C_H\sqrt{e+\delta}(T_s-T_a) - \frac{K_g}{d_g}(T_s-T_g)\right]. \label{eq:gspt_slow_ts}
+\end{align}
+
+Here $\varepsilon \ll 1$ separates fast turbulence relaxation from slow momentum and thermodynamic evolution, and $\delta>0$ defines the regularized lower boundary of unresolved turbulent activity.

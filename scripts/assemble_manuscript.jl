@@ -77,14 +77,16 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
     content_templates = filter(name -> (name != wrapper_name) && !(name in front_matter_templates), all_tex_templates)
 
     preferred_order = [
-        "theory_gspt.tex.mustache",
+        "governing_system.tex.mustache",
         "governing_equations.tex.mustache",
+        "critical_manifold_geometry.tex.mustache",
+        "regularization.tex.mustache",
         "mathematical_formulation_regularization_thermal_shift.tex.mustache",
+        "comparative_metrics.tex.mustache",
+        "numerical_implementation_solver_strategy.tex.mustache",
+        "numerical_verification_physical_interpretation.tex.mustache",
         "closures.tex.mustache",
         "parameters_geometry.tex.mustache",
-        "numerical_implementation_solver_strategy.tex.mustache",
-        "comparative_metrics.tex.mustache",
-        "numerical_verification_physical_interpretation.tex.mustache",
     ]
 
     ordered_templates = String[]
