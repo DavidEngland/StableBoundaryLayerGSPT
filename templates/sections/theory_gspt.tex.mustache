@@ -1,149 +1,74 @@
-\subsection{Nomenclature and Core Mathematical Notation}
-\begin{table}[ht!]
-\centering
-\small
-\begin{tabular}{lp{7.0cm}l}
-\hline
-\textbf{Symbol} & \textbf{Physical / Mathematical Meaning} & \textbf{State Space Status} \\ \hline
-$e$ & Turbulent Kinetic Energy (TKE) Density & Fast Coordinate \\
-$U, V$ & Horizontal Wind Velocity Components & Slow Coordinates \\
-$T_s$ & Land Surface Skin Temperature & Slow Coordinate \\
-$\varepsilon$ & Singular Perturbation Timescale Ratio ($\tau_{\text{turb}}/\tau_{\text{macro}}$) & Small Parameter \\
-$\Delta$ & Net Mechanical Production Minus Buoyancy Balance & Algebraic Metric \\
-$\mathcal{C}$ & Global Critical Constraint Set ($\mathcal{F}=0$) & Phase Space Subspace \\
-$\mathcal{M}_0$ & Normally Hyperbolic Critical Manifold ($\partial_e\mathcal{F}\neq0$) & Reduced Base Manifold \\
-$\mathcal{M}_\varepsilon$ & Fenichel-Perturbed Invariant Slow Manifold & Active Dynamical Track \\
-\hline
-\end{tabular}
-\end{table}
+\subsection{Geometric Singular Perturbation Theory (GSPT) Representation}
+\label{subsec:gspt_representation}
 
-\subsection{Geometric Singularity and State-Space Topologies}
-\label{subsec:gspt_topology}
-
-We model the non-equilibrium transitions of the nocturnal stable boundary layer (SBL) as a constrained vector field on a four-dimensional differentiable manifold with boundary. Let $\mathcal{X}$ denote the state space:
+The nocturnal stable boundary layer (SBL) system defined in Equations~\eqref{eq:fast_tke}--\eqref{eq:slow_ts} can be formally cast as a constrained vector field on a four-dimensional differentiable manifold with boundary. Let $\mathcal{X}$ denote the physical state space:
 \begin{equation}
-\mathcal{X}=\left\{\mathbf{x}=(e,U,V,T_s)^T\in\mathbb{R}_+\times\mathbb{R}\times\mathbb{R}\times\mathbb{R}_+\right\}\subset\mathbb{R}^4
+\mathcal{X} = \left\{ \mathbf{x} = (e, U, V, T_s)^T \in \mathbb{R}^4 \;\middle|\; e \ge -\delta, \; T_s > 0 \right\} \subset \mathbb{R}^4.
 \end{equation}
-where $e$ represents the turbulent kinetic energy (TKE) density, $(U,V)$ denote the components of the horizontal velocity vector, and $T_s$ is the land surface skin temperature.
 
-\paragraph{Time-Scale Separation.}
-The system exhibits a natural time-scale separation governed by the singular perturbation parameter $\varepsilon$:
+The system exhibits a stark time-scale separation parameterized by the dimensionless singular perturbation parameter $0 < \varepsilon \ll 1$:
 \begin{equation}
-0<\varepsilon\ll1,\quad \varepsilon\coloneqq\frac{\tau_{\text{turb}}}{\tau_{\text{macro}}}
+\varepsilon \coloneqq \frac{\tau_{\text{turb}}}{\tau_{\text{macro}}},
 \end{equation}
-Here $\tau_{\text{turb}}$ is the rapid turbulent relaxation timescale, typically $\mathcal{O}(10^1\,\text{s})$, while $\tau_{\text{macro}}$ is the slow synoptic-thermodynamic forcing timescale, typically $\mathcal{O}(10^3\text{--}10^4\,\text{s})$. This partition yields the fast-slow decomposition:
+where the rapid turbulent relaxation time scale ($\tau_{\text{turb}} \sim 10^1\,\text{s}$) is separated from the slow synoptic-thermodynamic forcing scales ($\tau_{\text{macro}} \sim 10^3\text{--}10^4\,\text{s}$). Grouping the slow variables into a sub-vector $\mathbf{y} = (U, V, T_s)^T \in \mathbb{R}^3$, the system parses into the standard fast-slow autonomous form:
 \begin{align}
-\varepsilon\dot{e}&=\mathcal{F}(e,U,V,T_s) \\
-\dot{\mathbf{y}}&=\mathbf{G}(e,\mathbf{y}),\quad \mathbf{y}\coloneqq(U,V,T_s)^T\in\mathbb{R}^3
+\varepsilon \frac{de}{dt} &= \mathcal{F}(e, \mathbf{y}; \varepsilon), \label{eq:fast_vector_field} \\
+\frac{d\mathbf{y}}{dt} &= \mathbf{G}(e, \mathbf{y}; \varepsilon), \label{eq:slow_vector_field}
 \end{align}
+where $\mathcal{F}$ represents the TKE tendency in Equation~\eqref{eq:fast_tke}, and $\mathbf{G} = (G_U, G_V, G_{T_s})^T$ contains the momentum and skin temperature tendencies from Equations~\eqref{eq:slow_u}--\eqref{eq:slow_ts}.
 
-\subsection{Critical Manifolds and Algebraic Regularization}
+\medskip
 
-In the singular limit $\varepsilon\to0$, the fast-slow flow is first constrained to the algebraic critical set
+\subsection{Critical Manifold and Fenichel-Type Persistence}
+\label{subsec:critical_manifold}
+
+In the singular limit $\varepsilon \to 0$, the fast-slow flow is constrained to the global critical set:
 \begin{equation}
-\mathcal{C}\coloneqq\left\{\mathbf{x}\in\mathcal{X}\ \vert\ \mathcal{F}(e,U,V,T_s)=0\right\}.
+\mathcal{C} \coloneqq \left\{ \mathbf{x} \in \mathcal{X} \;\middle|\; \mathcal{F}(e, \mathbf{y}; 0) = 0 \right\}.
 \end{equation}
-The normally hyperbolic critical manifold used in Fenichel theory is then the subset
+
+For our physical model, setting Equation~\eqref{eq:fast_tke} to zero yields the algebraic constraint:
 \begin{equation}
-\mathcal{M}_0\coloneqq\left\{\mathbf{x}\in\mathcal{C}\ \vert\ \partial_e\mathcal{F}(e,U,V,T_s)\neq0\right\}.
+\sqrt{e + \delta} \left[ l_0 \Delta(\mathbf{y}) - (e + \delta) \right] = 0,
+\label{eq:critical_constraint}
 \end{equation}
+where $\Delta(\mathbf{y}) \coloneqq \eta \gamma (U^2 + V^2) - K G(T_s)$ acts as the net macro-environmental forcing metric. The critical set $\mathcal{C}$ immediately bifurcates into two distinct, intersecting sheets:
+\begin{enumerate}
+    \item \textbf{The Laminar/Residual Sheet ($\mathcal{M}_0^{\text{lam}}$):} Given by $e + \delta = 0$ (or physically $e = -\delta$, representing the background residual molecular dissipation limit).
+    \item \textbf{The Active Turbulent Sheet ($\mathcal{M}_0^{\text{act}}$):} Given by the non-trivial root:
+    \begin{equation}
+    e^*(\mathbf{y}) = l_0 \Delta(\mathbf{y}) - \delta.
+    \label{eq:active_branch_gspt}
+    \end{equation}
+\end{enumerate}
 
-\paragraph{Singular Limit Decomposition.}
-Writing the system in slow time $t$ gives
-\begin{align}
-\varepsilon\dot e &= \mathcal{F}(e,U,V,T_s), \\
-\dot{\mathbf y} &= \mathbf G(e,\mathbf y),\qquad \mathbf y=(U,V,T_s)^T.
-\end{align}
-The reduced problem is obtained on $\mathcal{C}$ by enforcing $\mathcal{F}=0$ and evolving the slow variables tangentially. The layer problem is obtained in fast time $\tau=t/\varepsilon$:
-\begin{align}
-\frac{de}{d\tau} &= \mathcal{F}(e,U,V,T_s), \\
-\frac{d\mathbf y}{d\tau} &= \varepsilon\,\mathbf G(e,\mathbf y),
-\end{align}
-so at $\varepsilon=0$ the slow variables are frozen parameters in the fast subsystem.
-
-\begin{theorem}[Fenichel-Type Persistence]
-Let the vector fields $\mathcal{F}, \mathbf{G} \in C^r(\mathcal{X})$ with $r \ge 2$, and let $\mathcal{K} \subset \mathcal{M}_0$ be a compact, normally hyperbolic, and locally invariant submanifold for the reduced problem. Then for sufficiently small $0 < \varepsilon \ll 1$, there exists a locally invariant slow manifold $\mathcal{M}_\varepsilon$ that is $\mathcal{O}(\varepsilon)$ close to $\mathcal{K}$ in the $C^1$ topology, and the perturbed slow flow on $\mathcal{M}_\varepsilon$ is a regular perturbation of the reduced flow on $\mathcal{K}$.
+\begin{theorem}[Fenichel-Type Persistence of the Active Branch]
+Let $\mathcal{K} \subset \mathcal{M}_0^{\text{act}}$ be a compact subset of the active turbulent sheet where the normal hyperbolicity condition is strictly satisfied:
+\begin{equation}
+\partial_e \mathcal{F}(e, \mathbf{y}; 0)\Big|_{\mathcal{K}} = -\frac{3}{2}\frac{\sqrt{e^* + \delta}}{l_0} + \frac{\Delta(\mathbf{y})}{2\sqrt{e^* + \delta}} < 0.
+\end{equation}
+Then, for a sufficiently small perturbation parameter $0 < \varepsilon \ll 1$, there exists a locally invariant, smooth slow manifold $\mathcal{M}_\varepsilon$ that lies within $\mathcal{O}(\varepsilon)$ of $\mathcal{K}$ in the $C^1$ topology. The perturbed slow flow on $\mathcal{M}_\varepsilon$ is a regular perturbation of the reduced flow on $\mathcal{K}$.
 \end{theorem}
 
-\begin{theorem}[Existence and Stability of the Active Branch]
-Let $\Delta \coloneqq \eta\,\gamma\,(U^2+V^2) - K\,G(T_s)$ define the net macro-environmental balance. If the admissibility criterion is satisfied:
+\medskip
+
+\subsection{The Thermal Shift and Roughness Scaling}
+\label{subsec:thermal_shift_gspt}
+
+The active critical manifold $\mathcal{M}_0^{\text{act}}$ defines an elliptic paraboloid in the $(U, V, e)$ coordinates for any fixed surface temperature $T_s$. The spatial and dynamic properties of this manifold are highly sensitive to both surface radiative cooling and local roughness characteristics:
+
+\paragraph{The Thermal Shift Paradox.}
+During nocturnal radiative cooling, the surface skin temperature cools rapidly ($T_s \downarrow$). Because the stability function satisfies $\partial G(T_s) / \partial T_s < 0$, cooling increases the buoyant destruction term ($G(T_s) \uparrow$), which in turn drives the net environmental metric downward ($\Delta(\mathbf{y}) \downarrow$).
+
+Geometrically, this cooling translates the paraboloid critical manifold $\mathcal{M}_0^{\text{act}}$ vertically downward along the TKE axis. The volume of active phase space where $e > 0$ contracts, forcing the SBL toward decay.
+
+\paragraph{Roughness Scaling and the FLOSS Regime.}
+The drag coefficient $\gamma$ scales directly with the surface momentum roughness length $z_{0m}$ via classic log-profile theory:
 \begin{equation}
-\Delta \ge \frac{\delta}{l_0}
+\gamma \propto \left[ \ln\left( \frac{z_{\text{ref}}}{z_{0m}} \right) \right]^{-2}.
 \end{equation}
-then the fast subsystem admits a unique, physically admissible equilibrium $e^* = l_0\Delta - \delta$, which is strictly attracting with normal growth rate $\partial_e\mathcal{F} = -\sqrt{\Delta/l_0} < 0$. Conversely, if $\Delta < \delta/l_0$, no stable, physically admissible turbulent equilibrium exists on the critical set.
-\end{theorem}
 
-\paragraph{Remark (Alternative Fast Closures and Fold Topologies).}
-The closure formulation developed in this framework produces a clean transversal boundary-crossing termination at $e=0$. Alternative higher-order turbulence closures containing cubic production terms or nonlinear shear saturation can instead satisfy the simultaneous conditions:
-\begin{equation}
-\mathcal{F} = 0, \qquad \partial_e\mathcal{F} = 0
-\end{equation}
-inside the interior of the state space. Such formulations lead to genuinely folded critical manifolds, relaxation oscillations, and canard dynamics. These alternative geometries are discussed in Figure~\ref{fig:fold_envelope} solely as a comparative benchmark; they are not generated by the mathematical system analyzed here.
-
-\begin{figure}[ht!]
-\centering
-\small
-\setlength{\unitlength}{1mm}
-\begin{picture}(100,75)
-  \put(23,70){\framebox(54,6){Atmospheric Forcing ($U_g, V_g, R_{\downarrow}$)}}
-  \put(50,70){\vector(0,-1){6}}
-
-  % Uses \shortstack to create a clean two-line wrap inside the 6mm tall box
-  \put(23,58){\framebox(54,6){\shortstack{Surface Energy Budget \\ \scriptsize(Equation~\eqref{eq:slow_ts})}}}
-  \put(50,58){\vector(0,-1){6}}
-
-  \put(23,46){\framebox(54,6){Slow State Variables ($U, V, T_s$)}}
-  \put(50,46){\vector(0,-1){6}}
-
-  \put(30,34){\framebox(40,6){Fast TKE Mechanics ($e$)}}
-  \put(50,34){\vector(0,-1){6}}
-
-  \put(30,22){\framebox(40,6){Critical Manifold $\mathcal{M}_0$}}
-  \put(50,22){\vector(0,-1){6}}
-
-  \put(28,10){\framebox(44,6){Reduced Admissible Flow}}
-\end{picture}
-\caption{Conceptual modeling hierarchy of the 4D GSPT-SBL structural framework.}
-\label{fig:modeling_hierarchy}
-\end{figure}
-
-\subsubsection{Geometry of the Critical Manifold}
-\paragraph{Elliptic Paraboloid Interpretation.}
-For a fixed surface skin temperature $T_s$, the active branch can be mapped explicitly as a graph over the horizontal velocity coordinates:
-\begin{equation}
-e=l_0\left[\eta\gamma(U^2+V^2)-K\,G(T_s)\right]-\delta.
-\end{equation}
-The Hessian eigenvalues determine the local principal curvatures of the graph. Due to the rotational symmetry of the mechanical production term, these eigenvalues are degenerate ($\lambda_1 = \lambda_2 = 2\eta\gamma$), forming perfectly circular cross-sections centered about the non-turbulent geostrophic core.
-
-\subsubsection{Physical and Dynamical Interpretation}
-In low-roughness environments such as CASES99, strong surface cooling ($T_s \ll T_a$) amplifies $G(T_s)$, shifts the active branch downward in $e$, and expands the critical radius in the $(U,V)$ plane required to sustain turbulence. As active turbulence vanishes, the frictional drag terms in Equations~\eqref{eq:slow_u} and \eqref{eq:slow_v} are suppressed:
-\begin{equation}
-\gamma\sqrt{e+\delta}\to\gamma\sqrt{\delta}\approx0,
-\end{equation}
-which detaches the slow momentum vector from steady frictional balance and permits expansive clockwise Blackadar inertial circuits around $(U_g,V_g)$ at frequency $f$. The model therefore derives inertial oscillations from the governing equations rather than prescribing them phenomenologically.
-
-\subsubsection{Numerical and Statistical Implications}
-The local quadratic-fit RMSE is interpreted as a geometric proxy for phase-space exploration. High-roughness regimes such as FLOSS increase drag damping, confining trajectories to a narrower neighborhood and reducing fit error, while lower-roughness regimes such as CASES99 permit broader excursions across nonlinear manifold sectors and therefore larger geometric approximation error.
-
-\paragraph{\texorpdfstring{$C^\infty$}{C-infinity} Regularization.}
-To prevent gradient discontinuities near the active-to-laminar transition, the reduced diagnostic branch can be regularized via a smooth hyperbolic embedding parameterized by $0<\xi\ll1$:
-\begin{equation}
-e^*_{\xi}=\frac{1}{2}\left(e^*+\sqrt{(e^*)^2+\xi^2}\right).
-\end{equation}
-This is a standard $C^\infty$ approximation to the positive-part map and ensures that the reduced closures for momentum and heat exchange, $K_{m,h}\propto\sqrt{e^*_{\xi}+\delta}$, remain strictly smooth over the diagnostic domain. In the full ODE, the implemented solver adds a separate smooth floor gate to the fast tendency as $e\to-\delta$, so the state remains numerically forward-invariant while still transitioning smoothly between active shear-driven mixing and the residual laminar floor.
-
-\subsection{Future Work and Geometric Extensions}
-The present 4D construction adopts a single thermodynamic slow coordinate $T_s$, which is sufficient to resolve the collapse geometry as a boundary-mediated fold catastrophe in the reduced fast-slow projection. A natural extension is to promote lower-atmospheric potential temperature to an autonomous slow variable, expanding the phase space to
-\begin{equation}
-\mathcal{X}_5\subset\mathbb{R}^5,\qquad \mathbf{x}_5=(e,U,V,T_s,\theta)^T,
-\end{equation}
-with coupled slow thermodynamic sheets $(T_s,\theta)$. In this setting, the former one-dimensional fold locus is unrolled into a two-dimensional folded critical surface, and the singular geometry admits richer partitions into normally hyperbolic sheets separated by codimension-one loss-of-hyperbolicity strata.
-
-A conceptual prognostic closure for $\theta$ can be posed as
-\begin{equation}
-\frac{d\theta}{dt}=\frac{1}{C_a}\left[\rho c_p C_H\sqrt{e+\delta}\,(T_s-\theta)-\Lambda_{\mathrm{rad}}(\theta-\theta_{\mathrm{top}})\right],
-\label{eq:future_theta_ode}
-\end{equation}
-where $C_a$ is an effective lower-air heat capacity, the first term represents vertical heat-flux convergence from the surface layer, and the second term captures local radiative relaxation toward an overlying reference potential temperature $\theta_{\mathrm{top}}$ with rate $\Lambda_{\mathrm{rad}}>0$. Coupling Equation~\eqref{eq:future_theta_ode} to the existing fast TKE balance transforms the reduced critical geometry from a folded curve family into a folded surface family parameterized by $(T_s,\theta)$.
-
-This 5D topology is the minimal geometric setting that supports folded nodes and associated canard solutions: trajectories may track an attracting sheet, pass through a folded-node neighborhood, and persist for finite slow time near a repelling branch before jump transition. The resulting canard-mediated transit structure provides a direct route to mixed-mode oscillations (MMOs) in turbulent intensity and thermodynamic state. Consequently, the 5D extension supplies the foundational first-principles framework required to derive intermittent turbulence, nocturnal cycling, and burst-suppression alternation natively from geometric singular perturbation structure rather than from imposed stochastic switching rules.
+\begin{itemize}
+    \item \textbf{FLOSS (Fluxes Over Snow Surfaces):} Smooth snow features an exceptionally tiny roughness length ($z_{0m} \sim 10^{-4}\,\text{m}$). This minimizes frictional drag, suppressing mechanical shear production ($\gamma \to 0$). The critical manifold paraboloid contracts dramatically, requiring much larger geostrophic wind speeds ($\sqrt{U_g^2 + V_g^2}$) to sustain active turbulence before the manifold translates below the $e=0$ threshold.
+    \item \textbf{Grasslands (CASES99):} The larger roughness of sparse vegetation ($z_{0m} \sim 10^{-2}\,\text{m}$) enhances shear production, expanding the paraboloid envelope and permitting active turbulence to persist under weaker geostrophic winds.
+\end{itemize}

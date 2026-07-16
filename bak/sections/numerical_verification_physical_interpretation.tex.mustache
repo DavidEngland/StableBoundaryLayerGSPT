@@ -1,0 +1,10 @@
+\section{Numerical Verification and Physical Interpretation}
+\label{sec:numerical_verification}
+
+The Single-Column Model (SCM) verification run for the \texttt{ {{scm_case_name}} } case provides direct numerical confirmation of the Geometric Singular Perturbation Theory (GSPT) framework applied to the Stable Boundary Layer (SBL). By utilizing a stiff, high-order Rosenbrock solver (\texttt{ {{scm_solver_name}} }) within the Julia/SciML ecosystem, the highly nonlinear fast-slow dynamics of the turbulent-laminar transition are integrated without numerical instability. The solver required {{scm_rhs_evaluations}} right-hand side evaluations, illustrating the stiffness inherent to resolving high-frequency turbulent relaxation scales alongside slow radiative and conductive cooling.
+
+Physically, the model preserves strict mathematical consistency across the soil-vegetation-atmosphere interface, achieving a surface energy closure error of exactly ${{scm_surface_energy_closure_error}}\,\mathrm{W\,m^{-2}}$. Momentum transport remains physically bounded, with the eddy diffusivity $K_m$ restricted to the range $[{{scm_km_min}},\,{{scm_km_max}}]~\mathrm{m^2\,s^{-1}}$. Crucially, the lower bound does not collapse to zero; this is a direct consequence of the background mixing parameter $\delta$, which acts as a physical and numerical guardrail against model freezing.
+
+This behavior is illuminated by the regularized slow-manifold phase portrait (Figure~\ref{fig:scm_phase_delta_exi}). By resolving the phase dynamics into distinct spatial bands (surface, jet core, and upper boundary layer), the surface layer tracks the active turbulent branch without a catastrophic collapse into the laminar regime (fold-proximity fraction $={{scm_fold_fraction_percent}}\%$). The smooth transition through the manifold knee verifies that the $C^{\infty}$ hyperbolic embedding ($e^*_{\xi}$) regularizes the classic saddle-node fold behavior of second-order closures, preserving differentiability for implicit timesteppers while maintaining physical fidelity.
+
+{{{scm_all_figures_block}}}

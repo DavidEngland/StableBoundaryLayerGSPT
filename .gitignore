@@ -1,6 +1,8 @@
 Manifest.toml
 .DS_Store
 
+bak/*.*
+
 results/**/run_*/
 results/**/bifurcation_*/
 reports/generated/**

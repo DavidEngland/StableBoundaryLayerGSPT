@@ -1,76 +1,65 @@
-\subsection{Parameterization of Closures and Functions}
-\label{subsec:closures}
+\subsection{Microphysical Closures and Roughness Formulations}
+\label{subsec:micro_closures}
 
-To close the system mathematically, the abstract couplings are mapped to physical planetary boundary layer functions:
+To close the governing 4D system in Equations~\eqref{eq:fast_tke}--\eqref{eq:slow_ts}, the macroscopic momentum and sensible heat exchange coefficients must be resolved as functions of the state variables. Standard boundary-layer theory parameterizes the effective drag coefficient $\gamma$ and bulk thermal transfer coefficient $C_H$ using log-profile scaling relations modified by atmospheric stability:
+\begin{align}
+\gamma &= \frac{\kappa^2}{\left[ \ln(h / z_{0m}) \right]^2} \, \phi_m(Ri), \\
+C_H &= \frac{\kappa^2}{\ln(h / z_{0m}) \ln(h / z_{0h})} \, \phi_h(Ri),
+\end{align}
+where $\kappa \approx 0.4$ is the von Kármán constant, $h$ is the bulk boundary layer height, $z_{0m}$ is the momentum roughness length, and $z_{0h}$ is the thermal roughness length.
 
-\subsubsection{The Stratification Function \texorpdfstring{$G(T_s)$}{G(Ts)}}
-The stable stratification is driven by the vertical temperature inversion between the reference atmospheric layer ($T_a$) and the ground skin temperature ($T_s$). It is parameterized using a smooth, continuous exponential activation function to ensure it is $C^\infty$ everywhere:
+\paragraph{Physical Site Characteristics.}
+These aerodynamic roughness lengths define the physical geometry of the land-atmosphere interface, shifting the shear-generation potential of the site:
+\begin{itemize}
+    \item \textbf{FLOSS (Fluxes Over Snow Surfaces):} Characterized by a remarkably smooth snowpack with $z_{0m} \approx 10^{-4}\,\mathrm{m}$ and $z_{0h} \approx 10^{-5}\,\mathrm{m}$. This aerodynamic smoothness reduces $\gamma$ and $C_H$ by an order of magnitude compared to standard soil, severely limiting shear-driven TKE production and decoupling surface temperatures from the air column.
+    \item \textbf{CASES99:} Consists of a sparse prairie grassland with $z_{0m} \approx 0.02\,\mathrm{m}$ and $z_{0h} \approx 0.005\,\mathrm{m}$. The enhanced surface friction drives robust mechanical shear, making the active turbulent branch more resilient to thermal collapse.
+\end{itemize}
+
+\medskip
+
+\subsection{Mathematical Regularization: Smooth Hyperbolic Embedding}
+\label{subsec:hyperbolic_embedding}
+
+In the classical algebraic system, the turbulent exchange coefficients drop abruptly to zero when $e \le -\delta$. In numerical solvers, using discontinuous projections or $C^0$ thresholds (such as $e = \max(-\delta, e)$) breaks differentiability. This loss of smoothness triggers step-rejection loops, ruins Newton-Raphson convergence, and causes solver stalls.
+
+To guarantee that the right-hand sides of the ODE system remain $C^\infty$ smooth across the entire physical and non-physical phase space, we regularize the diagnostic TKE state $e^*$ using a smooth hyperbolic embedding parameterized by the small scaling factor $0 < \xi \ll 1$:
 \begin{equation}
-G(T_s) = \exp\left( \beta \frac{T_a - T_s}{T_a} \right) - 1
-\label{eq:stratification_func}
-\end{equation}
-
-Because $G(T_s)$ is dimensionless, the coefficient $K$ in Equation~\eqref{eq:fast_subsystem} must carry units of acceleration. In the present formulation, $K$ is therefore interpreted as a \textbf{buoyant destruction acceleration scale} with units of $\text{m~s}^{-2}$; it absorbs the gravitational and thermodynamic conversion factors that map stratification intensity into TKE destruction.
-
-\begin{description}
-    \item[Behavior:] When $T_s = T_a$ (neutral stratification), $G(T_s) = 0$, and buoyant destruction vanishes. When $T_s < T_a$ (nocturnal cooling), $G(T_s) > 0$, rapidly accelerating the buoyant destruction of TKE.
-\end{description}
-
-\subsubsection{The Turbulent Diffusivity/Drag Closure}
-The momentum drag coefficient $\gamma$ and the surface thermodynamic sensible heat exchange coefficient $C_H$ are scaled with logarithmic roughness laws:
-\begin{equation}
-\gamma = \gamma_{\mathrm{eff}}\frac{\kappa^2}{\ln(h/z_{0m})^2} \cdot \frac{1}{h} \qquad C_H = \frac{\kappa^2}{\ln(h/z_{0m})\ln(h/z_{0h})}
-\label{eq:drag_closures}
-\end{equation}
-Where $\kappa \approx 0.4$ is the von K\'arm\'an constant, $h$ is the bulk boundary layer height scale, and $z_{0m}, z_{0h}$ are the momentum and thermal roughness lengths. The parameter $l_0$ represents the \textbf{master turbulent length scale} (or asymptotic mixing length), which governs the maximum vertical scale of energy-containing eddies under neutral conditions. In highly stable regimes, $l_0$ acts as a geometric ceiling that bounds the turbulent dissipation rate $\epsilon \sim e^{3/2}/l_0$ and scales the magnitude of the eddy diffusivities.
-
-\subsubsection{\texorpdfstring{$C^\infty$}{C-infinity} Hyperbolic Embedding and Boundary Regularization}
-In the unregularized GSPT description, the fast turbulent kinetic energy (TKE) subsystem transitions from the active turbulent branch $\mathcal{M}_{\mathrm{act}}$ to the laminar floor through a transversal boundary crossing at the physical admissibility boundary $e = 0$. While this geometry is dynamically robust in the isolated 4D system, the resulting state-derived vertical eddy diffusivities can exhibit sharp kinks at collapse when they are passed directly into larger single-column atmospheric models. To preserve infinite differentiability across the boundary transit without altering the underlying non-folding geometry, we introduce a hyperbolic embedding parameterized by a small regularization scale $\xi > 0$.
-
-Let
-\begin{equation}
-\Delta = \eta\,\gamma\,(U^2 + V^2) - K\,G(T_s)
-\label{eq:delta_balance}
-\end{equation}
-denote the net balance between mechanical shear production and buoyant destruction in the fast subsystem. The unregularized active-branch equilibrium is
-\begin{equation}
-e^* = l_0\Delta - \delta,
-\end{equation}
-subject to the admissibility condition $e^* \ge 0$, which is equivalently represented by the positive-part continuation $\max(0, l_0\Delta - \delta)$ in reduced diagnostic closures. We smooth this sharp threshold by embedding the active branch into a $C^\infty$ hyperbolic surface:
-\begin{equation}
-e^*_{\xi}(\Delta) = \frac{1}{2}\left[(l_0\Delta - \delta) + \sqrt{(l_0\Delta - \delta)^2 + \xi^2}\right].
+e^*_{\xi} = \frac{1}{2} \left( e^* + \sqrt{(e^*)^2 + \xi^2} \right).
 \label{eq:hyperbolic_embedding}
 \end{equation}
 
-This construction satisfies three useful limits. First, for strongly active turbulent regimes where $(l_0\Delta - \delta) \gg \xi$,
+As a result of this embedding, the regularized turbulent diffusivity closures:
 \begin{equation}
-e^*_{\xi}(\Delta) = (l_0\Delta - \delta) + \mathcal{O}\left(\frac{\xi^2}{l_0\Delta - \delta}\right),
+K_m = l_0 \sqrt{e^*_{\xi} + \delta}, \quad K_h = l_0 \sqrt{e^*_{\xi} + \delta}
 \end{equation}
-so the embedding rapidly recovers the unregularized active-branch physics away from the threshold. Second, at the exact admissibility boundary $l_0\Delta = \delta$,
-\begin{equation}
-e^*_{\xi}\!\left(\frac{\delta}{l_0}\right) = \frac{\xi}{2},
-\end{equation}
-which provides a strictly positive, differentiable anchor point for the reduced closures. Third, for deeply stratified subcritical regimes with $(\delta - l_0\Delta) \gg \xi$, the embedded branch decays smoothly toward $0^+$.
+remain strictly smooth and differentiable for all real values of $e^*$.
 
-In the diagnostic pipeline, the state-based vertical exchange metrics are
+\medskip
+
+\subsection{The Fast-Subsystem Safeguard Gate}
+\label{subsec:safeguard_gate}
+
+While the hyperbolic embedding ensures smooth diagnostics, integrating the prognostic fast equation for TKE (Equation~\eqref{eq:fast_tke}) requires safeguarding the state variable itself. Near the collapse boundary ($e \to -\delta$), the derivative of the square-root transport term $\partial_e(\sqrt{e+\delta})$ diverges to infinity, creating a singular Jacobian.
+
+To intercept this numerical singularity without altering the physical behavior of active turbulence, we introduce a state-dependent activation gate $\Psi(e + \delta; \alpha)$ acting directly on the fast TKE balance:
 \begin{equation}
-K_m = \gamma\sqrt{e + \delta}, \qquad K_h = C_H\sqrt{e + \delta},
+\Psi(e + \delta; \alpha) = \frac{1}{2} \left[ 1 + \tanh\left( \frac{e + \delta - \alpha}{\alpha} \right) \right],
+\label{eq:smooth_gate_formula}
 \end{equation}
-while the embedded diagnostic tracks are defined by
+where $0 < \alpha \ll \delta$ represents a numerical safety scale.
+
+Applying this gate to the fast subsystem yields:
 \begin{equation}
-K_{m,\star} = \gamma\sqrt{e^*_{\xi} + \delta}, \qquad K_{h,\star} = C_H\sqrt{e^*_{\xi} + \delta}.
-\label{eq:embedded_diffusivities}
+\varepsilon \frac{de}{dt} = \Psi(e+\delta; \alpha) \left[ \eta \gamma (U^2 + V^2) \sqrt{e + \delta} - K G(T_s) \sqrt{e + \delta} \right] - \frac{(e+\delta)^{3/2}}{l_0}.
+\label{eq:gated_fast_system_ode}
 \end{equation}
-The introduction of Equation~\eqref{eq:embedded_diffusivities} also yields a bounded closure Jacobian in the slow variables:
-\begin{equation}
-\begin{aligned}
-J_K &=
-\begin{pmatrix}
-\partial K_{m,\star}/\partial U & \partial K_{m,\star}/\partial V \\
-\partial K_{h,\star}/\partial U & \partial K_{h,\star}/\partial V
-\end{pmatrix}, \\
-\|J_K\|_{\infty} &< \infty \text{ on } \mathcal{X}.
-\end{aligned}
-\label{eq:embedded_diffusivity_jacobian}
-\end{equation}
-The embedded diagnostics therefore remain localized to the collapse boundary while matching the state-derived values to leading order in the fully turbulent regime. In particular, Equation~\eqref{eq:embedded_diffusivity_jacobian} formalizes that the derivatives $\partial K_{m,\star}/\partial U$, $\partial K_{m,\star}/\partial V$, and their heat-flux analogues remain finite and continuous across the boundary transit. This allows the larger macro-scale coupling layer to inherit a smooth gradient landscape even though the full ODE in Equation~\eqref{eq:fast_subsystem} still enforces the physical admissibility barrier through its separate smooth floor gate.
+
+\paragraph{Mathematical Properties of the Gated System:}
+\begin{enumerate}
+    \item \textbf{Asymptotic Convergence:} For any active turbulent state where $(e + \delta) \gg \alpha$, the gate approaches unity exponentially fast:
+    \begin{equation}
+    \Psi(e+\delta; \alpha) = 1 - \mathcal{O}\left( e^{-2(e+\delta)/\alpha} \right),
+    \end{equation}
+    perfectly recovering the unaltered GSPT dynamics.
+    \item \textbf{Forward Invariance:} As the boundary layer collapses ($e \to -\delta$), the shifted coordinate $\varphi = e + \delta \to 0$. The gate $\Psi$ rapidly vanishes, shutting down both shear production and buoyant destruction before the square-root derivative can diverge. Consequently, the boundary $e = -\delta$ becomes a smooth, weakly attracting invariant manifold, guaranteeing that the numerical state remains in the real domain ($e(t) > -\delta$) for all time.
+\end{enumerate}

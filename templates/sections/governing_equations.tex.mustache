@@ -1,28 +1,21 @@
-\section{The Complete 4D GSPT-SBL Governing System}
-\label{sec:governing_system}
+\subsection{Governing 4D Dynamical System}
+\label{subsec:governing_system}
 
-The full state vector is defined as $\mathbf{x} = (e, U, V, T_s) \in \mathbb{R}^4$, where $e$ is the fast turbulent coordinate, and $(U, V, T_s)$ are the slow environmental coordinates. The system is scaled using the small singular perturbation parameter $\varepsilon$, representing the ratio of the rapid turbulent allocation timescale to the slow macro-environmental thermodynamic forcing timescale ($0 < \varepsilon \ll 1$).
+We model the non-equilibrium thermodynamic and mechanical state of the nocturnal stable boundary layer (SBL) using a coupled four-dimensional system of ordinary differential equations (ODEs). The state vector is defined as $\mathbf{x} = (e, U, V, T_s)^T \in \mathcal{X}$, representing the turbulent kinetic energy (TKE) density, horizontal wind components, and land surface skin temperature respectively.
 
-\subsection{The Complete Fast-Slow Equations}
-\label{subsec:fast_slow_eqs}
-
-\subsubsection*{Fast Subsystem (Turbulence Mechanics)}
-\begin{equation}
-\varepsilon \frac{de}{dt} = \sqrt{e + \delta} \left[ \eta\,\gamma\,(U^2 + V^2) - K \cdot G(T_s) \right] - \frac{(e+\delta)^{3/2}}{l_0} = \mathcal{F}(e,U,V,T_s)
-\label{eq:fast_subsystem}
-\end{equation}
-
-Here $K$ is a buoyancy-destruction acceleration scale with units of $\text{m~s}^{-2}$, so the bracketed production-minus-buoyancy term is dimensionally consistent. In the numerical implementation, the factor $\sqrt{e+\delta}$ is evaluated with a positivity regularization and the fast tendency is smoothly gated as $e$ approaches the laminar floor. This prevents trajectories from crossing below the admissible background-mixing threshold in the full 4D integration.
-
-\subsubsection*{Slow Subsystem (Atmospheric Rotational Dynamics \& Surface Thermodynamics)}
+The governing system is given by:
 \begin{align}
-\frac{dU}{dt} &= f(V - V_g) - \gamma \sqrt{e + \delta} \cdot U \label{eq:slow_u} \\
-\frac{dV}{dt} &= -f(U - U_g) - \gamma \sqrt{e + \delta} \cdot V \label{eq:slow_v} \\
-\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}} \left(R_n - H - G\right) \label{eq:slow_ts}
+\varepsilon \frac{de}{dt} &= \eta \gamma (U^2 + V^2) \sqrt{e + \delta} - K G(T_s) \sqrt{e + \delta} - \frac{(e + \delta)^{3/2}}{l_0} \label{eq:fast_tke} \\
+\frac{dU}{dt} &= f(V - V_g) - \gamma \sqrt{e + \delta} \, U \label{eq:slow_u} \\
+\frac{dV}{dt} &= -f(U - U_g) - \gamma \sqrt{e + \delta} \, V \label{eq:slow_v} \\
+\frac{dT_s}{dt} &= \frac{1}{C_s} \left[ R_{\downarrow} - \sigma T_s^4 - \rho c_p C_H \sqrt{e + \delta} (T_s - T_a) - \frac{K_g}{d_g} (T_s - T_g) \right] \label{eq:slow_ts}
 \end{align}
-with
-\begin{align}
-R_n &\coloneqq R_{\downarrow} - \sigma_{\text{SB}}T_s^4, \\
-H &\coloneqq \rho c_p C_H\sqrt{e+\delta}\,(T_s-T_a), \\
-G &\coloneqq \lambda\frac{T_s-T_{\text{deep}}}{d_{\text{soil}}}.
-\end{align}
+
+where the parameters and physical terms are defined as follows:
+\begin{itemize}
+    \item \textbf{Turbulent Transport Mechanics:} Equation~\eqref{eq:fast_tke} balances shear production (driven by mechanical wind shear with efficiency $\eta$ and drag coefficient $\gamma$), buoyant destruction (moderated by the thermal stratification function $G(T_s)$ and conduction coefficient $K$), and viscous dissipation parameterized by the turbulent master length scale $l_0$.
+    \item \textbf{Coriolis and Drag Coupling:} Equations~\eqref{eq:slow_u} and \eqref{eq:slow_v} couple horizontal momentum to geostrophic wind forcing $(U_g, V_g)$ and the Earth's rotation via the Coriolis parameter $f$, damped by turbulent drag proportional to the active root-TKE field $\sqrt{e+\delta}$.
+    \item \textbf{Surface Energy Balance:} Equation~\eqref{eq:slow_ts} evolves the skin temperature $T_s$ on a slab with thermal capacity $C_s$, balancing incoming longwave radiation $R_{\downarrow}$, outgoing Stefan-Boltzmann radiative cooling $\sigma T_s^4$, sensible heat flux exchange with the near-surface air $T_a$, and conductive soil heat flux to a deep soil layer at temperature $T_g$.
+\end{itemize}
+
+The parameter $\delta > 0$ serves as a mathematical regularizer representing the background residual molecular dissipation, ensuring that the turbulent exchange coefficients do not collapse to absolute zero during completely laminar regimes.

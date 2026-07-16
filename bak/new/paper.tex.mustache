@@ -1,9 +1,4 @@
-\documentclass[11pt,letterpaper]{article}
-
-% --- Layout & Geometry ---
-\usepackage[margin=1in]{geometry}
-\usepackage{setspace} % For line spacing control if needed (\singlespacing, \onehalfspacing)
-\singlespacing
+\documentclass[10pt,journal,compsoc]{IEEEtran}
 
 % --- Essential Packages ---
 \usepackage[utf8]{inputenc}
@@ -28,22 +23,25 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{remark}{Remark}
 
-% --- Document Metadata ---
-\title{\textbf{Geometric Singular Perturbation Analysis of the Nocturnal Stable Boundary Layer: Transitions, Regularizations, and Topological Folds}}
-
-\author{
-    \textbf{David E. England, PhD} \\
-    \small Research Engineer III \\
-    \small University of Alabama in Huntsville (UAH) \\
-    \small \href{mailto:david.england@uah.edu}{david.england@uah.edu}
-}
-\date{\small\itshape Manuscript prepared for SBL-GSPT collaborative research project stack. \\ Last compiled: \today}
-
 \begin{document}
 
-\maketitle
+% --- Title and Metadata ---
+\title{Geometric Singular Perturbation Analysis of the Nocturnal Stable Boundary Layer: Transitions, Regularizations, and Topological Folds}
 
-{{{abstract_tex}}}
+\author{
+    {/* Author list and affiliations go here if desired */}
+    \thanks{Manuscript prepared for SBL-GSPT collaborative research project stack.}
+}
+
+\markboth{Journal of the Atmospheric Sciences,~Vol.~XX, No.~X, 2026}{Shell \MakeLowercase{\textit{et al.}}: SBL GSPT Framework}
+
+\IEEEtitleabstractindextext{
+    {{{abstract}}}
+}
+
+\maketitle
+\IEEEdisplaynotitleabstractindextext
+\IEEEpeerreviewmaketitle
 
 % --- Main Body Sections ---
 \section{Introduction}
@@ -52,10 +50,14 @@ Nocturnal boundary layer transitions present a notorious modeling challenge due 
 
 % --- Dynamic Sections Compiled via Mustache ---
 
+\section{Theory and Mathematical Formulation}
+\label{sec:theory}
+{{{abstract_tex}}}
+
 {{{template_sections_tex}}}
 
-\section{Generated Diagnostics Figures}
-\label{sec:generated_diagnostics_figures}
+\section{Numerical Verification and Field Campaign Comparison}
+\label{sec:numerical_verification}
 {{{figure_tex_includes}}}
 
 \section{Conclusion and Discussion}

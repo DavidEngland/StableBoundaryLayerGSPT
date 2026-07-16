@@ -6,7 +6,7 @@ The reduced GSPT-SBL system in Equation~\eqref{eq:mathematical_full_system} is s
 \subsection{Mathematical Analysis of the Square-Root Singularity}
 \label{subsec:singularity_analysis}
 
-Let $\varphi \coloneqq e + \delta$ represent the shifted TKE coordinate. Under classical mixing-length theory, the fast subsystem in Equation~\eqref{eq:fast_tke} can be written in terms of $\varphi$ as:
+Let $\varphi \coloneqq e + \delta$ represent the shifted TKE coordinate. Under classical mixing-length theory, the fast subsystem in Equation~\eqref{eq:fast_subsystem} can be written in terms of $\varphi$ as:
 \begin{equation}
 \varepsilon \frac{d\varphi}{dt} = \sqrt{\varphi} \, \Delta(\mathbf{y}) - \frac{\varphi^{3/2}}{l_0} = \sqrt{\varphi} \left( \Delta(\mathbf{y}) - \frac{\varphi}{l_0} \right),
 \label{eq:shifted_fast_ode}
@@ -45,7 +45,7 @@ where $\alpha > 0$ is a small, user-defined numerical safety scale (typically ch
 
 Incorporating this gate into the fast dynamics yields:
 \begin{equation}
-\varepsilon\frac{de}{dt} = \Psi(e+\delta;\alpha)\,\sqrt{e+\delta}\,\Delta(\mathbf{y}) - \frac{(e+\delta)^{3/2}}{l_0},
+\varepsilon\frac{de}{dt} = \Psi(e+\delta;\alpha) \left[ l_0 \Delta(\mathbf{y}) \Phi_m(e) \right] - (e+\delta),
 \label{eq:gated_fast_system}
 \end{equation}
 where $\Phi_m(e) = \sqrt{e + \delta}$. This ensures that the solver sees a differentiable right-hand side even when the system is approaching a turbulent-to-laminar transition.
