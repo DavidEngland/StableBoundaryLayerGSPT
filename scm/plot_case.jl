@@ -161,15 +161,27 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         T_s;
         xlabel="Time (h)",
         ylabel="T_s (K)",
-        label="T_s",
+        label="T_s (left)",
         color=:royalblue,
-        linewidth=2,
-        legend=:topright,
+        linewidth=2.5,
+        legend=:topleft,
         dpi=dpi,
         title="Surface Thermodynamic Evolution",
+        grid=true,
+        gridalpha=0.3,
     )
     p1ar = Plots.twinx(p1a)
-    Plots.plot!(p1ar, t_hours, H; label="H", linewidth=2, color=:red, ylabel="H (W m^-2)")
+    Plots.plot!(
+        p1ar,
+        t_hours,
+        H;
+        label="H (right)",
+        linewidth=2.5,
+        color=:crimson,
+        ylabel="Sensible Heat Flux H (W m^-2)",
+        legend=:topright,
+        framestyle=:box,
+    )
 
     p1b = Plots.plot(
         t_hours,
@@ -178,14 +190,16 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         ylabel="u_* (m s^-1)",
         label="u_*",
         color=:black,
-        linewidth=2,
+        linewidth=2.5,
         linestyle=:dash,
         legend=:topright,
         dpi=dpi,
         title="Friction Velocity",
+        grid=true,
+        gridalpha=0.3,
     )
 
-    p1 = Plots.plot(p1a, p1b; layout=(2, 1), size=(1100, 700))
+    p1 = Plots.plot(p1a, p1b; layout=(2, 1), size=(1100, 750), margin=5Plots.mm)
     _savefig(Plots, p1, outdir, "fig01_timeseries_ts_h_ustar", fmt)
 
     # Figure 2: Hovmoller wind speed
@@ -397,7 +411,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     km_all = _flatten_field(ts, :Km_faces)
     kh_all = _flatten_field(ts, :Kh_faces)
 
-    ri_max_display = 5.0
+    ri_max_display = 2.0
     ri_min_display = max(minimum(ri_all), -0.5)
     keep = [
         isfinite(ri_all[i]) && isfinite(km_all[i]) && isfinite(kh_all[i]) &&
@@ -416,7 +430,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         alpha=0.5,
         xlabel="Ri_g",
         ylabel="K_m",
-        title="K_m vs Ri_g (Ri_g <= 5)",
+        title="K_m vs Ri_g (Ri_g <= 2)",
         xlims=(ri_min_display, ri_max_display),
         bottom_margin=8Plots.mm,
         left_margin=6Plots.mm,
@@ -431,7 +445,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         alpha=0.5,
         xlabel="Ri_g",
         ylabel="K_h",
-        title="K_h vs Ri_g (Ri_g <= 5)",
+        title="K_h vs Ri_g (Ri_g <= 2)",
         xlims=(ri_min_display, ri_max_display),
         bottom_margin=8Plots.mm,
         left_margin=6Plots.mm,

@@ -1,5 +1,5 @@
 {
-    "n_profiles": 4,
+    "n_profiles": 19,
     "parameters": {
         "theta_top": 265,
         "f": 0.0001,
@@ -30,7 +30,7 @@
         "theta_top_bc": "neumann",
         "duration_hours": 9,
         "N": 80,
-        "profile_every_seconds": 10800,
+        "profile_every_seconds": 1800,
         "outdir": "results/gabls1",
         "ts_min": 180,
         "save_jld2": true

@@ -1,18 +1,20 @@
-\subsection{Microphysical Closures and Roughness Formulations}
+\subsection{Aerodynamic Closures and Roughness Formulations}
 \label{subsec:micro_closures}
 
-To close the governing 4D system in Equations~\eqref{eq:fast_tke}--\eqref{eq:slow_ts}, the macroscopic momentum and sensible heat exchange coefficients must be resolved as functions of the state variables. Standard boundary-layer theory parameterizes the effective drag coefficient $\gamma$ and bulk thermal transfer coefficient $C_H$ using log-profile scaling relations modified by atmospheric stability:
+To close the governing 4D system in Equations~\eqref{eq:fast_tke}--\eqref{eq:slow_ts}, the macroscopic momentum and sensible heat exchange coefficients must be resolved. In classical boundary-layer modeling, empirical stability functions ($\phi_m(Ri), \phi_h(Ri)$) are typically introduced to diagnostically scale down turbulent transport under stable stratification.
+
+In our dynamical system formulation, however, the stabilization and ultimate collapse of the boundary layer are handled explicitly through the prognostic fast TKE coordinate ($e$). Consequently, we can bypass empirical algebraic stability curves entirely. The momentum exchange coefficient $\gamma$ and bulk thermal transfer coefficient $C_H$ are defined strictly by their neutral geometric values based on logarithmic wind profile theory:
 \begin{align}
-\gamma &= \frac{\kappa^2}{\left[ \ln(h / z_{0m}) \right]^2} \, \phi_m(Ri), \\
-C_H &= \frac{\kappa^2}{\ln(h / z_{0m}) \ln(h / z_{0h})} \, \phi_h(Ri),
+\gamma &= \frac{\kappa^2}{\left[ \ln(h / z_{0m}) \right]^2}, \\
+C_H &= \frac{\kappa^2}{\ln(h / z_{0m}) \ln(h / z_{0h})},
 \end{align}
 where $\kappa \approx 0.4$ is the von Kármán constant, $h$ is the bulk boundary layer height, $z_{0m}$ is the momentum roughness length, and $z_{0h}$ is the thermal roughness length.
 
 \paragraph{Physical Site Characteristics.}
-These aerodynamic roughness lengths define the physical geometry of the land-atmosphere interface, shifting the shear-generation potential of the site:
+These aerodynamic roughness lengths encapsulate the physical geometry of the land-atmosphere interface, shifting the baseline shear-generation potential of each observational site:
 \begin{itemize}
-    \item \textbf{FLOSS (Fluxes Over Snow Surfaces):} Characterized by a remarkably smooth snowpack with $z_{0m} \approx 10^{-4}\,\mathrm{m}$ and $z_{0h} \approx 10^{-5}\,\mathrm{m}$. This aerodynamic smoothness reduces $\gamma$ and $C_H$ by an order of magnitude compared to standard soil, severely limiting shear-driven TKE production and decoupling surface temperatures from the air column.
-    \item \textbf{CASES99:} Consists of a sparse prairie grassland with $z_{0m} \approx 0.02\,\mathrm{m}$ and $z_{0h} \approx 0.005\,\mathrm{m}$. The enhanced surface friction drives robust mechanical shear, making the active turbulent branch more resilient to thermal collapse.
+    \item \textbf{FLOSS (Fluxes Over Snow Surfaces):} Characterized by an ultra-smooth snowpack with $z_{0m} \approx 10^{-4}\,\mathrm{m}$ and $z_{0h} \approx 10^{-5}\,\mathrm{m}$. This aerodynamic smoothness reduces $\gamma$ and $C_H$ by nearly an order of magnitude compared to vegetated soil, severely limiting mechanical TKE production and preconditioning the surface temperature to rapidly decouple from the air column.
+    \item \textbf{CASES99:} Consists of a sparse prairie grassland with $z_{0m} \approx 0.02\,\mathrm{m}$ and $z_{0h} \approx 0.005\,\mathrm{m}$. The enhanced surface friction drives robust mechanical shear, expanding the active turbulent manifold and making the boundary layer highly resilient to thermal collapse.
 \end{itemize}
 
 \medskip
