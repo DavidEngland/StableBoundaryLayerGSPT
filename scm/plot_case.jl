@@ -154,27 +154,38 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     hov_theta .= _getkey(hov, :theta)
 
     # =========================================================================
-    # Figure 1: Time series (Ts, H, u*) [Merged Dual-Axis Legend]
+    # Figure 1: Time series (T_s, H, u_*)
     # =========================================================================
-    p1 = Plots.plot(
+    p1a = Plots.plot(
         t_hours,
         T_s;
         xlabel="Time (h)",
         ylabel="T_s (K)",
-        label="T_s (left axis)",
+        label="T_s",
         color=:royalblue,
         linewidth=2,
         legend=:topright,
         dpi=dpi,
-        title="Figure 1: Surface Thermodynamic Evolution",
+        title="Surface Thermodynamic Evolution",
     )
-    # Register twinx lines on the primary plot with empty coordinates so they merge nicely
-    Plots.plot!(p1, [], []; label="H (right axis)", linewidth=2, color=:red)
-    Plots.plot!(p1, [], []; label="u_* (right axis)", linewidth=2, color=:black, linestyle=:dash)
+    p1ar = Plots.twinx(p1a)
+    Plots.plot!(p1ar, t_hours, H; label="H", linewidth=2, color=:red, ylabel="H (W m^-2)")
 
-    p1r = Plots.twinx(p1)
-    Plots.plot!(p1r, t_hours, H; label="", linewidth=2, color=:red, ylabel="H (W m^-2)")
-    Plots.plot!(p1r, t_hours, ustar; label="", linewidth=2, color=:black, linestyle=:dash, ylabel="H / u_*")
+    p1b = Plots.plot(
+        t_hours,
+        ustar;
+        xlabel="Time (h)",
+        ylabel="u_* (m s^-1)",
+        label="u_*",
+        color=:black,
+        linewidth=2,
+        linestyle=:dash,
+        legend=:topright,
+        dpi=dpi,
+        title="Friction Velocity",
+    )
+
+    p1 = Plots.plot(p1a, p1b; layout=(2, 1), size=(1100, 700))
     _savefig(Plots, p1, outdir, "fig01_timeseries_ts_h_ustar", fmt)
 
     # Figure 2: Hovmoller wind speed
@@ -265,54 +276,103 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     _savefig(Plots, p5, outdir, "fig05_surface_energy_budget", fmt)
 
     # =========================================================================
-    # Figure 6: Manifold phase portrait Delta vs e_xi, colored by height band
+    # Figure 6: Closure response vs Ri_g, colored by height band
     # =========================================================================
     z_face_mid = zf[2:(end-1)]
     z_top = maximum(zf)
     z_surface_max = 0.2 * z_top
     z_mid_max = 0.6 * z_top
+    ri_min_display = max(-0.5, minimum(_flatten_field(ts, :Ri_faces)))
+    ri_max_display = 1.0
 
-    delta_surface_band = Float64[]
+    ri_surface_band = Float64[]
+    a_surface_band = Float64[]
     exi_surface_band = Float64[]
-    delta_mid_band = Float64[]
+    ri_mid_band = Float64[]
+    a_mid_band = Float64[]
     exi_mid_band = Float64[]
-    delta_upper_band = Float64[]
+    ri_upper_band = Float64[]
+    a_upper_band = Float64[]
     exi_upper_band = Float64[]
 
     for row in ts
+        ri_vec = _getkey(row, :Ri_faces)
         dvec = _getkey(row, :Delta_faces)
         evec = _getkey(row, :e_xi_faces)
         for j in eachindex(dvec)
             zloc = z_face_mid[j]
-            if zloc <= z_surface_max
-                push!(delta_surface_band, dvec[j])
+            a_val = Float64(_getkey(p, :l_0)) * dvec[j] - Float64(_getkey(p, :delta))
+            ri_val = ri_vec[j]
+            if ri_val < ri_min_display || ri_val > ri_max_display
+                continue
+            elseif zloc <= z_surface_max
+                push!(ri_surface_band, ri_vec[j])
+                push!(a_surface_band, a_val)
                 push!(exi_surface_band, evec[j])
             elseif zloc <= z_mid_max
-                push!(delta_mid_band, dvec[j])
+                push!(ri_mid_band, ri_vec[j])
+                push!(a_mid_band, a_val)
                 push!(exi_mid_band, evec[j])
             else
-                push!(delta_upper_band, dvec[j])
+                push!(ri_upper_band, ri_vec[j])
+                push!(a_upper_band, a_val)
                 push!(exi_upper_band, evec[j])
             end
         end
     end
 
-    p6 = Plots.scatter(
-        delta_surface_band,
+    p6a = Plots.scatter(
+        ri_surface_band,
+        a_surface_band;
+        markersize=2,
+        alpha=0.5,
+        color=:royalblue,
+        xlabel="Ri_g",
+        ylabel="A = l_0 \\Delta - \\delta",
+        title="A vs Ri_g",
+        label="surface band (z <= 0.2 z_top)",
+        legend=:topright,
+        xlims=(ri_min_display, ri_max_display),
+        dpi=dpi,
+    )
+    Plots.scatter!(
+        p6a,
+        ri_mid_band,
+        a_mid_band;
+        markersize=2,
+        alpha=0.5,
+        color=:darkorange,
+        label="mid-BL / jet band (0.2-0.6 z_top)",
+    )
+    Plots.scatter!(
+        p6a,
+        ri_upper_band,
+        a_upper_band;
+        markersize=2,
+        alpha=0.5,
+        color=:seagreen,
+        label="upper band (z > 0.6 z_top)",
+    )
+
+    Plots.hline!(p6a, [0.0]; color=:black, linestyle=:dash, linewidth=2, label="A = 0")
+
+    p6b = Plots.scatter(
+        ri_surface_band,
         exi_surface_band;
         markersize=2,
         alpha=0.5,
         color=:royalblue,
-        xlabel="Delta",
+        xlabel="Ri_g",
         ylabel="e_xi",
-        title="Figure 6: Regularized Slow-Manifold Phase Portrait",
+        title="e_xi vs Ri_g",
         label="surface band (z <= 0.2 z_top)",
-        legend=:topleft,
+        legend=:topright,
+        xlims=(ri_min_display, ri_max_display),
         dpi=dpi,
     )
     Plots.scatter!(
-        p6,
-        delta_mid_band,
+        p6b,
+        ri_mid_band,
         exi_mid_band;
         markersize=2,
         alpha=0.5,
@@ -320,8 +380,8 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         label="mid-BL / jet band (0.2-0.6 z_top)",
     )
     Plots.scatter!(
-        p6,
-        delta_upper_band,
+        p6b,
+        ri_upper_band,
         exi_upper_band;
         markersize=2,
         alpha=0.5,
@@ -329,8 +389,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         label="upper band (z > 0.6 z_top)",
     )
 
-    delta_crit = Float64(_getkey(p, :delta)) / Float64(_getkey(p, :l_0))
-    Plots.vline!(p6, [delta_crit]; color=:black, linestyle=:dash, linewidth=2, label="Delta = delta / l_0")
+    p6 = Plots.plot(p6a, p6b; layout=(1, 2), size=(1500, 480))
     _savefig(Plots, p6, outdir, "fig06_phase_delta_exi", fmt)
 
     # Figure 7: Diffusivity response vs Ri
@@ -383,20 +442,20 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     p7 = Plots.plot(p7a, p7b; layout=(1, 2), size=(1280, 460))
     _savefig(Plots, p7, outdir, "fig07_diffusivity_vs_ri", fmt)
 
-    # Figure 8: Fold proximity diagnostic vs time
-    fold_ref = fill(Float64(_getkey(p, :delta)) / Float64(_getkey(p, :l_0)), length(t_hours))
+    # Figure 8: Affine fold-distance diagnostic vs time
+    fold_distance = [Float64(_getkey(p, :l_0)) * Float64(val) - Float64(_getkey(p, :delta)) for val in delta_surface]
     p8 = Plots.plot(
         t_hours,
-        delta_surface;
+        fold_distance;
         linewidth=2,
         xlabel="Time (h)",
-        ylabel="Delta_surface",
-        title="Figure 8: Fold Proximity Diagnostic",
-        label="Delta_surface",
+        ylabel="A = l_0 \\Delta_{surface} - \\delta",
+        title="Figure 8: Affine Fold-Distance Diagnostic",
+        label="A(t)",
         legend=:topright,
         dpi=dpi,
     )
-    Plots.plot!(p8, t_hours, fold_ref; linewidth=2, linestyle=:dash, label="delta / l_0")
+    Plots.hline!(p8, [0.0]; linewidth=2, linestyle=:dash, label="fold threshold A = 0")
     _savefig(Plots, p8, outdir, "fig08_fold_proximity", fmt)
 
     manifest_path = joinpath(outdir, "figure_manifest.txt")

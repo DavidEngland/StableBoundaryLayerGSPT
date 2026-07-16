@@ -79,8 +79,10 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
     preferred_order = [
         "theory_gspt.tex.mustache",
         "governing_equations.tex.mustache",
+        "mathematical_formulation_regularization_thermal_shift.tex.mustache",
         "closures.tex.mustache",
         "parameters_geometry.tex.mustache",
+        "numerical_implementation_solver_strategy.tex.mustache",
         "comparative_metrics.tex.mustache",
         "numerical_verification_physical_interpretation.tex.mustache",
     ]

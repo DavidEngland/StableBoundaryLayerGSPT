@@ -1,0 +1,179 @@
+\section{Numerical Implementation and Solver Strategy}
+\label{sec:numerical_implementation}
+
+The reduced GSPT-SBL system in Equation~\eqref{eq:mathematical_full_system} is stiff by construction. The singular perturbation parameter $0 < \varepsilon \ll 1$ separates the rapid turbulent adjustment from the slower rotational and surface-energy evolution, while the square-root transport terms $\sqrt{e+\delta}$ introduce a sharp numerical sensitivity near the admissibility boundary. A practical integrator must resolve two requirements simultaneously: preserve the physical floor $e > -\delta$ and remain stable under rapid collapse events.
+
+\subsection{Mathematical Analysis of the Square-Root Singularity}
+\label{subsec:singularity_analysis}
+
+Let $\varphi \coloneqq e + \delta$ represent the shifted TKE coordinate. Under classical mixing-length theory, the fast subsystem in Equation~\eqref{eq:fast_subsystem} can be written in terms of $\varphi$ as:
+\begin{equation}
+\varepsilon \frac{d\varphi}{dt} = \sqrt{\varphi} \, \Delta(\mathbf{y}) - \frac{\varphi^{3/2}}{l_0} = \sqrt{\varphi} \left( \Delta(\mathbf{y}) - \frac{\varphi}{l_0} \right),
+\label{eq:shifted_fast_ode}
+\end{equation}
+where $\mathbf{y} = (U, V, T_s)^T$ is the slow state vector, and $\Delta(\mathbf{y}) = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s)$ is the net macro-environmental forcing balance.
+
+The Jacobian of this fast subsystem with respect to the shifted TKE coordinate is:
+\begin{equation}
+\frac{\partial}{\partial \varphi} \left( \varepsilon \frac{d\varphi}{dt} \right) = \frac{\Delta(\mathbf{y})}{2\sqrt{\varphi}} - \frac{3\sqrt{\varphi}}{2l_0}.
+\label{eq:fast_jacobian}
+\end{equation}
+
+As the boundary layer collapses and turbulence approaches the background floor ($\varphi \to 0^+$), the derivative exhibits a singular limit:
+\begin{equation}
+\lim_{\varphi \to 0^+} \frac{\partial}{\partial \varphi} \left( \varepsilon \frac{d\varphi}{dt} \right) =
+\begin{cases}
++\infty & \text{if } \Delta(\mathbf{y}) > 0, \\
+-\infty & \text{if } \Delta(\mathbf{y}) < 0.
+\end{cases}
+\label{eq:jacobian_singularity}
+\end{equation}
+
+This singularity causes extreme stiffness. In a discrete setting with step size $\Delta t$, any standard implicit or explicit scheme that evaluates a trial step where the numerical state overshoots into $\varphi_{k+1} < 0$ will enter the complex domain ($\mathbb{C}$), triggering immediate solver failure or NaN propagation.
+
+\subsection{Stiffness, Invariance, and Floor Protection}
+\label{subsec:numerical_stiffness}
+
+If a trial step drives the fast state below the shifted floor, the diagnostic closures become ill-defined and naive clipping (such as $e = \max(-\delta, e)$) breaks differentiability. This non-differentiable $C^1$ truncation disrupts the Newton iteration of implicit solvers, leading to step-rejection loops and stalling.
+
+The implementation therefore uses a smooth floor gate near $e = -\delta$ so that the trajectory remains forward-invariant without introducing discontinuous projections. We define the state-dependent gate using a smooth, non-convex activation function:
+\begin{equation}
+\Psi(e+\delta; \alpha) = \frac{1}{2} \left[ 1 + \tanh\left( \frac{e + \delta - \alpha}{\alpha} \right) \right],
+\label{eq:smooth_gate}
+\end{equation}
+where $\alpha > 0$ is a small, user-defined numerical safety scale (typically chosen such that $\alpha \sim 10^{-2} \delta$).
+
+Incorporating this gate into the fast dynamics yields:
+\begin{equation}
+\varepsilon\frac{de}{dt} = \Psi(e+\delta;\alpha) \left[ l_0 \Delta(\mathbf{y}) \Phi_m(e) \right] - (e+\delta),
+\label{eq:gated_fast_system}
+\end{equation}
+where $\Phi_m(e) = \sqrt{e + \delta}$. This ensures that the solver sees a differentiable right-hand side even when the system is approaching a turbulent-to-laminar transition.
+
+\paragraph{Properties of the Safeguard Gate:}
+\begin{enumerate}
+    \item \textbf{Asymptotic Consistency:} For active turbulent states where $(e+\delta) \gg \alpha$, the gate approaches unity exponentially fast:
+    \begin{equation}
+    \Psi(e+\delta; \alpha) = 1 - \mathcal{O}\left( e^{-2(e+\delta)/\alpha} \right),
+    \end{equation}
+    recovering the exact physical GSPT dynamics.
+    \item \textbf{Singularity Interception:} As the system collapses toward the laminar floor ($e \to -\delta$), the shifted variable $\varphi \to 0$. Since $\alpha > 0$, the gate term $\Psi$ rapidly vanishes. This smooth damping suppresses the positive feedback of the buoyancy term before the square-root term's derivative can diverge.
+    \item \textbf{Forward Invariance:} Under this formulation, the boundary $e = -\delta$ becomes a smooth, weakly attracting invariant manifold of the numerical system, guaranteeing that $e(t) > -\delta$ for all $t > 0$ under any consistent discretization.
+\end{enumerate}
+
+\paragraph{Implementation consequence.}
+The floor gate is not a physics replacement. It is a numerical safeguard that prevents square-root singularities, step rejection loops, and loss of Newton convergence when the stiff integrator probes the collapse neighborhood.
+
+\subsection{Solver Strategy}
+\label{subsec:solver_strategy}
+
+The preferred time integrators are L-stable implicit methods such as Rosenbrock-Wanner or SDIRK schemes, including \texttt{Rosenbrock23} and \texttt{Rodas5P} in the SciML ecosystem. These methods are well suited to the present model because they handle the fast transient on the TKE coordinate while taking comparatively larger steps on the slow momentum and thermodynamic variables.
+
+The solver should be supplied with an analytical or automatic-differentiation Jacobian, since the closure terms couple the fast and slow variables through $G(T_s)$, $\sqrt{e+\delta}$, and the Coriolis rotation. A Jacobian-aware implicit method is materially more robust than an explicit scheme, which would be forced into prohibitively small steps during nighttime collapse or recovery.
+
+\paragraph{Recommended configuration.}
+In practical use, the implementation should:
+\begin{enumerate}
+    \item initialize the state in the admissible domain $e > -\delta$,
+    \item evaluate the smooth floor gate and closure terms in the same residual function,
+    \item pass the Jacobian to the stiff solver whenever available, and
+    \item keep tolerances tight enough to resolve the transition layer without resolving unnecessary high-frequency noise.
+\end{enumerate}
+
+\subsection{Numerical Workflow and Code Implementation}
+\label{subsec:numerical_workflow}
+
+The implementation pipeline is straightforward. The full state vector is assembled, the fast-slow residual is evaluated in a single right-hand side function, and the stiff solver advances the system through the collapse and recovery phases. During strong cooling, the trajectory may spend long intervals near the admissibility boundary, so the integrator must prioritize stability and smoothness over aggressive extrapolation.
+
+To facilitate reproducibility, a self-contained Julia implementation of the complete gated 4D GSPT-SBL system is provided below, leveraging the SciML `DifferentialEquations.jl` stack with automatic differentiation:
+
+\begin{verbatim}
+using DifferentialEquations
+using LinearAlgebra
+using ForwardDiff
+
+# ====================================================================
+# 1. Physical and Numerical Parameters (CASES99 Baseline)
+# ====================================================================
+const Ug      = 10.0         # Zonal geostrophic wind (m/s)
+const Vg      = 0.0          # Meridional geostrophic wind (m/s)
+const Ta      = 285.15       # Reference air temperature (K)
+const Tdeep   = 283.15       # Deep soil temperature (K)
+const Rdown   = 260.0        # Downward longwave radiation (W/m^2)
+const f_cor   = 1.0e-4       # Coriolis parameter (s^-1)
+
+const epsilon = 0.01         # Fast-slow timescale ratio (eps << 1)
+const delta   = 1.0e-4       # Background TKE floor (m^2/s^2)
+const K_buoy  = 0.32         # Buoyant destruction scale (m/s^2)
+const beta    = 15.0         # Stability sensitivity parameter
+const h_bl    = 50.0         # Boundary layer bulk scale height (m)
+const l0      = 15.0         # Master turbulent mixing length (m)
+const gamma   = 1.4e-3       # Effective momentum drag scaling (s^-1)
+const CH      = 1.2e-3       # Thermal exchange coefficient
+const eta     = 15.0         # Shear production efficiency
+
+const sigma_SB = 5.670374e-8 # Stefan-Boltzmann constant (W/m^2/K^4)
+const lambda   = 1.2         # Soil thermal conductivity (W/m/K)
+const d_soil   = 0.5         # Soil coupling depth (m)
+const rho_cp   = 1200.0      # Volumetric heat capacity of air (J/m^3/K)
+const C_skin   = 2.0e4       # Thermal capacity of skin layer (J/m^2/K)
+
+# Numerical Safeguard Parameters
+const alpha_safe = 1.0e-6    # Damping scale for the safeguard floor gate
+
+# ====================================================================
+# 2. Vector Field Definition
+# ====================================================================
+function gspt_sbl_dynamics!(dx, x, p, t)
+    # State mapping: x = [e, U, V, Ts]
+    e  = x[1]
+    U  = x[2]
+    V  = x[3]
+    Ts = x[4]
+
+    # Shifted TKE coordinate
+    phi = e + delta
+
+    # 2.1 Smooth Safeguard Floor Gate
+    # Suppresses square-root singularities when phi -> 0
+    psi = 0.5 * (1.0 + tanh((phi - alpha_safe) / alpha_safe))
+
+    # 2.2 Physical Auxiliary Functions
+    G_Ts = exp(beta * (Ta - Ts) / Ta) - 1.0
+
+    # Net mechanical production minus buoyancy balance
+    shear_prod = eta * gamma * (U^2 + V^2)
+    buoy_dest  = K_buoy * G_Ts
+    Delta      = shear_prod - buoy_dest
+
+    # Surface Energy Budget Terms
+    Rn = Rdown - sigma_SB * (Ts^4)
+    H  = rho_cp * CH * sqrt(max(phi, 1.0e-12)) * (Ts - Ta)
+    G  = lambda * (Ts - Tdeep) / d_soil
+
+    # 2.3 Evaluated Tendencies
+    # Fast TKE Equation (with smooth safeguard gate)
+    dx[1] = (1.0 / epsilon) * (psi * sqrt(max(phi, 1.0e-12)) * Delta - (phi^(1.5)) / l0)
+
+    # Slow Momentum and Thermodynamic Equations
+    dx[2] = f_cor * (V - Vg) - gamma * sqrt(max(phi, 1.0e-12)) * U
+    dx[3] = -f_cor * (U - Ug) - gamma * sqrt(max(phi, 1.0e-12)) * V
+    dx[4] = (1.0 / C_skin) * (Rn - H - G)
+
+    return nothing
+end
+
+# ====================================================================
+# 3. Solver Execution and Integration setup
+# ====================================================================
+# Initial Conditions: Active turbulent state transitioning to night
+x0 = [0.05, 8.0, -2.0, 284.15]
+tspan = (0.0, 3600.0) # Integrate for 1 hour
+
+prob = ODEProblem(gspt_sbl_dynamics!, x0, tspan)
+
+# Solve using Rodas5P (5th order A-L-stable Rosenbrock method)
+sol = solve(prob, Rodas5P(autodiff=true), reltol=1.0e-6, abstol=1.0e-8)
+\end{verbatim}
+
+In this formulation, the numerical method is part of the model design: the ODE solver is not merely a post-processing tool, but the mechanism that preserves the geometric structure of the reduced manifold while allowing the coupled atmosphere-surface system to evolve through a stiff nocturnal transition.
