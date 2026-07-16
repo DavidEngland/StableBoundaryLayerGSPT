@@ -1,0 +1,43 @@
+cd /home/claude && python3 << 'EOF'
+import sympy as sp
+
+# ---------- 1. Solve the critical manifold equation as literally stated ----------
+# eq: l0*Delta*Phi_m(e) - (e+delta) = 0, with Phi_m(e) = sqrt(e+delta)
+l0, Delta, delta = sp.symbols('l0 Delta delta', positive=True)
+psi = sp.symbols('psi', nonnegative=True)  # psi = sqrt(e+delta)
+
+eq = sp.Eq(l0*Delta*psi - psi**2,
+0)
+sols = sp.solve(eq, psi)
+print("Branches for psi = sqrt(e+delta):", sols)
+print("=> nontrivial branch e* = psi^2 - delta =", sp.expand(sols[
+  -1
+]**2 - delta) if sols else None)
+print("Document claims e* = l0*Delta - delta  (LINEAR in Delta)")
+print("Direct solve gives e* = (l0*Delta)**2 - delta  (QUADRATIC in Delta)")
+print()
+
+# ---------- 2. Check dF/de on the (correct) active branch ----------
+e, T = sp.symbols('e T', real=True)
+F = l0*Delta*sp.sqrt(e+delta) - (e+delta)
+dFde = sp.diff(F, e)
+print("dF/de (general) =", dFde)
+
+# substitute correct active-branch value e = (l0*Delta)^2 - delta
+e_active_correct = (l0*Delta)**2 - delta
+val_correct = sp.simplify(dFde.subs(e, e_active_correct))
+print("dF/de on CORRECT active branch e=(l0*Delta)^2 - delta  ->", val_correct)
+
+# also check what dF/de would be on the document's claimed (incorrect) branch, just to compare
+e_active_doc = l0*Delta - delta
+val_doc = sp.simplify(dFde.subs(e, e_active_doc))
+print("dF/de on DOCUMENT's stated branch e=l0*Delta - delta   ->", val_doc)
+EOF
+
+---
+
+{
+  "returncode": 0,
+  "stdout": "Branches for psi = sqrt(e+delta): [0, Delta*l0]\n=> nontrivial branch e* = psi^2 - delta = Delta**2*l0**2 - delta\nDocument claims e* = l0*Delta - delta  (LINEAR in Delta)\nDirect solve gives e* = (l0*Delta)**2 - delta  (QUADRATIC in Delta)\n\ndF\/de (general) = Delta*l0\/(2*sqrt(delta + e)) - 1\ndF\/de on CORRECT active branch e=(l0*Delta)^2 - delta  -> -1\/2\ndF\/de on DOCUMENT's stated branch e=l0*Delta - delta   -> sqrt(Delta)*sqrt(l0)\/2 - 1\n",
+  "stderr": ""
+}
