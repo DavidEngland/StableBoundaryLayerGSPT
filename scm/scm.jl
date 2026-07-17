@@ -90,23 +90,30 @@ function scm_gspt_tendencies!(dX, X, p, t)
     K_m_faces, K_h_faces = _get_face_diffusivity_buffers(p)
 
     # 4. Turbulence Closure Loop
-    # @inbounds bypasses safety checks; @simd encourages loop vectorization.
     @inbounds @simd for i in 1:(N-1)
         # Spatial gradients across interior interfaces
         dU_dz = (U[i+1] - U[i]) / dz
         dV_dz = (V[i+1] - V[i]) / dz
         dth_dz = (theta[i+1] - theta[i]) / dz
 
-        # Local mixing length profile
+        # Local mixing length profile (with physical decay aloft)
         z_face = z_faces[i+1]
-        ell_z = (kappa * z_face) / (1.0 + (kappa * z_face) / l_0)
+
+        # Blackadar length scale
+        ell_neutral = (kappa * z_face) / (1.0 + (kappa * z_face) / l_0)
+
+        # Damp mixing length aloft to let the free atmosphere decouple
+        # (e.g., using a standard boundary layer scale or vertical decay)
+        h_est = 100.0 # Estimated SBL height scale
+        decay_factor = exp(-z_face / h_est)
+        ell_z = ell_neutral * decay_factor
 
         # Exponential Stratification Activation
         stability_arg = clamp(β * dth_dz * ell_z / theta_a, -40.0, 40.0)
         G_local = expm1(stability_arg)
 
-        # Local Net Production-Minus-Buoyancy
-        Δ_local = η * (ell_z^2) * (dU_dz^2 + dV_dz^2) - K_buoy * G_local
+        # Local Net Production-Minus-Buoyancy (CORRECTED UNITS: scaled by ell_z)
+        Δ_local = η * (ell_z^2) * (dU_dz^2 + dV_dz^2) - K_buoy * ell_z * G_local
 
         # England's Regularized C^∞ Hyperbolic Embedding Engine
         term_quadratic = (l_0 * Δ_local)^2 - δ
