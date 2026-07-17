@@ -22,6 +22,8 @@ SCM_WRAPPER_PDF_NAME ?= $(SCM_REPORT_BASE)_wrapper.pdf
 SCM_WRAPPER_TEX_PATH ?= $(SCM_OUTDIR)/$(SCM_WRAPPER_TEX_NAME)
 SCM_WRAPPER_PDF_PATH ?= $(SCM_OUTDIR)/$(SCM_WRAPPER_PDF_NAME)
 SCM_WRITE_COMPAT_WRAPPER ?= 0
+BIFURCATION_VERBOSE ?= 0
+BIFURCATION_LOG_DIR ?= results/_logs
 
 bootstrap:
 	julia --project=. -e 'using Pkg; Pkg.instantiate()'
@@ -51,13 +53,49 @@ run-solver-sheba:
 run-solver-all: run-solver-cases99 run-solver-floss run-solver-sheba
 
 bifurcation-cases99:
-	julia --project=. scripts/sweep_bifurcation.jl --dataset CASES99
+	@mkdir -p $(BIFURCATION_LOG_DIR)
+	@log="$(BIFURCATION_LOG_DIR)/bifurcation_CASES99.log"; \
+	echo "[bifurcation] CASES99 start (log: $$log)"; \
+	if [ "$(BIFURCATION_VERBOSE)" = "1" ]; then \
+		julia --project=. scripts/sweep_bifurcation.jl --dataset CASES99 2>&1 | tee "$$log"; \
+	else \
+		julia --project=. scripts/sweep_bifurcation.jl --dataset CASES99 >"$$log" 2>&1 || { \
+			echo "[bifurcation] CASES99 failed (showing last 40 lines)"; \
+			tail -n 40 "$$log"; \
+			exit 1; \
+		}; \
+	fi; \
+	echo "[bifurcation] CASES99 done"
 
 bifurcation-floss:
-	julia --project=. scripts/sweep_bifurcation.jl --dataset FLOSS
+	@mkdir -p $(BIFURCATION_LOG_DIR)
+	@log="$(BIFURCATION_LOG_DIR)/bifurcation_FLOSS.log"; \
+	echo "[bifurcation] FLOSS start (log: $$log)"; \
+	if [ "$(BIFURCATION_VERBOSE)" = "1" ]; then \
+		julia --project=. scripts/sweep_bifurcation.jl --dataset FLOSS 2>&1 | tee "$$log"; \
+	else \
+		julia --project=. scripts/sweep_bifurcation.jl --dataset FLOSS >"$$log" 2>&1 || { \
+			echo "[bifurcation] FLOSS failed (showing last 40 lines)"; \
+			tail -n 40 "$$log"; \
+			exit 1; \
+		}; \
+	fi; \
+	echo "[bifurcation] FLOSS done"
 
 bifurcation-sheba:
-	julia --project=. scripts/sweep_bifurcation.jl --dataset SHEBA
+	@mkdir -p $(BIFURCATION_LOG_DIR)
+	@log="$(BIFURCATION_LOG_DIR)/bifurcation_SHEBA.log"; \
+	echo "[bifurcation] SHEBA start (log: $$log)"; \
+	if [ "$(BIFURCATION_VERBOSE)" = "1" ]; then \
+		julia --project=. scripts/sweep_bifurcation.jl --dataset SHEBA 2>&1 | tee "$$log"; \
+	else \
+		julia --project=. scripts/sweep_bifurcation.jl --dataset SHEBA >"$$log" 2>&1 || { \
+			echo "[bifurcation] SHEBA failed (showing last 40 lines)"; \
+			tail -n 40 "$$log"; \
+			exit 1; \
+		}; \
+	fi; \
+	echo "[bifurcation] SHEBA done"
 
 # Optimized: Parallelization-friendly prerequisite tree
 bifurcation-all: bifurcation-cases99 bifurcation-floss bifurcation-sheba
