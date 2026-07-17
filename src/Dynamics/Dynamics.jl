@@ -5,6 +5,7 @@ using OrdinaryDiffEq: ODEProblem, solve, Rodas5P, Rosenbrock23
 export integrate_system
 export default_4d_parameters
 export closure_coefficients
+export effective_h_scale
 export stratification_function
 export hyperbolic_embedding_e
 export fast_vector_field_F
@@ -32,6 +33,13 @@ function default_4d_parameters()
         "K" => 0.32,
         "beta" => 15.0,
         "h" => 50.0,
+        # Optional non-local scaling controls for h (disabled by default).
+        "use_nonlocal_h" => 0.0,
+        "nonlocal_h_weight" => 0.5,
+        "nonlocal_h_min" => 20.0,
+        "nonlocal_h_max" => 400.0,
+        "nonlocal_velocity_floor" => 0.1,
+        "nonlocal_f_floor" => 1.0e-5,
         # Roughness and dissipation controls.
         "kappa" => 0.40,
         "z0m" => 0.05,
@@ -56,10 +64,38 @@ function default_4d_parameters()
     )
 end
 
+"""Return effective h for local or optional non-local scaling."""
+function effective_h_scale(
+    p::AbstractDict{String,<:Real};
+    U::Union{Nothing,Real}=nothing,
+    V::Union{Nothing,Real}=nothing,
+)
+    h_local = Float64(p["h"])
+    use_nonlocal = Float64(get(p, "use_nonlocal_h", 0.0)) > 0.5
+    if !use_nonlocal || isnothing(U) || isnothing(V)
+        return h_local
+    end
+
+    weight = clamp(Float64(get(p, "nonlocal_h_weight", 0.5)), 0.0, 1.0)
+    h_min = Float64(get(p, "nonlocal_h_min", 20.0))
+    h_max = Float64(get(p, "nonlocal_h_max", 400.0))
+    u_floor = Float64(get(p, "nonlocal_velocity_floor", 0.1))
+    f_floor = Float64(get(p, "nonlocal_f_floor", 1.0e-5))
+
+    speed = max(hypot(Float64(U), Float64(V)), u_floor)
+    f_eff = max(abs(Float64(p["f_coriolis"])), f_floor)
+    h_nonlocal = clamp(speed / f_eff, h_min, h_max)
+    return (1.0 - weight) * h_local + weight * h_nonlocal
+end
+
 """Compute drag and heat-exchange coefficients from roughness lengths."""
-function closure_coefficients(p::AbstractDict{String,<:Real})
+function closure_coefficients(
+    p::AbstractDict{String,<:Real};
+    U::Union{Nothing,Real}=nothing,
+    V::Union{Nothing,Real}=nothing,
+)
     kappa = Float64(p["kappa"])
-    h = Float64(p["h"])
+    h = effective_h_scale(p; U=U, V=V)
     z0m = Float64(p["z0m"])
     z0h = Float64(p["z0h"])
     gamma_efficiency = Float64(get(p, "gamma_efficiency", 1.0))
@@ -174,7 +210,7 @@ function _rhs_4d!(du, u, p, t)
     e_floor_transition = Float64(get(p, "e_floor_transition", 1.0e-5))
     de_floor_smooth_eps = Float64(get(p, "de_floor_smooth_eps", 1.0e-10))
 
-    gamma, C_H = closure_coefficients(p)
+    gamma, C_H = closure_coefficients(p; U=U, V=V)
     e_plus = _regularized_positive(e + delta, eps_pos)
     sqrt_e = sqrt(e_plus)
 
@@ -223,7 +259,6 @@ end
 """Convert ODE solution into NamedTuple rows with derived diagnostics."""
 function solution_to_rows(sol, parameters::AbstractDict{String,<:Real})
     p = Dict{String,Float64}(k => Float64(v) for (k, v) in parameters)
-    gamma, C_H = closure_coefficients(p)
     delta = p["delta"]
     Ta = p["T_a"]
     beta = p["beta"]
@@ -236,6 +271,8 @@ function solution_to_rows(sol, parameters::AbstractDict{String,<:Real})
         U = sol.u[i][2]
         V = sol.u[i][3]
         Ts = sol.u[i][4]
+
+        gamma, C_H = closure_coefficients(p; U=U, V=V)
 
         e_plus = _regularized_positive(e + delta, eps_pos)
         sqrt_e = sqrt(e_plus)

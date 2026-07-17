@@ -16,17 +16,49 @@ function Base.showerror(io::IO, e::SurfaceAnomalyException)
 end
 
 # Enforce preallocated workspace check at startup, not inside RHS loop
-function _get_face_diffusivity_buffers(p)
+function _get_face_diffusivity_buffers(p, T)
     # We assume p has a workspace or direct fields.
     # If they are missing, we fail loudly *before* the solver runs.
     if hasproperty(p, :workspace)
         ws = p.workspace
-        return ws.Km, ws.Kh
+        if eltype(ws.Km) === T && eltype(ws.Kh) === T
+            return ws.Km, ws.Kh
+        end
+        # Jacobian autodiff may require Dual-valued temporaries; keep baseline
+        # zero-allocation path for Float64 runtime via the branch above.
+        return Vector{T}(undef, length(ws.Km)), Vector{T}(undef, length(ws.Kh))
     elseif hasproperty(p, :K_m_faces) && hasproperty(p, :K_h_faces)
-        return p.K_m_faces, p.K_h_faces
+        if eltype(p.K_m_faces) === T && eltype(p.K_h_faces) === T
+            return p.K_m_faces, p.K_h_faces
+        end
+        return Vector{T}(undef, length(p.K_m_faces)), Vector{T}(undef, length(p.K_h_faces))
     else
         error("Performance Error: No preallocated face diffusivity buffers found in parameter struct 'p'. Please initialize p.workspace.Km and p.workspace.Kh.")
     end
+end
+
+function _effective_h_scale(p, U_ref::Real, V_ref::Real)
+    T = promote_type(typeof(U_ref), typeof(V_ref), typeof(p.f))
+    h_local = hasproperty(p, :h) ? convert(T, p.h) : convert(T, 100.0)
+    use_nonlocal = hasproperty(p, :use_nonlocal_h) && p.use_nonlocal_h > 0.5
+    if !use_nonlocal
+        return h_local
+    end
+
+    weight = clamp(
+        hasproperty(p, :nonlocal_h_weight) ? convert(T, p.nonlocal_h_weight) : convert(T, 0.5),
+        zero(T),
+        one(T),
+    )
+    h_min = hasproperty(p, :nonlocal_h_min) ? convert(T, p.nonlocal_h_min) : convert(T, 20.0)
+    h_max = hasproperty(p, :nonlocal_h_max) ? convert(T, p.nonlocal_h_max) : convert(T, 400.0)
+    u_floor = hasproperty(p, :nonlocal_velocity_floor) ? convert(T, p.nonlocal_velocity_floor) : convert(T, 0.1)
+    f_floor = hasproperty(p, :nonlocal_f_floor) ? convert(T, p.nonlocal_f_floor) : convert(T, 1.0e-5)
+
+    speed = max(sqrt(U_ref * U_ref + V_ref * V_ref), u_floor)
+    f_eff = max(abs(convert(T, p.f)), f_floor)
+    h_nonlocal = clamp(speed / f_eff, h_min, h_max)
+    return (one(T) - weight) * h_local + weight * h_nonlocal
 end
 
 """
@@ -87,7 +119,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
     dtheta = @view dX[(2N+2):(3N+1)]
 
     # 3. Retrieve preallocated buffers (zero-allocation)
-    K_m_faces, K_h_faces = _get_face_diffusivity_buffers(p)
+    K_m_faces, K_h_faces = _get_face_diffusivity_buffers(p, eltype(U))
 
     # 4. Turbulence Closure Loop
     @inbounds @simd for i in 1:(N-1)
@@ -104,8 +136,10 @@ function scm_gspt_tendencies!(dX, X, p, t)
 
         # Damp mixing length aloft to let the free atmosphere decouple
         # (e.g., using a standard boundary layer scale or vertical decay)
-        h_est = 100.0 # Estimated SBL height scale
-        decay_factor = exp(-z_face / h_est)
+        U_face = 0.5 * (U[i] + U[i+1])
+        V_face = 0.5 * (V[i] + V[i+1])
+        h_eff = _effective_h_scale(p, U_face, V_face)
+        decay_factor = exp(-z_face / h_eff)
         ell_z = ell_neutral * decay_factor
 
         # Exponential Stratification Activation
@@ -149,6 +183,8 @@ function scm_gspt_tendencies!(dX, X, p, t)
     dth_dz_surf = (theta[1] - T_s) / dz
 
     ell_surf = (kappa * z_centers[1]) / (1.0 + (kappa * z_centers[1]) / l_0)
+    h_eff_surf = _effective_h_scale(p, U[1], V[1])
+    ell_surf *= exp(-z_centers[1] / h_eff_surf)
     stability_arg_surf = clamp(β * dth_dz_surf * ell_surf / theta_a, -40.0, 40.0)
     G_surf = expm1(stability_arg_surf)
     Δ_surf = η * (ell_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * G_surf

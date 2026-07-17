@@ -2,6 +2,7 @@ Generated figures from payload: results/gabls1/payload.jld2
 - fig01_timeseries_ts_h_ustar.png
 - fig02_hovmoller_wind.png
 - fig03_hovmoller_theta.png
+- fig03b_hovmoller_km_exi.png
 - fig04_profiles_u_theta_km.png
 - fig05_surface_energy_budget.png
 - fig06_phase_delta_exi.png

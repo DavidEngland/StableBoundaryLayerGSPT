@@ -1,4 +1,4 @@
-.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all assemble-manuscript paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl compile-scm-reports test clean
+.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all assemble-manuscript paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports test clean
 
 DATASET ?= CASES99
 
@@ -12,6 +12,9 @@ SCM_OUTDIR ?= results/$(SCM_CASE)
 SCM_PLOT_FORMAT ?= png
 SCM_PLOT_DPI ?= 200
 SCM_REPORT_TEMPLATE ?= templates/scm_case_report.tex.mustache
+SCM_SOLVER_JACOBIAN ?= autodiff
+SCM_JACOBIAN_SPARSITY ?= dense
+SCM_EXTRA_ARGS ?=
 SCM_DZ_TAG ?= $(shell echo "$(SCM_DZ)" | sed 's/\.0$$//')
 SCM_DURATION_H ?= $(shell echo "$(SCM_DURATION)" | cut -d. -f1)
 SCM_REPORT_NAME ?= $(SCM_CASE)_$(SCM_GRID_SIZE)x$(SCM_DZ_TAG)m_$(SCM_DURATION_H)h_report.tex
@@ -134,7 +137,7 @@ stablebl-bundle-synthetic:
 	bash scripts/stablebl bundle --synthetic --dataset CASES99
 
 scm-run:
-	julia --project=. scm/run_case.jl --case $(SCM_CASE) --duration $(SCM_DURATION) --dt $(SCM_DT) --grid-size $(SCM_GRID_SIZE) --dz $(SCM_DZ) --profile-every $(SCM_PROFILE_EVERY) --outdir $(SCM_OUTDIR)
+	julia --project=. scm/run_case.jl --case $(SCM_CASE) --duration $(SCM_DURATION) --dt $(SCM_DT) --grid-size $(SCM_GRID_SIZE) --dz $(SCM_DZ) --profile-every $(SCM_PROFILE_EVERY) --outdir $(SCM_OUTDIR) --solver-jacobian $(SCM_SOLVER_JACOBIAN) --jacobian-sparsity $(SCM_JACOBIAN_SPARSITY) $(SCM_EXTRA_ARGS)
 
 scm-plot:
 	julia --project=. scm/plot_case.jl --input $(SCM_OUTDIR)/payload.jld2 --outdir $(SCM_OUTDIR)/plots --format $(SCM_PLOT_FORMAT) --dpi $(SCM_PLOT_DPI)
@@ -157,6 +160,53 @@ run-gabls1:
 
 run-idealized-sbl:
 	$(MAKE) scm-all SCM_CASE=idealized_sbl SCM_OUTDIR=results/idealized_sbl
+
+run-sheba:
+	$(MAKE) scm-all \
+		SCM_CASE=sheba \
+		SCM_DURATION=12.0 \
+		SCM_DT=10.0 \
+		SCM_GRID_SIZE=160 \
+		SCM_DZ=2.0 \
+		SCM_OUTDIR=results/sheba \
+		SCM_SOLVER_JACOBIAN=autodiff \
+		SCM_EXTRA_ARGS='--save-jld2 true --use-nonlocal-h true --h 300 --nonlocal-h-weight 0.5 --nonlocal-h-min 20.0 --nonlocal-h-max 400.0 --ts-min 220'
+
+run-sheba-fd:
+	$(MAKE) scm-all \
+		SCM_CASE=sheba \
+		SCM_DURATION=12.0 \
+		SCM_DT=10.0 \
+		SCM_GRID_SIZE=160 \
+		SCM_DZ=2.0 \
+		SCM_OUTDIR=results/sheba_fd \
+		SCM_SOLVER_JACOBIAN=finite \
+		SCM_JACOBIAN_SPARSITY=dense \
+		SCM_EXTRA_ARGS='--save-jld2 true --use-nonlocal-h true --h 300 --nonlocal-h-weight 0.5 --nonlocal-h-min 20.0 --nonlocal-h-max 400.0 --ts-min 220'
+
+run-sheba-high-top:
+	$(MAKE) scm-all \
+		SCM_CASE=sheba \
+		SCM_DURATION=12.0 \
+		SCM_DT=10.0 \
+		SCM_GRID_SIZE=250 \
+		SCM_DZ=2.0 \
+		SCM_OUTDIR=results/sheba_high_top \
+		SCM_SOLVER_JACOBIAN=autodiff \
+		SCM_JACOBIAN_SPARSITY=banded \
+		SCM_EXTRA_ARGS='--save-jld2 true --use-nonlocal-h true --h 500 --nonlocal-h-weight 0.5 --nonlocal-h-min 20.0 --nonlocal-h-max 500.0 --ts-min 220'
+
+run-sheba-high-top-fd:
+	$(MAKE) scm-all \
+		SCM_CASE=sheba \
+		SCM_DURATION=12.0 \
+		SCM_DT=10.0 \
+		SCM_GRID_SIZE=250 \
+		SCM_DZ=2.0 \
+		SCM_OUTDIR=results/sheba_high_top_fd \
+		SCM_SOLVER_JACOBIAN=finite \
+		SCM_JACOBIAN_SPARSITY=dense \
+		SCM_EXTRA_ARGS='--save-jld2 true --use-nonlocal-h true --h 500 --nonlocal-h-weight 0.5 --nonlocal-h-min 20.0 --nonlocal-h-max 500.0 --ts-min 220'
 
 scm-verify:
 	@echo "Running SCM diagnostic pipeline verification..."

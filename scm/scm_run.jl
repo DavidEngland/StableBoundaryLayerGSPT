@@ -1,12 +1,78 @@
 using LinearAlgebra
 using Statistics
 using Printf
+using SparseArrays
 import OrdinaryDiffEq
     import JLD2
 
 
 include(joinpath(@__DIR__, "scm.jl"))
 include(joinpath(@__DIR__, "scm_diagnostics.jl"))
+
+"""
+    build_scm_jacobian_prototype(p)
+
+Build a sparse Jacobian prototype matching the local vertical stencil
+for state layout [Ts, U[1:N], V[1:N], theta[1:N]].
+"""
+function build_scm_jacobian_prototype(p)
+    N = p.N
+    n = 3N + 1
+    rows = Int[]
+    cols = Int[]
+
+    # Ts row couples to Ts, U1, V1, theta1 through surface fluxes/SEB.
+    push!(rows, 1); push!(cols, 1)
+    push!(rows, 1); push!(cols, 2)
+    push!(rows, 1); push!(cols, N + 2)
+    push!(rows, 1); push!(cols, 2N + 2)
+
+    idxU(i) = 1 + i
+    idxV(i) = 1 + N + i
+    idxTh(i) = 1 + 2N + i
+
+    # U equations: nearest-neighbor U stencil + same-level and neighboring V/theta influence.
+    for i in 1:N
+        r = idxU(i)
+        for j in max(1, i - 1):min(N, i + 1)
+            push!(rows, r); push!(cols, idxU(j))
+            push!(rows, r); push!(cols, idxV(j))
+            push!(rows, r); push!(cols, idxTh(j))
+        end
+        if i == 1
+            push!(rows, r); push!(cols, 1)
+        end
+    end
+
+    # V equations: nearest-neighbor V stencil + same-level and neighboring U/theta influence.
+    for i in 1:N
+        r = idxV(i)
+        for j in max(1, i - 1):min(N, i + 1)
+            push!(rows, r); push!(cols, idxV(j))
+            push!(rows, r); push!(cols, idxU(j))
+            push!(rows, r); push!(cols, idxTh(j))
+        end
+        if i == 1
+            push!(rows, r); push!(cols, 1)
+        end
+    end
+
+    # Theta equations: nearest-neighbor theta stencil + local velocity coupling via closure.
+    for i in 1:N
+        r = idxTh(i)
+        for j in max(1, i - 1):min(N, i + 1)
+            push!(rows, r); push!(cols, idxTh(j))
+            push!(rows, r); push!(cols, idxU(j))
+            push!(rows, r); push!(cols, idxV(j))
+        end
+        if i == 1
+            push!(rows, r); push!(cols, 1)
+        end
+    end
+
+    vals = ones(Float64, length(rows))
+    return sparse(rows, cols, vals, n, n)
+end
 
 """
     run_and_diagnose_scm(X0, p, t_span, dt; cfg=SCMDiagnosticConfig(), solver=Rodas5P(), abstol=1e-8, reltol=1e-6)
@@ -24,12 +90,24 @@ function run_and_diagnose_scm(
     abstol=1.0e-8,
     reltol=1.0e-6,
     profile_every_seconds=1800.0,
+    jacobian_mode::Symbol=:autodiff,
+    jacobian_sparsity::Symbol=:dense,
 )
     t_start, t_end = t_span
     t_end >= t_start || error("t_span must satisfy t_end >= t_start")
     dt > 0 || error("dt must be positive")
 
-    solver_alg = isnothing(solver) ? OrdinaryDiffEq.Rodas5P(autodiff=false) : solver
+    if isnothing(solver)
+        if jacobian_mode == :finite
+            solver_alg = OrdinaryDiffEq.Rodas5P(autodiff=false)
+        elseif jacobian_mode == :autodiff
+            solver_alg = OrdinaryDiffEq.Rodas5P()
+        else
+            error("Unsupported jacobian_mode=$(jacobian_mode). Use :autodiff or :finite")
+        end
+    else
+        solver_alg = solver
+    end
 
     times = collect(t_start:dt:t_end)
     if isempty(times) || times[end] < t_end
@@ -38,8 +116,18 @@ function run_and_diagnose_scm(
 
     println("Starting SCM simulation trajectory...")
     @printf("  Grid points (N): %d | Time samples: %d | dt: %.1f s\n", p.N, length(times), dt)
+    @printf("  Jacobian mode: %s\n", String(jacobian_mode))
+    @printf("  Jacobian sparsity: %s\n", String(jacobian_sparsity))
 
-    prob = OrdinaryDiffEq.ODEProblem(scm_gspt_tendencies!, copy(X0), (t_start, t_end), p)
+    f = if jacobian_sparsity == :banded
+        OrdinaryDiffEq.ODEFunction(scm_gspt_tendencies!; jac_prototype=build_scm_jacobian_prototype(p))
+    elseif jacobian_sparsity == :dense
+        scm_gspt_tendencies!
+    else
+        error("Unsupported jacobian_sparsity=$(jacobian_sparsity). Use :dense or :banded")
+    end
+
+    prob = OrdinaryDiffEq.ODEProblem(f, copy(X0), (t_start, t_end), p)
     sol = OrdinaryDiffEq.solve(prob, solver_alg; saveat=times, abstol=abstol, reltol=reltol)
 
     states = [Vector(u) for u in sol.u]
@@ -79,6 +167,8 @@ function run_and_diagnose_scm(
         verification=verification,
         solver_summary=(
             algorithm=string(typeof(solver_alg)),
+            jacobian_mode=String(jacobian_mode),
+            jacobian_sparsity=String(jacobian_sparsity),
             accepted_steps=sol.destats.naccept,
             rejected_steps=sol.destats.nreject,
             rhs_evaluations=sol.destats.nf,

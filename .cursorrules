@@ -1,0 +1,39 @@
+# StableBoundaryLayerGSPT AI Guidance
+
+## Language and Runtime
+- Language: Julia
+- Use project environment: julia --project=.
+- Primary SCM entrypoint: scm/run_case.jl
+
+## SCM State and Grid Contract
+- State vector layout is block-structured:
+  [Ts, U[1], ..., U[N], V[1], ..., V[N], theta[1], ..., theta[N]]
+- Core diffusion stencil is nearest-neighbor in 1D vertical space:
+  node i couples only to i-1, i, i+1
+- Uniform-grid default uses scalar dz in SCM operators
+
+## Solvers and Jacobian Path
+- Stiff solver: OrdinaryDiffEq.Rodas5P
+- Jacobian mode flag: --solver-jacobian {autodiff|finite}
+- Sparsity flag: --jacobian-sparsity {dense|banded}
+- Banded mode uses a sparse Jacobian prototype consistent with the local 1D stencil
+
+## AD and Type-Stability Rules
+- Keep RHS helper logic type-generic (Float64 and Dual-compatible)
+- Do not force Float64 casts in closure helpers used during Jacobian construction
+- Workspace/scratch buffers must safely adapt when Dual numbers are present
+
+## SHEBA Operational Defaults
+- SHEBA initial theta-lapse-rate default: 0.004 K/m
+- Runtime override: --theta-lapse-rate <K/m>
+- Typical high-top experiment setup: N=250, dz=2.0 (about 500 m top)
+- SHEBA safety floor: ts_min = 220 K
+- Non-local h bounds are clamp-controlled (defaults commonly 20 m to 400 m unless overridden)
+
+## Non-local Height Clamp Contract
+- Apply runtime clamp before closure coefficients:
+  h_eff = max(nonlocal_h_min, min(h_diagnosed, nonlocal_h_max))
+
+## Output Artifacts
+- Main diagnostics: time_series.csv, summary.json, payload.jld2
+- Primary figure for thermal structure: fig03_hovmoller_theta

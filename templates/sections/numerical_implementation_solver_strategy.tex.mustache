@@ -80,6 +80,42 @@ In practical use, the implementation should:
     \item keep tolerances tight enough to resolve the transition layer without resolving unnecessary high-frequency noise.
 \end{enumerate}
 
+\subsection{Implementation Contract for AI-Assisted Code Generation}
+\label{subsec:ai_impl_contract}
+
+For reproducible AI-assisted editing in development environments (for example VS Code Copilot or Cursor), the numerical implementation should be treated as a strict software contract rather than descriptive prose.
+
+\paragraph{Mathematical-to-code variable mapping.}
+The governing state variables are mapped directly to implementation identifiers as follows:
+\begin{itemize}
+    \item horizontal momentum $(u, v)$ map to \texttt{U, V},
+    \item potential temperature $\theta$ maps to \texttt{theta},
+    \item surface temperature $T_s$ maps to \texttt{Ts},
+    \item turbulent kinetic energy $e$ maps to closure diagnostics used to compute face diffusivities.
+\end{itemize}
+
+\paragraph{State layout and stencil assumptions.}
+The SCM ODE state vector uses a block layout:
+\begin{equation}
+\mathbf{X} = [T_s, U_1,\ldots,U_N, V_1,\ldots,V_N, \theta_1,\ldots,\theta_N]^T.
+\label{eq:state_layout_block}
+\end{equation}
+Diffusive transport uses a nearest-neighbor second-order stencil on a uniform grid with spacing $\Delta z$, so each interior node $i$ couples only to $(i-1, i, i+1)$.
+
+\paragraph{Runtime clamp logic for non-local height.}
+The diagnosed non-local coupling height is clamped explicitly at runtime:
+\begin{equation}
+h_{\mathrm{eff}} = \max\left(h_{\min},\, \min\left(h_{\mathrm{diagnosed}},\, h_{\max}\right)\right),
+\label{eq:nonlocal_h_clamp}
+\end{equation}
+with default bounds $h_{\min}=20\,\mathrm{m}$ and $h_{\max}=400\,\mathrm{m}$ for the SHEBA configuration unless overridden.
+
+\paragraph{Automatic differentiation type-generic requirement.}
+To support sparse automatic differentiation Jacobians, internal flux routines, face buffers, and intermediate arrays must remain type-generic. In particular, workspace buffers must accept either \texttt{Float64} or dual-valued types during Jacobian construction, and closures must avoid forced scalar casts that break dual propagation.
+
+\paragraph{Solver and library stack.}
+The stiff ODE system is integrated with \texttt{Rodas5P} from \texttt{OrdinaryDiffEq.jl}. Jacobian evaluation can be configured for finite differences or automatic differentiation, and structural sparsity is provided through a sparse Jacobian prototype consistent with the 1D local stencil.
+
 \subsection{Numerical Workflow and Code Implementation}
 \label{subsec:numerical_workflow}
 

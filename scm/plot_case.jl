@@ -31,6 +31,15 @@ struct SCMParameters{T,W}
     R_down::T
     lambda_s::T
     d_soil::T
+    h::T
+    use_nonlocal_h::T
+    nonlocal_h_weight::T
+    nonlocal_h_min::T
+    nonlocal_h_max::T
+    nonlocal_velocity_floor::T
+    nonlocal_f_floor::T
+    z0m::T
+    z0h::T
     k_min_surf::T
     ts_min::T
     ts_max::T
@@ -103,6 +112,21 @@ function _getkey(x, key::Symbol)
     error("Missing key/property: $(key)")
 end
 
+function _maybe_getkey(x, key::Symbol)
+    if hasproperty(x, key)
+        return getproperty(x, key)
+    elseif x isa AbstractDict
+        if haskey(x, key)
+            return x[key]
+        end
+        skey = String(key)
+        if haskey(x, skey)
+            return x[skey]
+        end
+    end
+    return nothing
+end
+
 function _nearest_index(values::AbstractVector{<:Real}, target::Real)
     return argmin(abs.(values .- target))
 end
@@ -120,6 +144,43 @@ function _savefig(Plots, fig, outdir::String, stem::String, ext::String)
     Plots.savefig(fig, path)
     println("saved: $(path)")
     return path
+end
+
+function _overlay_triheight_tracks!(Plots, plt, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend::Bool=true)
+    d_label = with_legend ? "h_D" : ""
+    e_label = with_legend ? "h_e" : ""
+    g_label = with_legend ? "h_∂e" : ""
+
+    Plots.plot!(
+        plt,
+        t_hours,
+        h_decoupling;
+        linewidth=2.2,
+        linestyle=:dash,
+        color=:gold3,
+        alpha=0.95,
+        label=d_label,
+    )
+    Plots.plot!(
+        plt,
+        t_hours,
+        h_energy_floor;
+        linewidth=2.2,
+        linestyle=:dash,
+        color=:deepskyblue3,
+        alpha=0.95,
+        label=e_label,
+    )
+    Plots.plot!(
+        plt,
+        t_hours,
+        h_max_energy_gradient;
+        linewidth=2.2,
+        linestyle=:dash,
+        color=:orangered3,
+        alpha=0.95,
+        label=g_label,
+    )
 end
 
 function generate_figures(payload_path::String, outdir::String, fmt::String, dpi::Int)
@@ -145,6 +206,14 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
 
     delta_surface = [Float64(_getkey(r, :surface_delta)) for r in ts]
 
+    h_decoupling_raw = _maybe_getkey(ts[1], :h_decoupling)
+    h_energy_floor_raw = _maybe_getkey(ts[1], :h_energy_floor)
+    h_max_energy_gradient_raw = _maybe_getkey(ts[1], :h_max_energy_gradient)
+    triheight_available = !isnothing(h_decoupling_raw) && !isnothing(h_energy_floor_raw) && !isnothing(h_max_energy_gradient_raw)
+    h_decoupling = triheight_available ? [Float64(_getkey(r, :h_decoupling)) for r in ts] : Float64[]
+    h_energy_floor = triheight_available ? [Float64(_getkey(r, :h_energy_floor)) for r in ts] : Float64[]
+    h_max_energy_gradient = triheight_available ? [Float64(_getkey(r, :h_max_energy_gradient)) for r in ts] : Float64[]
+
     zc = collect(Float64, _getkey(hov, :z_centers))
     zf = collect(Float64, _getkey(hov, :z_faces))
     hov_t = collect(Float64, _getkey(hov, :t)) ./ 3600.0
@@ -152,6 +221,11 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     hov_wind .= _getkey(hov, :wind)
     hov_theta = Array{Float64}(undef, size(_getkey(hov, :theta))...)
     hov_theta .= _getkey(hov, :theta)
+    hov_km = Array{Float64}(undef, size(_getkey(hov, :Km))...)
+    hov_km .= _getkey(hov, :Km)
+    hov_exi = Array{Float64}(undef, size(_getkey(hov, :e_xi))...)
+    hov_exi .= _getkey(hov, :e_xi)
+    zf_mid = zf[2:(end-1)]
 
     # =========================================================================
     # Figure 1: Time series (T_s, H, u_*)
@@ -211,8 +285,12 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         ylabel="z (m)",
         title="Figure 2: Time-Height Wind Speed",
         colorbar_title="|V| (m s^-1)",
+        legend=:topright,
         dpi=dpi,
     )
+    if triheight_available
+        _overlay_triheight_tracks!(Plots, p2, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=true)
+    end
     _savefig(Plots, p2, outdir, "fig02_hovmoller_wind", fmt)
 
     # Figure 3: Hovmoller potential temperature
@@ -224,9 +302,45 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         ylabel="z (m)",
         title="Figure 3: Time-Height Potential Temperature",
         colorbar_title="theta (K)",
+        legend=:topright,
         dpi=dpi,
     )
+    if triheight_available
+        _overlay_triheight_tracks!(Plots, p3, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=false)
+    end
     _savefig(Plots, p3, outdir, "fig03_hovmoller_theta", fmt)
+
+    # Figure 3b: Time-height closure diagnostics (K_m and e_xi) with tri-height tracks
+    p3b_a = Plots.heatmap(
+        hov_t,
+        zf_mid,
+        permutedims(hov_km),
+        xlabel="Time (h)",
+        ylabel="z_face (m)",
+        title="Figure 3b: Time-Height K_m",
+        colorbar_title="K_m (m^2 s^-1)",
+        legend=:topright,
+        dpi=dpi,
+    )
+    p3b_b = Plots.heatmap(
+        hov_t,
+        zf_mid,
+        permutedims(hov_exi),
+        xlabel="Time (h)",
+        ylabel="z_face (m)",
+        title="Time-Height e_xi",
+        colorbar_title="e_xi",
+        legend=:topright,
+        dpi=dpi,
+    )
+    if triheight_available
+        _overlay_triheight_tracks!(Plots, p3b_a, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=true)
+        _overlay_triheight_tracks!(Plots, p3b_b, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=false)
+    else
+        println("Tri-height tracks not found in payload; skipping overlays.")
+    end
+    p3b = Plots.plot(p3b_a, p3b_b; layout=(1, 2), size=(1500, 480))
+    _savefig(Plots, p3b, outdir, "fig03b_hovmoller_km_exi", fmt)
 
     # =========================================================================
     # Figure 4: Vertical profiles [Consolidated Legend Only on Panel A]
@@ -478,6 +592,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         println(io, "- fig01_timeseries_ts_h_ustar.$(fmt)")
         println(io, "- fig02_hovmoller_wind.$(fmt)")
         println(io, "- fig03_hovmoller_theta.$(fmt)")
+        println(io, "- fig03b_hovmoller_km_exi.$(fmt)")
         println(io, "- fig04_profiles_u_theta_km.$(fmt)")
         println(io, "- fig05_surface_energy_budget.$(fmt)")
         println(io, "- fig06_phase_delta_exi.$(fmt)")

@@ -33,6 +33,13 @@ struct SCMParameters{T,W}
     R_down::T
     lambda_s::T
     d_soil::T
+    h::T
+    use_nonlocal_h::T
+    nonlocal_h_weight::T
+    nonlocal_h_min::T
+    nonlocal_h_max::T
+    nonlocal_velocity_floor::T
+    nonlocal_f_floor::T
     z0m::T          # Added: Momentum roughness length
     z0h::T          # Added: Thermal roughness length
     k_min_surf::T
@@ -50,7 +57,7 @@ end
 function _usage()
     println("Usage: julia scm/run_case.jl [options]")
     println("Options:")
-    println("  --case <gabls1|idealized_sbl>      Case name (default: gabls1)")
+    println("  --case <gabls1|idealized_sbl|sheba>  Case name (default: gabls1)")
     println("  --duration <hours>                 Simulation duration in hours (default: 9.0)")
     println("  --dt <seconds>                     Output/sample interval in seconds (default: 30.0)")
     println("  --grid-size <N>                    Vertical levels (default: 80)")
@@ -60,13 +67,21 @@ function _usage()
     println("  --theta-top-bc <neumann|dirichlet|relaxation>  Upper thermal BC")
     println("  --theta-top <K>                    Upper boundary reference theta")
     println("  --lambda-top <1/s>                 Relaxation coefficient for top BC")
+    println("  --theta-lapse-rate <K/m>           Initial background dtheta/dz")
     println("  --z0m <meters>                     Momentum roughness length")
     println("  --z0h <meters>                     Thermal roughness length")
+    println("  --h <meters>                       Local coupling bulk scale height")
+    println("  --use-nonlocal-h <true|false>      Enable non-local effective h scaling")
+    println("  --nonlocal-h-weight <0..1>         Blend weight from local h to non-local h")
+    println("  --nonlocal-h-min <meters>          Lower clamp for non-local h")
+    println("  --nonlocal-h-max <meters>          Upper clamp for non-local h")
     println("  --k-min-surf <m2/s>                Background surface diffusivity floor")
     println("  --ts-min <K>                       Lower anomaly-guard surface temperature")
     println("  --ts-max <K>                       Upper anomaly-guard surface temperature")
     println("  --debug-print <true|false>         Emit periodic SEB diagnostics")
     println("  --save-jld2 <true|false>           Save payload.jld2 (default: true)")
+    println("  --solver-jacobian <autodiff|finite>  Jacobian mode for Rodas5P (default: autodiff)")
+    println("  --jacobian-sparsity <dense|banded> Jacobian sparsity hint (default: dense)")
     println("  --help                             Show this help message")
 end
 
@@ -93,13 +108,21 @@ function parse_args(args::Vector{String})
         "theta_top_bc" => "neumann",
         "theta_top" => nothing,
         "lambda_top" => nothing,
+        "theta_lapse_rate" => nothing,
         "z0m" => nothing, # Custom override
         "z0h" => nothing, # Custom override
+        "h" => nothing,
+        "use_nonlocal_h" => false,
+        "nonlocal_h_weight" => nothing,
+        "nonlocal_h_min" => nothing,
+        "nonlocal_h_max" => nothing,
         "k_min_surf" => 1.0e-3,
         "ts_min" => 180.0,
         "ts_max" => 350.0,
         "debug_print" => false,
         "save_jld2" => true,
+        "solver_jacobian" => "autodiff",
+        "jacobian_sparsity" => "dense",
     )
 
     i = 1
@@ -138,11 +161,29 @@ function parse_args(args::Vector{String})
         elseif a == "--lambda-top" && i < length(args)
             cfg["lambda_top"] = parse(Float64, args[i+1])
             i += 2
+        elseif a == "--theta-lapse-rate" && i < length(args)
+            cfg["theta_lapse_rate"] = parse(Float64, args[i+1])
+            i += 2
         elseif a == "--z0m" && i < length(args)
             cfg["z0m"] = parse(Float64, args[i+1])
             i += 2
         elseif a == "--z0h" && i < length(args)
             cfg["z0h"] = parse(Float64, args[i+1])
+            i += 2
+        elseif a == "--h" && i < length(args)
+            cfg["h"] = parse(Float64, args[i+1])
+            i += 2
+        elseif a == "--use-nonlocal-h" && i < length(args)
+            cfg["use_nonlocal_h"] = _parse_bool(args[i+1])
+            i += 2
+        elseif a == "--nonlocal-h-weight" && i < length(args)
+            cfg["nonlocal_h_weight"] = parse(Float64, args[i+1])
+            i += 2
+        elseif a == "--nonlocal-h-min" && i < length(args)
+            cfg["nonlocal_h_min"] = parse(Float64, args[i+1])
+            i += 2
+        elseif a == "--nonlocal-h-max" && i < length(args)
+            cfg["nonlocal_h_max"] = parse(Float64, args[i+1])
             i += 2
         elseif a == "--k-min-surf" && i < length(args)
             cfg["k_min_surf"] = parse(Float64, args[i+1])
@@ -158,6 +199,16 @@ function parse_args(args::Vector{String})
             i += 2
         elseif a == "--save-jld2" && i < length(args)
             cfg["save_jld2"] = _parse_bool(args[i+1])
+            i += 2
+        elseif a == "--solver-jacobian" && i < length(args)
+            mode = lowercase(args[i+1])
+            mode in ("autodiff", "finite") || error("--solver-jacobian must be autodiff or finite")
+            cfg["solver_jacobian"] = mode
+            i += 2
+        elseif a == "--jacobian-sparsity" && i < length(args)
+            mode = lowercase(args[i+1])
+            mode in ("dense", "banded") || error("--jacobian-sparsity must be dense or banded")
+            cfg["jacobian_sparsity"] = mode
             i += 2
         else
             error("Unknown or incomplete argument: $(a). Use --help for options.")
@@ -196,6 +247,13 @@ function _base_case_params(N::Int, dz::Float64)
         "R_down" => 240.0,
         "lambda_s" => 1.2,
         "d_soil" => 0.10,
+        "h" => 100.0,
+        "use_nonlocal_h" => 0.0,
+        "nonlocal_h_weight" => 0.5,
+        "nonlocal_h_min" => 20.0,
+        "nonlocal_h_max" => 400.0,
+        "nonlocal_velocity_floor" => 0.1,
+        "nonlocal_f_floor" => 1.0e-5,
         "z0m" => 0.1,         # Default momentum roughness length
         "z0h" => 0.01,        # Default thermal roughness length
         "k_min_surf" => 1.0e-3,
@@ -210,7 +268,7 @@ function _base_case_params(N::Int, dz::Float64)
     )
 end
 
-function build_case(case_name::String, N::Int, dz::Float64)
+function build_case(case_name::String, N::Int, dz::Float64; theta_lapse_rate_override=nothing)
     d = _base_case_params(N, dz)
     z = d["z_centers"]
 
@@ -223,10 +281,12 @@ function build_case(case_name::String, N::Int, dz::Float64)
         d["z0h"] = 0.01
         d["theta_top_bc"] = :dirichlet
         d["theta_top"] = 265.0
+        d["theta_lapse_rate"] = 0.01
 
         U0 = 0.7 .* d["Ug"] .* (1 .- exp.(-z ./ 120.0))
         V0 = zeros(Float64, N)
-        theta0 = d["theta_a"] .+ 0.01 .* z
+        theta_lapse_rate = isnothing(theta_lapse_rate_override) ? d["theta_lapse_rate"] : Float64(theta_lapse_rate_override)
+        theta0 = d["theta_a"] .+ theta_lapse_rate .* z
         Ts0 = d["theta_a"] - 1.0
     elseif case_name == "idealized_sbl"
         # Setup matches CASES99 prairie grass site configuration
@@ -238,13 +298,36 @@ function build_case(case_name::String, N::Int, dz::Float64)
         d["z0m"] = 0.02
         d["z0h"] = 0.005
         d["theta_top_bc"] = :neumann
+        d["theta_lapse_rate"] = 0.006
 
         U0 = 0.8 .* d["Ug"] .* (1 .- exp.(-z ./ 100.0))
         V0 = zeros(Float64, N)
-        theta0 = d["theta_a"] .+ 0.006 .* z
+        theta_lapse_rate = isnothing(theta_lapse_rate_override) ? d["theta_lapse_rate"] : Float64(theta_lapse_rate_override)
+        theta0 = d["theta_a"] .+ theta_lapse_rate .* z
         Ts0 = d["theta_a"] - 2.0
+    elseif case_name == "sheba"
+        # Arctic sea-ice benchmark with weak roughness and strong stability.
+        d["Ug"] = 7.0
+        d["theta_a"] = 257.0
+        d["T_deep"] = 255.5
+        d["R_down"] = 190.0
+        d["beta"] = 1.15
+        d["h"] = 300.0
+        d["nonlocal_h_max"] = 400.0
+        d["z0m"] = 1.0e-4
+        d["z0h"] = 1.0e-5
+        d["ts_min"] = 220.0
+        d["theta_top_bc"] = :dirichlet
+        d["theta_top"] = 257.0
+        d["theta_lapse_rate"] = 0.004
+
+        U0 = 0.6 .* d["Ug"] .* (1 .- exp.(-z ./ 90.0))
+        V0 = zeros(Float64, N)
+        theta_lapse_rate = isnothing(theta_lapse_rate_override) ? d["theta_lapse_rate"] : Float64(theta_lapse_rate_override)
+        theta0 = d["theta_a"] .+ theta_lapse_rate .* z
+        Ts0 = d["theta_a"] - 3.0
     else
-        error("Unknown case: $(case_name). Supported: gabls1, idealized_sbl")
+        error("Unknown case: $(case_name). Supported: gabls1, idealized_sbl, sheba")
     end
 
     p = SCMParameters(
@@ -267,6 +350,13 @@ function build_case(case_name::String, N::Int, dz::Float64)
         d["R_down"],
         d["lambda_s"],
         d["d_soil"],
+        d["h"],
+        d["use_nonlocal_h"],
+        d["nonlocal_h_weight"],
+        d["nonlocal_h_min"],
+        d["nonlocal_h_max"],
+        d["nonlocal_velocity_floor"],
+        d["nonlocal_f_floor"],
         d["z0m"],
         d["z0h"],
         d["k_min_surf"],
@@ -316,6 +406,13 @@ function _apply_top_bc_overrides!(p::SCMParameters, theta_top_bc::String, theta_
         p.R_down,
         p.lambda_s,
         p.d_soil,
+        p.h,
+        p.use_nonlocal_h,
+        p.nonlocal_h_weight,
+        p.nonlocal_h_min,
+        p.nonlocal_h_max,
+        p.nonlocal_velocity_floor,
+        p.nonlocal_f_floor,
         p.z0m,
         p.z0h,
         p.k_min_surf,
@@ -333,6 +430,11 @@ end
 function _apply_runtime_overrides!(p::SCMParameters, cfg)
     z0m_val = isnothing(cfg["z0m"]) ? p.z0m : Float64(cfg["z0m"])
     z0h_val = isnothing(cfg["z0h"]) ? p.z0h : Float64(cfg["z0h"])
+    h_val = isnothing(cfg["h"]) ? p.h : Float64(cfg["h"])
+    h_weight = isnothing(cfg["nonlocal_h_weight"]) ? p.nonlocal_h_weight : Float64(cfg["nonlocal_h_weight"])
+    h_min = isnothing(cfg["nonlocal_h_min"]) ? p.nonlocal_h_min : Float64(cfg["nonlocal_h_min"])
+    h_max = isnothing(cfg["nonlocal_h_max"]) ? p.nonlocal_h_max : Float64(cfg["nonlocal_h_max"])
+    use_nonlocal_h_val = Bool(cfg["use_nonlocal_h"]) ? 1.0 : 0.0
 
     return SCMParameters(
         p.N,
@@ -354,6 +456,13 @@ function _apply_runtime_overrides!(p::SCMParameters, cfg)
         p.R_down,
         p.lambda_s,
         p.d_soil,
+        h_val,
+        use_nonlocal_h_val,
+        h_weight,
+        h_min,
+        h_max,
+        p.nonlocal_velocity_floor,
+        p.nonlocal_f_floor,
         z0m_val,
         z0h_val,
         Float64(cfg["k_min_surf"]),
@@ -398,6 +507,11 @@ function _parameter_snapshot(p::SCMParameters)
         "R_down" => p.R_down,
         "lambda_s" => p.lambda_s,
         "d_soil" => p.d_soil,
+        "h" => p.h,
+        "use_nonlocal_h" => p.use_nonlocal_h,
+        "nonlocal_h_weight" => p.nonlocal_h_weight,
+        "nonlocal_h_min" => p.nonlocal_h_min,
+        "nonlocal_h_max" => p.nonlocal_h_max,
         "z0m" => p.z0m,                 # Exported to paper/JSON
         "z0h" => p.z0h,                 # Exported to paper/JSON
         "l_0" => p.l_0,                 # Exported to paper/JSON
@@ -483,7 +597,10 @@ function main(args)
     dt = cfg["dt"]
     outdir = cfg["outdir"] == "" ? joinpath("results", case_name) : cfg["outdir"]
 
-    X0, p0 = build_case(case_name, N, dz)
+    X0, p0 = build_case(case_name, N, dz; theta_lapse_rate_override=cfg["theta_lapse_rate"])
+    if isnothing(cfg["theta_lapse_rate"]) && N > 1
+        cfg["theta_lapse_rate"] = (X0[2N + 3] - X0[2N + 2]) / dz
+    end
     p1 = _apply_top_bc_overrides!(p0, cfg["theta_top_bc"], cfg["theta_top"], cfg["lambda_top"])
     p = _apply_runtime_overrides!(p1, cfg)
 
@@ -495,6 +612,8 @@ function main(args)
             t_span,
             dt;
             profile_every_seconds=cfg["profile_every_seconds"],
+            jacobian_mode=Symbol(cfg["solver_jacobian"]),
+            jacobian_sparsity=Symbol(cfg["jacobian_sparsity"]),
         )
     catch e
         if e isa SurfaceAnomalyException

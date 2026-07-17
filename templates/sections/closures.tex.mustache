@@ -15,6 +15,12 @@ C_H &= \frac{\kappa^2}{\ln(h / z_{0m}) \ln(h / z_{0h})},
 \end{align}
 where $\kappa \approx 0.4$ is the von Kármán constant, $h$ is the bulk boundary layer height, and $z_{0m}, z_{0h}$ are the momentum and thermal roughness lengths, respectively.
 
+For implementation reproducibility, the non-local height used inside these closures is applied through explicit clamp logic,
+\begin{equation}
+h \leftarrow \max\left(\texttt{nonlocal\_h\_min},\,\min\left(h_{\mathrm{diagnosed}},\texttt{nonlocal\_h\_max}\right)\right),
+\end{equation}
+before evaluating log-law coefficients or derived diffusivities.
+
 \paragraph{Physical Derivation of Structural Constants.}
 Bypassing diagnostic functions requires that the structural parameters $l_0$ and $\eta$ carry the asymptotic physical scaling of MOST into neutral limits:
 \begin{itemize}

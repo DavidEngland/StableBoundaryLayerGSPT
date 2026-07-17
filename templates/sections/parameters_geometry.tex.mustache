@@ -1,6 +1,8 @@
 \subsection{Physical Parameters and Baseline Scaling}
 \label{subsec:parameters}
 
+To reduce ambiguity between manuscript notation and implementation variables, we use the following direct mappings in the SCM code path: $U_g \leftrightarrow$ \texttt{Ug}, $V_g \leftrightarrow$ \texttt{Vg}, $T_a \leftrightarrow$ \texttt{theta\_a}, $T_{\text{deep}} \leftrightarrow$ \texttt{T\_deep}, $h \leftrightarrow$ \texttt{h}, $z_{0m} \leftrightarrow$ \texttt{z0m}, and $z_{0h} \leftrightarrow$ \texttt{z0h}. Runtime non-local bounds are carried by \texttt{nonlocal\_h\_min} and \texttt{nonlocal\_h\_max}.
+
 To run this model numerically (e.g., in Julia/SciML or Python's \texttt{solve\_ivp}), use the following verified baseline parameters scaled for a typical mid-latitude nocturnal boundary layer (resembling CASES99 conditions):
 
 \begin{table}[ht!]

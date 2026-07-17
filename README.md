@@ -38,9 +38,16 @@ bash scripts/stablebl build --dataset CASES99
 bash scripts/stablebl diagnostics --dataset CASES99 --nsamples 120 --ngrid 40 --seed 7
 bash scripts/stablebl paper --dataset CASES99
 bash scripts/stablebl bundle --synthetic --dataset CASES99
+
+# SCM quick commands
+make run-gabls1
+make run-sheba
+make run-sheba-high-top
 ```
 
 `scripts/stablebl paper` now auto-generates the 4D solver trajectory and diagnostic geometry plot, writes it under `reports/generated/figures/`, assembles `reports/generated/paper.tex`, and compiles the PDF so collaborators can reproduce manuscript figures without manual steps.
+
+For SCM-specific workflow details and CLI options, see `scm/ReadMe.md`.
 
 ## External Datasets & Local Directory Setup
 
@@ -120,3 +127,4 @@ Outputs are written under `bundle/` and include manuscript artifacts, figures, d
 - Edit scientific contracts in `spec/` (canonical equations, diagnostics, outputs, datasets).
 - Edit narrative section sources in `templates/sections/`.
 - Do not manually edit `reports/generated/`; it is overwritten by pipeline runs.
+- Generated simulation outputs (for example `results/**` payloads, CSV, JSON, and plots) are ignored by Git in this repository and should be treated as local artifacts.

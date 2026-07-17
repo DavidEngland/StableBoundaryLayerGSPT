@@ -37,3 +37,22 @@ results/**/*_report_wrapper.aux
 results/**/*_report_wrapper.log
 results/**/scm_case_report_wrapper.aux
 results/**/scm_case_report_wrapper.log
+
+# ==============================================================================
+# Simulation Output Binaries & Data Dumps
+# ==============================================================================
+# Block all Julia data storage binaries and raw tabular outputs everywhere
+*.jld2
+*.csv
+*.h5
+
+# Block all generated diagnostic figures and run payloads in results/ directories
+results/**/*.png
+results/**/*.pdf
+results/**/*.jld2
+results/**/*.csv
+results/**/*.json
+results/**/plots/
+
+# Keep the directory structure intact if needed, but ignore the contents
+!results/**/.gitkeep

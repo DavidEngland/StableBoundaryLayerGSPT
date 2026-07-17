@@ -10,9 +10,10 @@ Traditional SBL closures often suffer from abrupt regime switches near high Rich
 
 ## Core Features
 
-- Zero-allocation RHS design in `scm_gspt_tendencies!` with preallocated workspace buffers.
+- Dual-safe RHS design in `scm_gspt_tendencies!` with preallocated workspace buffers for standard runs and typed scratch buffers when AD dual numbers are present.
 - Smooth regularization of the transition manifold through $(\delta, \xi)$.
 - Vertically resolved momentum and thermal diffusion with consistent surface coupling.
+- Configurable Jacobian strategy: `--solver-jacobian {autodiff|finite}` and `--jacobian-sparsity {dense|banded}`.
 - Fail-fast anomaly guard for non-physical skin temperatures with structured failure summaries.
 - End-to-end pipeline for run, diagnostics, plotting, and LaTeX report generation.
 
@@ -44,6 +45,8 @@ For $N$ vertical levels, the state vector is $X \in \mathbb{R}^{3N+1}$:
 
 Diffusivities $K_m$ and $K_h$ are evaluated on faces ($1\dots N-1$), while prognostic variables are centered at cell centers.
 
+The Jacobian prototype in the SCM driver uses this block state layout and a local nearest-neighbor stencil, so each interior node only couples to $(i-1, i, i+1)$ along the vertical column.
+
 ## Quick Start
 
 Run the full SCM workflow from repository root:
@@ -57,6 +60,10 @@ Case-specific presets:
 ```bash
 make run-idealized-sbl
 make run-gabls1
+make run-sheba
+make run-sheba-fd
+make run-sheba-high-top
+make run-sheba-high-top-fd
 ```
 
 Verification smoke test (run + plots + report + checks):
@@ -71,101 +78,63 @@ make scm-verify
 
 ```bash
 julia --project=. scm/run_case.jl \
-    --case idealized_sbl \
+    --case sheba \
     --duration 12.0 \
-    --dt 30.0 \
-    --grid-size 100 \
-    --dz 5.0 \
+    --dt 10.0 \
+    --grid-size 250 \
+    --dz 2.0 \
+    --solver-jacobian autodiff \
+    --jacobian-sparsity banded \
+    --theta-lapse-rate 0.004 \
+    --use-nonlocal-h true \
+    --h 500 \
+    --nonlocal-h-weight 0.5 \
+    --nonlocal-h-min 20.0 \
+    --nonlocal-h-max 500.0 \
     --k-min-surf 1e-3 \
-    --ts-min 180.0 \
+    --ts-min 220.0 \
     --ts-max 350.0 \
     --debug-print false \
-    --outdir results/idealized_sbl
+    --outdir results/sheba_high_top
 ```
 
-2. Generate figure suite:
+1. Generate figure suite:
 
 ```bash
 julia --project=. scm/plot_case.jl \
-    --input results/idealized_sbl/payload.jld2 \
-    --outdir results/idealized_sbl/plots \
+    --input results/sheba_high_top/payload.jld2 \
+    --outdir results/sheba_high_top/plots \
     --format png
 ```
 
-3. Render SCM LaTeX case report:
+1. Render SCM LaTeX case report:
 
 ```bash
 julia --project=. scm/render_case_report.jl \
-    --summary results/idealized_sbl/summary.json \
+    --summary results/sheba_high_top/summary.json \
     --template templates/scm_case_report.tex.mustache \
-    --out results/idealized_sbl/idealized_sbl_100x5m_12h_report.tex
+    --out results/sheba_high_top/sheba_250x2m_12h_report.tex
 ```
 
-4. Compile combined SCM portfolio from all current semantic report wrappers under `results/`:
+1. Compile combined SCM portfolio from all current semantic report wrappers under `results/`:
 
 ```bash
 make compile-scm-reports
 ```
 
-## Minimal Programmatic Example
+## Solver Modes and Performance A/B
 
-```julia
-using OrdinaryDiffEq
-using DifferentialEquations
+Use matching setups to compare solver pathways:
 
-N = 100
-dz = 5.0
-z_centers = collect(range(dz / 2, step=dz, length=N))
-z_faces = collect(range(dz, step=dz, length=N - 1))
+```bash
+# Sparse AD Jacobian path (recommended)
+make run-sheba-high-top
 
-struct SCMWorkspace
-        Km::Vector{Float64}
-        Kh::Vector{Float64}
-end
-
-Base.@kwdef struct SCMParameters{W}
-        N::Int
-        dz::Float64
-        z_centers::Vector{Float64}
-        z_faces::Vector{Float64}
-        workspace::W
-        f::Float64 = 1e-4
-        Ug::Float64 = 8.0
-        Vg::Float64 = 0.0
-        theta_a::Float64 = 265.0
-        T_deep::Float64 = 270.0
-        delta::Float64 = 1e-4
-        K_buoy::Float64 = 0.1
-        beta::Float64 = 1.0
-        l_0::Float64 = 30.0
-        eta::Float64 = 0.5
-        xi::Float64 = 1e-3
-        C_skin::Float64 = 1e4
-        R_down::Float64 = 150.0
-        lambda_s::Float64 = 1.0
-        d_soil::Float64 = 1.0
-        k_min_surf::Float64 = 1e-3
-        ts_min::Float64 = 180.0
-        ts_max::Float64 = 350.0
-        theta_top_bc::Symbol = :relaxation
-        theta_top::Float64 = 275.0
-        lambda_top::Float64 = 0.01
-        debug_print::Bool = false
-        profile_every::Float64 = 1800.0
-end
-
-ws = SCMWorkspace(zeros(N - 1), zeros(N - 1))
-p = SCMParameters(N=N, dz=dz, z_centers=z_centers, z_faces=z_faces, workspace=ws)
-
-X0 = zeros(3N + 1)
-X0[1] = 263.0
-X0[2:(N + 1)] .= 5.0
-X0[(N + 2):(2N + 1)] .= 1.0
-X0[(2N + 2):(3N + 1)] .= 265.0
-
-prob = ODEProblem(scm_gspt_tendencies!, X0, (0.0, 43200.0), p)
-sol = solve(prob, Rodas5P(autodiff=false), reltol=1e-6, abstol=1e-8)
+# Dense finite-difference baseline path
+make run-sheba-high-top-fd
 ```
+
+Inspect `summary.json` in each output directory and compare `solver_summary.rhs_evaluations`, `accepted_steps`, and `rejected_steps`.
 
 ## Surface Coupling
 
@@ -191,3 +160,5 @@ Each run produces:
 - `plots/`: figure suite (`fig01` through `fig08` by default).
 - `<semantic>_report.tex`: auto-rendered SCM report section with namespaced labels.
 - `<semantic>_report_wrapper.{tex,pdf}`: standalone wrapper for case-level PDF compile.
+
+Note: generated run outputs are intentionally ignored by Git in this repository configuration.

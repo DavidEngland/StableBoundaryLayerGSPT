@@ -19,6 +19,13 @@ The concrete prognostic system for the state vector $\mathbf{x} = (U, V, T_s, e)
 
 Here, $f$ is the Coriolis frequency, $h$ is the boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant acceleration scale. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The transport functions are modeled as $\Phi_{m,h}(e) = \sqrt{e + \delta}$ to maintain consistency with classical mixing-length theory.
 
+In the multi-layer SCM closure, the constant scale height $h$ is replaced by an emergent effective scale height $h_{\text{eff}}$ that feeds resolved momentum back into the damping coefficients:
+\begin{equation}
+h_{\text{eff}} = \operatorname{clamp}\!\left((1-w)h_0 + w\,\frac{\sqrt{U^2 + V^2 + \delta_u}}{\max(|f|, f_{\text{floor}})},\; h_{\min},\; h_{\max}\right),
+\label{eq:heff_emergent}
+\end{equation}
+where $w \in [0,1]$ is the non-local blend weight and $\delta_u$ is a small velocity floor regularizer.
+
 \subsection{Geometric Analysis: Boundary Crossings vs. Fold Catastrophes}
 \label{subsec:geometric_consequences}
 
@@ -29,5 +36,24 @@ GSPT allows us to formally distinguish between two distinct physical transitions
     \begin{equation}
     \mathcal{C}_{\text{fold}} = \left\{ (U, V, T_s, e) \in \mathcal{M}_0 \ \middle|\ \det \left( \text{D}_{\mathbf{y}} e^*_{\xi} \right) = 0 \right\}.
     \end{equation}
+    In equivalent SEB form, this corresponds to a loss of slow thermodynamic Jacobian rank:
+    \begin{equation}
+    \frac{\partial}{\partial T_s}\left(R_{\downarrow} - \sigma_{\mathrm{SB}}T_s^4 - \rho c_p C_H\sqrt{e^*(T_s,U,V)+\delta}(T_s-T_a) - \frac{K_g}{d_g}(T_s-T_g)\right)=0.
+    \label{eq:seb_fold_condition}
+    \end{equation}
     At this fold line, normal hyperbolicity is completely lost, forcing the slow flow to jump along the fast fibers toward the stable laminar sheet—manifesting physically as SBL collapse.
 \end{itemize}
+
+\subsection{Tri-Height Observability Diagnostics}
+\label{subsec:triheight_observability}
+
+To track how $h_{\text{eff}}$ modifies vertical structure during transition, we diagnose three operational heights in SCM outputs:
+\begin{equation}
+\begin{aligned}
+h_D &= \inf\{z : D(z) < 0.05\}, \qquad D(z)=K_m(z)/\max_z K_m(z),\\
+h_e &= \inf\{z : e(z) < \epsilon_e\},\\
+h_{\partial e} &= \operatorname*{arg\,max}_z\left(-\frac{\partial e}{\partial z}\right).
+\end{aligned}
+\label{eq:triheight_diagnostics}
+\end{equation}
+These correspond to the geometric decoupling interface, energetic turbulent floor, and maximum-curvature transition height, respectively.

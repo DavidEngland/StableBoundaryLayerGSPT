@@ -14,6 +14,7 @@ Base.@kwdef struct SCMDiagnosticConfig{T<:Real}
     ri_eps::T = 1.0e-12
     monin_eps::T = 1.0e-10
     bl_threshold_fraction::T = 0.05
+    e_floor_threshold::T = 1.0e-2
     delta_near_tol::T = 1.0e-4
     k_min_surf::T = 1.0e-3
     radiative_floor_margin_k::T = 20.0
@@ -21,6 +22,62 @@ end
 
 """Finite-volume mixing length used by the SCM closure."""
 mixing_length(z::Real, l0::Real; kappa::Real=0.4) = (kappa * z) / (1.0 + (kappa * z) / l0)
+
+function effective_h_scale(p, U_ref::Real, V_ref::Real)
+    h_local = hasproperty(p, :h) ? Float64(p.h) : 100.0
+    use_nonlocal = hasproperty(p, :use_nonlocal_h) && Float64(p.use_nonlocal_h) > 0.5
+    if !use_nonlocal
+        return h_local
+    end
+
+    weight = clamp(hasproperty(p, :nonlocal_h_weight) ? Float64(p.nonlocal_h_weight) : 0.5, 0.0, 1.0)
+    h_min = hasproperty(p, :nonlocal_h_min) ? Float64(p.nonlocal_h_min) : 20.0
+    h_max = hasproperty(p, :nonlocal_h_max) ? Float64(p.nonlocal_h_max) : 400.0
+    u_floor = hasproperty(p, :nonlocal_velocity_floor) ? Float64(p.nonlocal_velocity_floor) : 0.1
+    f_floor = hasproperty(p, :nonlocal_f_floor) ? Float64(p.nonlocal_f_floor) : 1.0e-5
+
+    speed = max(hypot(Float64(U_ref), Float64(V_ref)), u_floor)
+    f_eff = max(abs(Float64(p.f)), f_floor)
+    h_nonlocal = clamp(speed / f_eff, h_min, h_max)
+    return (1.0 - weight) * h_local + weight * h_nonlocal
+end
+
+"""Return face heights associated with interior closure vectors."""
+function interior_face_heights(p)
+    return p.z_faces[2:end-1]
+end
+
+"""First height where profile drops below threshold; if never crossed, return top level."""
+function first_height_below(values::AbstractVector, heights::AbstractVector, threshold::Real)
+    idx = findfirst(v -> v < threshold, values)
+    return isnothing(idx) ? heights[end] : heights[idx]
+end
+
+"""Height of strongest negative vertical gradient using finite differences."""
+function max_negative_gradient_height(values::AbstractVector, heights::AbstractVector)
+    n = length(values)
+    n == length(heights) || error("values/heights length mismatch")
+    if n == 0
+        error("values cannot be empty")
+    elseif n == 1
+        return (height=heights[1], max_negative_gradient=0.0)
+    end
+
+    d_dz = zeros(Float64, n)
+    @inbounds for i in 1:n
+        if i == 1
+            d_dz[i] = (values[2] - values[1]) / (heights[2] - heights[1])
+        elseif i == n
+            d_dz[i] = (values[n] - values[n - 1]) / (heights[n] - heights[n - 1])
+        else
+            d_dz[i] = (values[i + 1] - values[i - 1]) / (heights[i + 1] - heights[i - 1])
+        end
+    end
+
+    neg_grad = -d_dz
+    idx = argmax(neg_grad)
+    return (height=heights[idx], max_negative_gradient=neg_grad[idx])
+end
 
 """
     compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
@@ -55,6 +112,10 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
 
         zf = z_faces[i + 1]
         ell = mixing_length(zf, l0; kappa=cfg.kappa)
+        U_face = 0.5 * (U[i] + U[i + 1])
+        V_face = 0.5 * (V[i] + V[i + 1])
+        h_eff = effective_h_scale(p, U_face, V_face)
+        ell *= exp(-zf / h_eff)
         s2 = dU_dz^2 + dV_dz^2
         arg = clamp(beta * dth_dz * ell / theta_a, -40.0, 40.0)
         G = expm1(arg)
@@ -104,6 +165,8 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     dV_dz_surf = (V[1] - 0.0) / dz
     dth_dz_surf = (theta[1] - T_s) / dz
     ell_surf = mixing_length(z_centers[1], l0; kappa=cfg.kappa)
+    h_eff_surf = effective_h_scale(p, U[1], V[1])
+    ell_surf *= exp(-z_centers[1] / h_eff_surf)
     G_surf = expm1(clamp(beta * dth_dz_surf * ell_surf / theta_a, -40.0, 40.0))
     Delta_surf = eta * (ell_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * G_surf
     Q_surf = (l0 * Delta_surf)^2 - delta
@@ -144,6 +207,11 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     bl_idx = findfirst(x -> x < km_threshold, closure.Km)
     bl_depth = isnothing(bl_idx) ? z_centers[end] : z_centers[bl_idx]
 
+    z_faces_interior = interior_face_heights(p)
+    h_decoupling = first_height_below(closure.Km, z_faces_interior, km_threshold)
+    h_energy_floor = first_height_below(closure.e_xi, z_faces_interior, cfg.e_floor_threshold)
+    h_grad = max_negative_gradient_height(closure.e_xi, z_faces_interior)
+
     near_fold = abs(Delta_surf - sqrt(delta) / l0) <= cfg.delta_near_tol
 
     return (
@@ -158,6 +226,10 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
         below_radiative_floor=below_radiative_floor,
         u_star=u_star,
         boundary_layer_depth=bl_depth,
+        h_decoupling=h_decoupling,
+        h_energy_floor=h_energy_floor,
+        h_max_energy_gradient=h_grad.height,
+        max_negative_de_dz=h_grad.max_negative_gradient,
         ri_min=ri_min,
         ri_max=ri_max,
         monin_obukhov_length=monin_L,
@@ -283,6 +355,9 @@ function compute_numerical_verification(time_series)
     radiative_breach_hits = count(row -> row.below_radiative_floor, time_series)
     min_rad_margin = minimum([row.T_s - row.radiative_equilibrium_temperature for row in time_series])
     kh_surf_min = minimum([row.kh_surface for row in time_series])
+    hD = [row.h_decoupling for row in time_series]
+    he = [row.h_energy_floor for row in time_series]
+    hde = [row.h_max_energy_gradient for row in time_series]
 
     return (
         min_diffusivity=minimum(km_mins),
@@ -294,6 +369,15 @@ function compute_numerical_verification(time_series)
         radiative_floor_breach_fraction=radiative_breach_hits / length(time_series),
         min_surface_minus_radiative_equilibrium=min_rad_margin,
         min_surface_kh=kh_surf_min,
+        h_decoupling_min=minimum(hD),
+        h_decoupling_mean=mean(hD),
+        h_decoupling_max=maximum(hD),
+        h_energy_floor_min=minimum(he),
+        h_energy_floor_mean=mean(he),
+        h_energy_floor_max=maximum(he),
+        h_max_energy_gradient_min=minimum(hde),
+        h_max_energy_gradient_mean=mean(hde),
+        h_max_energy_gradient_max=maximum(hde),
     )
 end
 

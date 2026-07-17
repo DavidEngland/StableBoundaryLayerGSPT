@@ -24,3 +24,7 @@ four_d_solver:
     z0m: 1.5
     z0h: 0.2
     h: 60.0
+    use_nonlocal_h: 0.0
+    nonlocal_h_weight: 0.5
+    nonlocal_h_min: 20.0
+    nonlocal_h_max: 400.0
