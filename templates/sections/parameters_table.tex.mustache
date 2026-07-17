@@ -1,0 +1,28 @@
+\begin{table}[htbp]
+\centering
+\caption{Dynamical System Parameters, Aerodynamic Constants, and Scaling Rationale.}
+\label{tab:system_parameters}
+\begin{tabular}{llll}
+\hline
+\textbf{Symbol} & \textbf{Physical Parameter} & \textbf{Default Value} & \textbf{Physical Rationale / Scaling Origin} \\ \hline
+\multicolumn{4}{l}{\textit{GSPT \& System Constants}} \\
+$\varepsilon$ & Singular perturbation timescale & $0.05$ & Ratio of fast TKE relaxation ($\sim 10^2$ s) to slow synoptic evolution ($\sim 2 \times 10^3$ s) \\
+$\delta$ & Background residual TKE floor & $10^{-4} \ \mathrm{m^2 \ s^{-2}}$ & Represents molecular/non-turbulent residual transport limit \\
+$\xi$ & Hyperbolic embedding scale & $10^{-3}$ & Numerical smoothing scale; $\xi \ll \delta$ preserves GSPT manifold structure \\
+$\alpha$ & Safeguard gate activation scale & $5 \times 10^{-5}$ & Singular-derivative cutoff boundary; configured as $0 < \alpha < \delta$ \\
+\hline
+\multicolumn{4}{l}{\textit{Boundary Layer Geometry \& Turbulence Properties}} \\
+$h$ & Bulk SBL domain height & $50.0 \ \mathrm{m}$ & Shallow nocturnal boundary layer representative height \\
+$l_0$ & Master mixing length scale & $15.0 \ \mathrm{m}$ & Asymptotic Blackadar limit capped by CASES99 stable buoyancy scales \\
+$\eta$ & Shear production efficiency & $1.5$ & Derived via MOST neutral limit equilibrium: $\eta = 1/(\kappa\sqrt{c_0})$ \\
+$K$ & Buoyancy scale parameter & $9.81 \ \mathrm{m \ s^{-2}}$ & Acceleration of gravity $g$ acting on thermodynamic perturbations \\
+$\beta$ & Thermal sensitivity factor & $1.0$ & Normalized buoyancy response to skin temperature gradients \\
+\hline
+\multicolumn{4}{l}{\textit{Site-Specific Surface Roughness Configurations}} \\
+$z_{0m}^{\text{CASES}}$ & Momentum roughness (Grassland) & $0.02 \ \mathrm{m}$ & Representative aerodynamic roughness for CASES99 prairie \\
+$z_{0h}^{\text{CASES}}$ & Thermal roughness (Grassland) & $0.005 \ \mathrm{m}$ & High surface-to-air coupling limit \\
+$z_{0m}^{\text{FLOSS}}$ & Momentum roughness (Snowpack) & $10^{-4} \ \mathrm{m}$ & Ultra-smooth FLOSS site snowpack boundary layer \\
+$z_{0h}^{\text{FLOSS}}$ & Thermal roughness (Snowpack) & $10^{-5} \ \mathrm{m}$ & Low surface coupling; prone to rapid radiative decoupling \\
+\hline
+\end{tabular}
+\end{table}

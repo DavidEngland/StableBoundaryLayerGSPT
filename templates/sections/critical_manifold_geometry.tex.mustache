@@ -1,50 +1,27 @@
-\subsection{Critical Manifold Geometry}
+\subsection{Critical Manifold Geometry and Stability Properties}
 \label{subsec:critical_manifold_geometry}
 
-Define the slow variable bundle $\mathbf{y}=(U,V,T_s)$ and forcing metric
-\begin{equation}
-\Delta(\mathbf{y}) = \eta\gamma(U^2+V^2)-K G(T_s).
-\end{equation}
-In the singular limit $\varepsilon \to 0$, the fast equation \eqref{eq:gspt_fast} yields
-\begin{equation}
-l_0\Delta(\mathbf{y})\sqrt{e+\delta} - (e+\delta) = 0.
-\label{eq:critical_constraint_unified}
-\end{equation}
-Hence the critical manifold splits into
-\begin{align}
-\mathcal{M}_0^{\mathrm{lam}} &: e+\delta=0,\\
-\mathcal{M}_0^{\mathrm{act}} &: e^*(\mathbf{y})=(l_0\Delta(\mathbf{y}))^2-\delta.
-\label{eq:active_branch_quadratic_unified}
-\end{align}
+In the singular limit $\varepsilon \to 0$, the fast TKE coordinate relaxes instantaneously to its equilibrium state. This defines the critical manifold $\mathcal{M}_0$ of the system as an invariant algebraic variety embedded within the four-dimensional state space:
 
-\begin{proposition}[Thermal Shift Paradox]
-\label{prop:thermal_shift_paradox}
-Assume $\partial_{T_s}G(T_s)<0$. During nocturnal cooling ($T_s\downarrow$), $G(T_s)$ increases, so $\Delta(\mathbf{y})$ decreases. Consequently the active branch \eqref{eq:active_branch_quadratic_unified} translates downward in $e$, shrinking the admissible active-turbulence volume and increasing the wind magnitude required to sustain $e>0$.
+\begin{equation}
+\mathcal{M}_0 = \left\{(U,V,T_s,e) \in \mathbb{R}^4 \;\middle|\; l_0 \left[\eta\,\gamma\,(U^2+V^2) - K\,G(T_s)\right] \sqrt{e+\delta} - (e+\delta) = 0\right\}.
+\end{equation}
+
+Factoring this expression yields two distinct sheets: a trivial laminar floor sheet where $e = -\delta$, and an active turbulent branch given by the paraboloid:
+
+\begin{equation}
+e^* = (l_0\Delta)^2 - \delta, \qquad \text{where} \quad \Delta(U,V,T_s) = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
+\label{eq:critical_branch_paraboloid}
+\end{equation}
+
+\begin{proposition}[Thermal Downward Translation]
+\label{prop:thermal_shift_proof}
+Let the surface stability function satisfy $\partial G / \partial T_s < 0$ everywhere in the physical domain. Continuous radiative cooling of the surface skin temperature ($T_s \downarrow$) induces a uniform, monotonic downward geometric translation of the active critical manifold along the fast coordinate axis.
 \end{proposition}
 
 \paragraph{Proof.}
-From $\partial_{T_s}G<0$, cooling implies $G\uparrow$ and thus
+Differentiating the equilibrium TKE state $e^*$ with respect to the slow thermodynamic variable $T_s$ yields:
 \begin{equation}
-\partial_{T_s}\Delta = -K\partial_{T_s}G < 0.
+\frac{\partial e^*}{\partial T_s} = 2 l_0^2 \, \Delta(U,V,T_s) \, \left( -K \frac{\partial G}{\partial T_s} \right).
 \end{equation}
-Differentiating \eqref{eq:active_branch_quadratic_unified} gives
-\begin{equation}
-\partial_{T_s}e^* = 2l_0^2\Delta\,\partial_{T_s}\Delta.
-\end{equation}
-In the active branch of interest ($\Delta>0$), this is negative, so $e^*$ shifts downward as $T_s$ cools.
-
-\begin{theorem}[Uniform Normal Hyperbolicity on the Active Branch]
-\label{thm:uniform_normal_hyperbolicity}
-On compact subsets of $\mathcal{M}_0^{\mathrm{act}}$ with $\Delta>0$, the fast-direction derivative is
-\begin{equation}
-\partial_e\mathcal{F}\big|_{\mathcal{M}_0^{\mathrm{act}}} = -\frac{1}{2}<0,
-\end{equation}
-so the active branch is uniformly normally attracting.
-\end{theorem}
-
-\paragraph{Proof.}
-For $\mathcal{F}(e,\mathbf{y};0)=l_0\Delta\sqrt{e+\delta}-(e+\delta)$,
-\begin{equation}
-\partial_e\mathcal{F} = \frac{l_0\Delta}{2\sqrt{e+\delta}}-1.
-\end{equation}
-Substituting $e+\delta=(l_0\Delta)^2$ from \eqref{eq:active_branch_quadratic_unified} gives $\partial_e\mathcal{F}=\frac{1}{2}-1=-\frac{1}{2}$.
+Since $K > 0$ and $\partial G / \partial T_s < 0$, the term $\left(-K \frac{\partial G}{\partial T_s}\right)$ is strictly positive. For any active turbulent state where mechanical shear exceeds buoyant destruction ($\Delta > 0$), it follows that $\partial e^* / \partial T_s > 0$. Therefore, a decrease in surface temperature ($\Delta T_s < 0$) yields a strict reduction in the equilibrium TKE value ($\Delta e^* < 0$), translating the active paraboloid downward toward the laminar boundary. $\blacksquare$

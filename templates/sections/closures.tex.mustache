@@ -1,67 +1,28 @@
-\subsection{Aerodynamic Closures and Roughness Formulations}
+\subsection{Aerodynamic Closures and Physical Turbulent Diffusivities}
 \label{subsec:micro_closures}
 
-To close the governing 4D system in Equations~\eqref{eq:fast_tke}--\eqref{eq:slow_ts}, the macroscopic momentum and sensible heat exchange coefficients must be resolved. In classical boundary-layer modeling, empirical stability functions ($\phi_m(Ri), \phi_h(Ri)$) are typically introduced to diagnostically scale down turbulent transport under stable stratification.
+To close the governing 4D system, the macroscopic momentum and sensible heat exchange coefficients must be resolved. In traditional local frameworks, these are governed by Monin-Obukhov Similarity Theory (MOST) via the dimensionless gradients $\phi_m(\zeta), \phi_h(\zeta)$ where $\zeta = z/L$ is the stability parameter, or through empirical stability functions $f_m(Ri), f_h(Ri)$ parameterized by the gradient Richardson number:
 
-In our dynamical system formulation, however, the stabilization and ultimate collapse of the boundary layer are handled explicitly through the prognostic fast TKE coordinate ($e$). Consequently, we can bypass empirical algebraic stability curves entirely. The momentum exchange coefficient $\gamma$ and bulk thermal transfer coefficient $C_H$ are defined strictly by their neutral geometric values based on logarithmic wind profile theory:
+\begin{equation}
+K_m = \frac{\kappa z u_*}{\phi_m(\zeta)}, \qquad K_h = \frac{\kappa z u_*}{\phi_h(\zeta)}.
+\end{equation}
+
+In our dynamical system formulation, however, the stabilization, scaling, and ultimate collapse of the boundary layer are handled explicitly through the prognostic fast TKE coordinate $e$. Consequently, we can bypass empirical algebraic stability curves entirely. The momentum exchange coefficient $\gamma$ and bulk thermal transfer coefficient $C_H$ are defined strictly by their neutral geometric values based on logarithmic wind profile theory where $\phi_m(0) = \phi_h(0) = 1$:
+
 \begin{align}
 \gamma &= \frac{\kappa^2}{\left[ \ln(h / z_{0m}) \right]^2}, \\
 C_H &= \frac{\kappa^2}{\ln(h / z_{0m}) \ln(h / z_{0h})},
 \end{align}
-where $\kappa \approx 0.4$ is the von Kármán constant, $h$ is the bulk boundary layer height, $z_{0m}$ is the momentum roughness length, and $z_{0h}$ is the thermal roughness length.
+where $\kappa \approx 0.4$ is the von Kármán constant, $h$ is the bulk boundary layer height, and $z_{0m}, z_{0h}$ are the momentum and thermal roughness lengths, respectively.
 
-\paragraph{Physical Site Characteristics.}
-These aerodynamic roughness lengths encapsulate the physical geometry of the land-atmosphere interface, shifting the baseline shear-generation potential of each observational site:
+\paragraph{Physical Derivation of Structural Constants.}
+Bypassing diagnostic functions requires that the structural parameters $l_0$ and $\eta$ carry the asymptotic physical scaling of MOST into neutral limits:
 \begin{itemize}
-    \item \textbf{FLOSS (Fluxes Over Snow Surfaces):} Characterized by an ultra-smooth snowpack with $z_{0m} \approx 10^{-4}\,\mathrm{m}$ and $z_{0h} \approx 10^{-5}\,\mathrm{m}$. This aerodynamic smoothness reduces $\gamma$ and $C_H$ by nearly an order of magnitude compared to vegetated soil, severely limiting mechanical TKE production and preconditioning the surface temperature to rapidly decouple from the air column.
-    \item \textbf{CASES99:} Consists of a sparse prairie grassland with $z_{0m} \approx 0.02\,\mathrm{m}$ and $z_{0h} \approx 0.005\,\mathrm{m}$. The enhanced surface friction drives robust mechanical shear, expanding the active turbulent manifold and making the boundary layer highly resilient to thermal collapse.
+    \item \textbf{Shear Efficiency ($\eta$):} In a neutral surface layer, balancing TKE shear production with viscous dissipation requires tracking the steady-state ratio of TKE to friction velocity, $e = c_0 u_*^2$ (where observationally $c_0 \approx 3.8$). This matches the analytical requirement $\eta = 1 / (\kappa \sqrt{c_0}) \approx 1.28$. We adopt $\eta = 1.5$ as the scaled bulk efficiency parameter across the layer.
+    \item \textbf{Master Length Scale ($l_0$):} Following classical Blackadar-type interpolation, the local mixing length $\ell$ is limited by an asymptotic master scale $l_0$ via $\ell^{-1} = (\kappa z)^{-1} + l_0^{-1}$. In highly stratified nocturnal layers, buoyancy forces cap the maximum vertical eddy size. Observational data from campaigns like CASES99 bound this bulk macroscale to $l_0 \approx 15\,\mathrm{m}$ for a shallow $50\,\mathrm{m}$ boundary layer.
 \end{itemize}
 
-\medskip
-
-\subsection{Mathematical Regularization: Smooth Hyperbolic Embedding}
-\label{subsec:hyperbolic_embedding}
-
-In the classical algebraic system, the turbulent exchange coefficients drop abruptly to zero when $e \le -\delta$. In numerical solvers, using discontinuous projections or $C^0$ thresholds (such as $e = \max(-\delta, e)$) breaks differentiability. This loss of smoothness triggers step-rejection loops, ruins Newton-Raphson convergence, and causes solver stalls.
-
-To guarantee that the right-hand sides of the ODE system remain $C^\infty$ smooth across the entire physical and non-physical phase space, we regularize the diagnostic TKE state $e^*$ using a smooth hyperbolic embedding parameterized by the small scaling factor $0 < \xi \ll 1$:
+Using the smooth hyperbolic embedding $e^*_{\xi}$ defined in Eq.~\eqref{eq:hyperbolic_embedding_unified}, the physical turbulent diffusivities are evaluated as:
 \begin{equation}
-e^*_{\xi} = \frac{1}{2} \left( e^* + \sqrt{(e^*)^2 + \xi^2} \right).
-\label{eq:hyperbolic_embedding}
+K_m = l_0 \sqrt{e^*_{\xi} + \delta}, \quad K_h = l_0 \sqrt{e^*_{\xi} + \delta}.
 \end{equation}
-
-As a result of this embedding, the regularized turbulent diffusivity closures:
-\begin{equation}
-K_m = l_0 \sqrt{e^*_{\xi} + \delta}, \quad K_h = l_0 \sqrt{e^*_{\xi} + \delta}
-\end{equation}
-remain strictly smooth and differentiable for all real values of $e^*$.
-
-\medskip
-
-\subsection{The Fast-Subsystem Safeguard Gate}
-\label{subsec:safeguard_gate}
-
-While the hyperbolic embedding ensures smooth diagnostics, integrating the prognostic fast equation for TKE (Equation~\eqref{eq:fast_tke}) requires safeguarding the state variable itself. Near the collapse boundary ($e \to -\delta$), the derivative of the square-root transport term $\partial_e(\sqrt{e+\delta})$ diverges to infinity, creating a singular Jacobian.
-
-To intercept this numerical singularity without altering the physical behavior of active turbulence, we introduce a state-dependent activation gate $\Psi(e + \delta; \alpha)$ acting directly on the fast TKE balance:
-\begin{equation}
-\Psi(e + \delta; \alpha) = \frac{1}{2} \left[ 1 + \tanh\left( \frac{e + \delta - \alpha}{\alpha} \right) \right],
-\label{eq:smooth_gate_formula}
-\end{equation}
-where $0 < \alpha \ll \delta$ represents a numerical safety scale.
-
-Applying this gate to the fast subsystem yields:
-\begin{equation}
-\varepsilon \frac{de}{dt} = \Psi(e+\delta; \alpha)\, l_0\, \sqrt{e + \delta}\, \left[ \eta \gamma (U^2 + V^2) - K G(T_s) \right] - (e+\delta).
-\label{eq:gated_fast_system_ode}
-\end{equation}
-
-\paragraph{Mathematical Properties of the Gated System:}
-\begin{enumerate}
-    \item \textbf{Asymptotic Convergence:} For any active turbulent state where $(e + \delta) \gg \alpha$, the gate approaches unity exponentially fast:
-    \begin{equation}
-    \Psi(e+\delta; \alpha) = 1 - \mathcal{O}\left( e^{-2(e+\delta)/\alpha} \right),
-    \end{equation}
-    perfectly recovering the unaltered GSPT dynamics.
-    \item \textbf{Forward Invariance:} As the boundary layer collapses ($e \to -\delta$), the shifted coordinate $\varphi = e + \delta \to 0$. The gate $\Psi$ rapidly vanishes, shutting down both shear production and buoyant destruction before the square-root derivative can diverge. Consequently, the boundary $e = -\delta$ becomes a smooth, weakly attracting invariant manifold, guaranteeing that the numerical state remains in the real domain ($e(t) > -\delta$) for all time.
-\end{enumerate}

@@ -1,36 +1,28 @@
 \subsection{Regularization and Invariant Dynamics}
 \label{subsec:regularization_unified}
 
-To preserve smoothness of closures across active-laminar transition neighborhoods, we define the $C^{\infty}$ hyperbolic embedding
+To maintain normal hyperbolicity across active-laminar transition neighborhoods where the active paraboloid intersects the laminar floor, we substitute the non-differentiable algebraic clipping function $\max(0, e^*)$ with a smooth $C^{\infty}$ hyperbolic embedding:
+
 \begin{equation}
 e^*_{\xi}(\mathbf{y}) = \frac{1}{2}\left(e^*(\mathbf{y}) + \sqrt{(e^*(\mathbf{y}))^2 + \xi^2}\right),
 \label{eq:hyperbolic_embedding_unified}
 \end{equation}
-with $e^*(\mathbf{y})=(l_0\Delta(\mathbf{y}))^2-\delta$ and $\xi>0$. As $\xi\to 0$, this converges to the clipped branch while maintaining differentiability for implicit Jacobian-based solvers.
+
+where $\mathbf{y} = (U, V, T_s)^T$ and $\xi > 0$ represents an arbitrary, non-vanishing topological regularization scale. As $\xi \to 0$, $e^*_{\xi}$ converges uniformly to the clipped state while ensuring that the manifold remains a differentiable manifold for arbitrary derivatives.
 
 \begin{theorem}[Forward Invariance of the Physical Domain]
 \label{thm:forward_invariance}
-Consider the gated fast subsystem
+Consider the regularized, gated fast sub-dynamics:
 \begin{equation}
 \varepsilon\frac{de}{dt} = \Psi(e+\delta;\alpha)\,l_0\sqrt{e+\delta}\,\Delta(\mathbf{y})-(e+\delta),
 \label{eq:gated_fast_invariance}
 \end{equation}
-with $\Psi(0;\alpha)=0$ and $\Psi(\cdot;\alpha)\in C^1$. If $e(0)\ge -\delta$, then $\Omega=\{e\ge -\delta\}$ is positively invariant.
+where $\Psi(0;\alpha)=0$ and $\Psi(\cdot;\alpha)\in C^1$. If the initial fast state satisfies $e(0) \ge -\delta$, then the subgrid phase space domain $\Omega = \{e \in \mathbb{R} \mid e \ge -\delta\}$ is strictly positively invariant under the forward flow.
 \end{theorem}
 
 \paragraph{Proof.}
-Set $\varphi=e+\delta\ge 0$. Equation \eqref{eq:gated_fast_invariance} becomes
+Define a non-negative shifted coordinate $\varphi = e + \delta \ge 0$. Substituting this variable into Equation~\eqref{eq:gated_fast_invariance} yields:
 \begin{equation}
 \varepsilon\frac{d\varphi}{dt}=\Psi(\varphi;\alpha)\,l_0\sqrt{\varphi}\,\Delta(\mathbf{y})-\varphi.
 \end{equation}
-At the boundary $\varphi=0$, the right-hand side is zero because both terms vanish. Thus the boundary is invariant; uniqueness of solutions for a $C^1$ vector field prevents crossing into $\varphi<0$, so $e\ge -\delta$ is preserved.
-
-\paragraph{Smooth Surface Exchange Regularization.}
-Near collapse, surface exchange can become numerically brittle if coefficients degenerate too quickly. We therefore use
-\begin{equation}
-K_m^{\mathrm{surf}} = K_{m,\min} + \ell_{\mathrm{surf}}\sqrt{e^*_{\xi,\mathrm{surf}}+\delta},
-\qquad
-K_h^{\mathrm{surf}} = \frac{K_m^{\mathrm{surf}}}{\mathrm{Pr}_t},
-\label{eq:surface_exchange_regularization}
-\end{equation}
-where $K_{m,\min}>0$ ensures smooth, strictly positive coupling and avoids non-differentiable floor clipping while remaining consistent with the manifold-regularized closure.
+Evaluating this vector field directly on the boundary boundary $\varphi = 0$, the right-hand side collapses identically to zero because both the safeguard gate $\Psi(0;\alpha)$ and the linear relaxation term vanish. The boundary of the domain is therefore an exact invariant orbit of the system. By the uniqueness properties of solutions for Lipschitz-continuous vector fields, no forward trajectory originating within the interior ($\varphi > 0$) can intersect or cross this boundary, guaranteeing that $e(t) \ge -\delta$ for all $t > 0$. $\blacksquare$

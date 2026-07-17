@@ -1,21 +1,16 @@
 \subsection{Fast-Slow Decomposition}
 \label{subsec:fast_slow_decomposition}
 
-We model the non-equilibrium thermodynamic and mechanical state of the nocturnal stable boundary layer (SBL) using a coupled four-dimensional system of ordinary differential equations (ODEs). The state vector is defined as $\mathbf{x} = (e, U, V, T_s)^T \in \mathcal{X}$, representing the turbulent kinetic energy (TKE) density, horizontal wind components, and land surface skin temperature respectively.
+To isolate the rapid subgrid-scale turbulent relaxation from the slower evolution of the macroscale atmospheric flow and land surface temperature, we introduce the formal singular perturbation parameter $0 < \varepsilon \ll 1$. By scaling time relative to the slow macroscopic processes, the coupled SBL system can be rigorously cast into a standard GSPT fast-slow framework:
 
-The governing system is given by:
-\begin{align}
-\varepsilon \frac{de}{dt} &= l_0\left[\eta \gamma (U^2 + V^2) - K G(T_s)\right] \sqrt{e + \delta} - (e + \delta) \label{eq:fast_tke} \\
-\frac{dU}{dt} &= f(V - V_g) - \gamma \sqrt{e + \delta} \, U \label{eq:slow_u} \\
-\frac{dV}{dt} &= -f(U - U_g) - \gamma \sqrt{e + \delta} \, V \label{eq:slow_v} \\
-\frac{dT_s}{dt} &= \frac{1}{C_s} \left[ R_{\downarrow} - \sigma T_s^4 - \rho c_p C_H \sqrt{e + \delta} (T_s - T_a) - \frac{K_g}{d_g} (T_s - T_g) \right] \label{eq:slow_ts}
-\end{align}
+\begin{equation}
+\begin{aligned}
+\varepsilon \frac{de}{dt} &= \mathcal{F}(e, \mathbf{y}; \varepsilon), \\
+\frac{d\mathbf{y}}{dt} &= \mathcal{G}(e, \mathbf{y}; \varepsilon),
+\end{aligned}
+\label{eq:gspt_abstract_form}
+\end{equation}
 
-where the parameters and physical terms are defined as follows:
-\begin{itemize}
-    \item \textbf{Turbulent Transport Mechanics:} Equation~\eqref{eq:fast_tke} balances shear production (driven by mechanical wind shear with efficiency $\eta$ and drag coefficient $\gamma$), buoyant destruction (moderated by the thermal stratification function $G(T_s)$ and conduction coefficient $K$), and viscous dissipation parameterized by the turbulent master length scale $l_0$.
-    \item \textbf{Coriolis and Drag Coupling:} Equations~\eqref{eq:slow_u} and \eqref{eq:slow_v} couple horizontal momentum to geostrophic wind forcing $(U_g, V_g)$ and the Earth's rotation via the Coriolis parameter $f$, damped by turbulent drag proportional to the active root-TKE field $\sqrt{e+\delta}$.
-    \item \textbf{Surface Energy Balance:} Equation~\eqref{eq:slow_ts} evolves the skin temperature $T_s$ on a slab with thermal capacity $C_s$, balancing incoming longwave radiation $R_{\downarrow}$, outgoing Stefan-Boltzmann radiative cooling $\sigma T_s^4$, sensible heat flux exchange with the near-surface air $T_a$, and conductive soil heat flux to a deep soil layer at temperature $T_g$.
-\end{itemize}
+where $e$ serves as the fast coordinate representing the turbulent kinetic energy (TKE), and $\mathbf{y} = (U, V, T_s)^T \in \mathbb{R}^3$ represents the vector of slow state variables. The explicit forms of the fast vector field $\mathcal{F}$ and slow vector field $\mathcal{G}$ map directly to the prognostic physical equations detailed in Section~\ref{subsec:mathematical_fast_slow}.
 
-The parameter $\delta > 0$ serves as a mathematical regularizer representing the background residual molecular dissipation, ensuring that the turbulent exchange coefficients do not collapse to absolute zero during completely laminar regimes.
+This formulation ensures that in the singular limit $\varepsilon \to 0$, the turbulent states are constrained to an invariant manifold where production balances dissipation instantaneously, while the slow variables dictate the secular drift of the entire system across phase space.

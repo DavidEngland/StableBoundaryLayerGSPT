@@ -39,15 +39,15 @@
     "n_times": 1081,
     "outdir": "results/gabls1",
     "verification": {
-        "min_diffusivity": 0.10372060403544836,
-        "max_diffusivity": 79.40774285072372,
-        "min_ri": 0.009840282365223418,
-        "max_ri": 82.31986585607653,
+        "min_diffusivity": 0.057149673384346775,
+        "max_diffusivity": 166.03425764260047,
+        "min_ri": 0.009489272111972247,
+        "max_ri": 160.19351097868056,
         "max_surface_energy_closure_error": 0,
         "fold_near_fraction": 0,
         "radiative_floor_breach_fraction": 0,
-        "min_surface_minus_radiative_equilibrium": 4.810449184312404,
-        "min_surface_kh": 0.008737936512779234
+        "min_surface_minus_radiative_equilibrium": 4.849217503859279,
+        "min_surface_kh": 0.0344744220892011
     },
     "figure_manifest": [
         "Time series of T_s, sensible heat flux, and friction velocity",
@@ -61,9 +61,9 @@
     ],
     "solver_summary": {
         "algorithm": "OrdinaryDiffEqRosenbrock.Rodas5P{0, ADTypes.AutoFiniteDiff{Val{:forward}, Val{:forward}, Val{:hcentral}, Nothing, Nothing, Int64}, Nothing, typeof(OrdinaryDiffEqCore.DEFAULT_PRECS), Val{:forward}(), true, nothing, typeof(OrdinaryDiffEqCore.trivial_limiter!), typeof(OrdinaryDiffEqCore.trivial_limiter!)}",
-        "accepted_steps": 416,
-        "rejected_steps": 1,
-        "rhs_evaluations": 104426,
+        "accepted_steps": 170,
+        "rejected_steps": 0,
+        "rhs_evaluations": 42672,
         "retcode": "Success",
         "abstol": 1.0e-8,
         "reltol": 1.0e-6

@@ -30,10 +30,10 @@ function parse_args(args::Vector{String})
     while i <= length(args)
         arg = args[i]
         if arg == "--dataset" && i < length(args)
-            dataset = args[i + 1]
+            dataset = args[i+1]
             i += 2
         elseif arg == "--date" && i < length(args)
-            generated_date_human = args[i + 1]
+            generated_date_human = args[i+1]
             i += 2
         else
             error("Unknown or incomplete argument: $(arg)")
@@ -59,7 +59,8 @@ function build_optional_tex_template(path::String, context::Dict{String,String};
     if !isfile(path)
         return fallback
     end
-    return render_template(read_text(path), context)
+    rendered = render_template(read_text(path), context)
+    return "% --- Begin Section: $(path) ---\n" * rendered * "\n% --- End Section: $(path) ---"
 end
 
 function build_tex_template_sections(section_dir::String, context::Dict{String,String})
@@ -106,7 +107,11 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
     for file in ordered_templates
         template_path = joinpath(section_dir, file)
         template_text = read_text(template_path)
-        push!(content_blocks, render_template(template_text, context))
+        rendered = render_template(template_text, context)
+
+        # Inject explicit source traceability comments
+        commented_block = "% --- Begin Section: $(template_path) ---\n" * rendered * "\n% --- End Section: $(template_path) ---"
+        push!(content_blocks, commented_block)
     end
 
     content_joined = join(content_blocks, "\n\n")
@@ -115,7 +120,8 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
         wrapper_text = read_text(wrapper_path)
         wrapper_context = copy(context)
         wrapper_context["content"] = content_joined
-        return render_template(wrapper_text, wrapper_context)
+        rendered_wrapper = render_template(wrapper_text, wrapper_context)
+        return "% --- Begin Wrapper: $(wrapper_path) ---\n" * rendered_wrapper * "\n% --- End Wrapper: $(wrapper_path) ---"
     end
 
     return content_joined
@@ -202,8 +208,8 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
     end
 
     image_files = sort(filter(name -> (
-        (endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf"))
-    ), readdir(fig_dir)))
+            (endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf"))
+        ), readdir(fig_dir)))
 
     for file in image_files
         stem = replace(file, r"\.[^.]+$" => "")
@@ -235,8 +241,8 @@ function build_md_figure_includes(fig_dir::String)
     end
 
     image_files = sort(filter(name -> (
-        endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf")
-    ), readdir(fig_dir)))
+            endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf")
+        ), readdir(fig_dir)))
 
     for file in image_files
         push!(lines, "- reports/generated/figures/$(file)")
@@ -291,7 +297,7 @@ end
 function format_int_commas(x)
     x isa Integer || return string(x)
     s = reverse(string(abs(x)))
-    chunks = [reverse(s[i:min(i + 2, end)]) for i in 1:3:length(s)]
+    chunks = [reverse(s[i:min(i+2, end)]) for i in 1:3:length(s)]
     out = join(reverse(chunks), ",")
     return x < 0 ? "-$(out)" : out
 end
@@ -328,7 +334,6 @@ function find_scm_summary_path()
         end
     end
 
-    # Fallback: discover newest results/*/summary.json that also has a plots directory.
     discovered = String[]
     if isdir("results")
         for entry in readdir("results")
@@ -417,8 +422,8 @@ function read_scm_summary_context()
     all_scm_blocks = String[]
     if isdir(scm_plots_dir)
         scm_image_files = sort(filter(name -> (
-            endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf")
-        ), readdir(scm_plots_dir)))
+                endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf")
+            ), readdir(scm_plots_dir)))
 
         for file in scm_image_files
             stem = replace(file, r"\.[^.]+$" => "")
@@ -579,6 +584,6 @@ rendered_md = render_template(md_template, md_context)
 write(tex_out, rendered_tex)
 write(md_out, rendered_md)
 
-println("Generated manuscript files:")
+println("Generated manuscript files with section annotations:")
 println(tex_out)
 println(md_out)

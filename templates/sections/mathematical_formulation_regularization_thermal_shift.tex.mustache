@@ -1,12 +1,12 @@
 \section{Mathematical Formulation, Regularization, and Thermal Shift}
 \label{sec:mathematical_formulation}
 
-This section formalizes the reduced Geometric Singular Perturbation Theory (GSPT) description of the Stable Boundary Layer (SBL) in the coupled state vector $\mathbf{x} = (U, V, T_s, e)^T$, where $U$ and $V$ are the bulk horizontal wind components, $T_s$ is the land surface temperature, and $e$ is the fast turbulent kinetic energy (TKE) coordinate. The formulation separates the rapid subgrid-scale turbulent adjustment from the slower surface-energy and rotational evolution by introducing the singular perturbation parameter $0 < \varepsilon \ll 1$.
+This section formalizes the reduced Geometric Singular Perturbation Theory (GSPT) description of the Stable Boundary Layer (SBL). The formulation separates the rapid subgrid-scale turbulent adjustment from the slower surface-energy and rotational evolution.
 
 \subsection{Fast-Slow Structure and Dimensional Scaling}
 \label{subsec:mathematical_fast_slow}
 
-The prognostic system is written in the standard fast-slow form:
+The concrete prognostic system for the state vector $\mathbf{x} = (U, V, T_s, e)^T$ is given by:
 \begin{equation}
 \begin{aligned}
 \frac{dU}{dt} &= f(V - V_g) - C_D \frac{\sqrt{U^2+V^2}}{h} U \Phi_m(e), \\
@@ -17,59 +17,17 @@ The prognostic system is written in the standard fast-slow form:
 \label{eq:mathematical_full_system}
 \end{equation}
 
-Here, $f$ is the Coriolis frequency, $h$ is the boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K \in [\text{m s}^{-2}]$ is the kinematic buoyant acceleration scale, establishing dimensional consistency for the buoyancy term. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The transport functions are modeled as $\Phi_{m,h}(e) = \sqrt{e + \delta}$ to maintain consistency with classical mixing-length theory while remaining smoothly defined for $e > -\delta$.
-
-\subsection{Thermal Shift of the Critical Manifold}
-\label{subsec:thermal_shift}
-
-In the singular limit $\varepsilon \to 0$, the fast subsystem defines the critical manifold:
-\begin{equation}
-\mathcal{M}_0 = \left\{(U,V,T_s,e) \in \mathbb{R}^4 \;\middle|\; l_0 \left[\eta\,\gamma\,(U^2+V^2) - K\,G(T_s)\right] \Phi_m(e) - (e+\delta) = 0\right\}.
-\end{equation}
-
-Solving for the non-trivial active branch yields:
-\begin{equation}
-e^* = (l_0\Delta)^2 - \delta, \qquad \text{where} \quad \Delta(U,V,T_s) = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
-\label{eq:critical_branch}
-\end{equation}
-
-\paragraph{The Thermal Shift Paradox.}
-The thermal forcing enters through the stability function $G(T_s)$, which satisfies $\partial G / \partial T_s < 0$. During nocturnal radiative cooling, the surface temperature drops:
-\begin{equation}
-T_s \downarrow \quad \implies \quad G(T_s) \uparrow \quad \implies \quad \Delta(U,V,T_s) \downarrow.
-\end{equation}
-
-Geometrically, this stability increase physically dampens TKE production, translating the paraboloid critical manifold $\mathcal{M}_0$ vertically downward along the $e$-axis. This downward translation reduces the volume of active phase space where $e > 0$. Consequently, the horizontal wind threshold $\sqrt{U^2+V^2}$ required to remain above the laminar floor expands, forcing the system toward collapse under weak geostrophic winds.
-
-\subsection{$C^\infty$ Hyperbolic Regularization}
-\label{subsec:smooth_regularization}
-
-To eliminate non-differentiable $C^1$ boundaries introduced by typical algebraic clipping functions (e.g., $\max(0, \Delta)$), we regularize the transition between the active and laminar states using a smooth hyperbolic embedding parameterized by the regularization scale $\xi \ll 1$:
-\begin{equation}
-e^*_{\xi}(U,V,T_s) = \frac{1}{2}\left( \left((l_0\Delta)^2 - \delta\right) + \sqrt{\left((l_0\Delta)^2 - \delta\right)^2 + \xi^2}\right).
-\label{eq:smooth_embedding}
-\end{equation}
-
-This regularization satisfies:
-\begin{enumerate}
-    \item $\lim_{\xi \to 0} e^*_{\xi} = \max\left(0, (l_0\Delta)^2 - \delta\right)$ (uniform convergence to the clipped limit),
-    \item $e^*_{\xi} \in C^\infty(\mathbb{R}^3)$ for any fixed $\xi > 0$.
-\end{enumerate}
-
-This smooth diagnostic continuation preserves the normal hyperbolicity of $\mathcal{M}_0$ across the transition boundary. The state-based transport coefficients are subsequently closed using the regularized TKE state:
-\begin{equation}
-\Phi_m(e^*_{\xi}) = \sqrt{e^*_{\xi}+\delta}, \qquad \Phi_h(e^*_{\xi}) = \frac{C_H}{C_D}\sqrt{e^*_{\xi}+\delta}.
-\end{equation}
+Here, $f$ is the Coriolis frequency, $h$ is the boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant acceleration scale. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The transport functions are modeled as $\Phi_{m,h}(e) = \sqrt{e + \delta}$ to maintain consistency with classical mixing-length theory.
 
 \subsection{Geometric Analysis: Boundary Crossings vs. Fold Catastrophes}
 \label{subsec:geometric_consequences}
 
 GSPT allows us to formally distinguish between two distinct physical transitions that are often conflated in boundary-layer literature:
 \begin{itemize}
-    \item \textbf{The Boundary Crossing:} This is a fast-subsystem phenomenon occurring when the trajectory crosses the physical threshold $e = 0$. Here, the critical manifold remains normally hyperbolic, but the transport coefficients transition to their background molecular/residual values.
+    \item \textbf{The Boundary Crossing:} This occurs when the fast trajectory crosses the physical threshold $e = 0$. Here, the critical manifold remains normally hyperbolic, but the transport coefficients transition to their background molecular/residual values.
     \item \textbf{The Fold Catastrophe ($\mathcal{C}_{\text{fold}}$):} This is an emergent property of the coupled slow flow on $\mathcal{M}_0$. It occurs where the tangent space of the critical manifold becomes parallel to the fast direction, satisfying:
     \begin{equation}
-    \mathcal{C}_{\text{fold}} = \left\{ (U, V, T_s, e) \in \mathcal{M}_0 \ \middle|\ \det \left( \text{D}_{\mathbf{X}_{\text{slow}}} e^*_{\xi} \right) = 0 \right\}.
+    \mathcal{C}_{\text{fold}} = \left\{ (U, V, T_s, e) \in \mathcal{M}_0 \ \middle|\ \det \left( \text{D}_{\mathbf{y}} e^*_{\xi} \right) = 0 \right\}.
     \end{equation}
-    At this fold line, normal hyperbolicity is lost. The slow flow can no longer negotiate the bend of the paraboloid, forcing the system to jump along the fast fibers toward the stable laminar sheet—manifesting physically as the rapid, runaway cooling of the SBL collapse.
+    At this fold line, normal hyperbolicity is completely lost, forcing the slow flow to jump along the fast fibers toward the stable laminar sheet—manifesting physically as SBL collapse.
 \end{itemize}
