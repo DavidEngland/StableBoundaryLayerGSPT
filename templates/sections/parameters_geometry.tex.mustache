@@ -1,54 +1,46 @@
-\subsection{Physical Parameters and Baseline Scaling}
-\label{subsec:parameters}
+\section{Physical Parameters, Geometric Domain, and Grid Configuration}
+\label{sec:parameters_geometry}
 
-To reduce ambiguity between manuscript notation and implementation variables, we use the following direct mappings in the SCM code path: $U_g \leftrightarrow$ \texttt{Ug}, $V_g \leftrightarrow$ \texttt{Vg}, $T_a \leftrightarrow$ \texttt{theta\_a}, $T_{\text{deep}} \leftrightarrow$ \texttt{T\_deep}, $h \leftrightarrow$ \texttt{h}, $z_{0m} \leftrightarrow$ \texttt{z0m}, and $z_{0h} \leftrightarrow$ \texttt{z0h}. Runtime non-local bounds are carried by \texttt{nonlocal\_h\_min} and \texttt{nonlocal\_h\_max}.
+The validation of the high-resolution single-column GSPT-SBL configuration is framed explicitly around clear-sky stable regimes observed during the Surface Heat Budget of the Arctic Ocean (SHEBA) field campaign. Simulating these long-lived Arctic winter nights requires a rigorous alignment between continuous vertical boundary conditions, soil-ice core interfaces, and the underlying discrete computational grid.
 
-To run this model numerically (e.g., in Julia/SciML or Python's \texttt{solve\_ivp}), use the following verified baseline parameters scaled for a typical mid-latitude nocturnal boundary layer (resembling CASES99 conditions):
+\subsection{Vertical Domain Architecture and Stratification Floor}
+\label{subsec:domain_stratification}
 
-\begin{table}[ht!]
-\centering
-\setlength{\tabcolsep}{8pt}
-\small
-\caption{Baseline Physical Parameter Specifications for the 4D GSPT-SBL System}
-\label{tab:baseline_parameters}
-\begin{tabular}{lllll}
-\hline
-\textbf{Symbol} & \textbf{Description} & \textbf{Baseline Value} & \textbf{Units} & \textbf{Dynamical Role} \\ \hline
-\multicolumn{5}{l}{\textit{Environmental Controls and Geostrophic Forcing}} \\
-$U_g$ & Zonal Geostrophic Wind & $10.0$ & $\text{m s}^{-1}$ & Slow Forcing \\
-$V_g$ & Meridional Geostrophic Wind & $0.0$ & $\text{m s}^{-1}$ & Slow Forcing \\
-$T_a$ & Reference Air Temperature ($z = h$) & $285.15$ & $\text{K}\ (12^\circ\text{C})$ & Thermodynamic Reference \\
-$T_{\text{deep}}$ & Deep Soil Core Temperature & $283.15$ & $\text{K}\ (10^\circ\text{C})$ & Ground Boundary State \\
-$R_{\downarrow}$ & Downward Longwave Radiation & $260.0$ & $\text{W m}^{-2}$ & Radiative Forcing \\
-$f$ & Coriolis Parameter ($\sim 45^\circ\text{N}$) & $1.0 \times 10^{-4}$ & $\text{s}^{-1}$ & Rotational Coupling \\ \hline
-\multicolumn{5}{l}{\textit{Turbulence and Boundary Layer Internals}} \\
-$\varepsilon$ & Singular Perturbation Parameter & $0.01$ & Dimensionless & Timescale Separation \\
-$\delta$ & Background Mixing Parameter & $1.0 \times 10^{-4}$ & $\text{m}^2\text{s}^{-2}$ & Boundary Regularization \\
-$K$ & Buoyant Destruction Acceleration Scale & $0.32$ & $\text{m s}^{-2}$ & Stratification Coupling \\
-$\beta$ & Stratification Sensitivity Parameter & $15.0$ & Dimensionless & Stability Activation \\
-$h$ & Coupling Bulk Scale Height & $50.0$ & $\text{m}$ & Surface-Layer Geometry \\
-$z_{0m}$ & Momentum Roughness Length & $0.02$ & $\text{m}$ & Drag Closure Control \\
-$z_{0h}$ & Thermal Roughness Length & $0.005$ & $\text{m}$ & Heat-Flux Closure Control \\
-$l_0$ & Master Turbulent Length Scale & $15.0$ & $\text{m}$ & Fast Turbulence Closure \\
-$\gamma_{\mathrm{eff}}$ & Drag Scaling Efficiency & $2.0$ & Dimensionless & Momentum Dissipation Scaling \\
-$\eta$ & Shear Production Efficiency & $15.0$ & Dimensionless & Production Scaling \\
-$\xi$ & Hyperbolic Embedding Scale & $1.0 \times 10^{-5}$ & Dimensionless & Diagnostic Smoothing \\ \hline
-\multicolumn{5}{l}{\textit{Thermal Properties (Surface Energy Budget)}} \\
-$\sigma_{\text{SB}}$ & Stefan-Boltzmann Constant & $5.67 \times 10^{-8}$ & $\text{W m}^{-2}\text{K}^{-4}$ & Radiative Cooling \\
-$\lambda$ & Soil Thermal Conductivity & $1.2$ & $\text{W m}^{-1}\text{K}^{-1}$ & Ground Heat Flux \\
-$d_{\text{soil}}$ & Effective Soil Layer Depth & $0.5$ & $\text{m}$ & Ground Coupling Depth \\
-$\rho c_p$ & Volumetric Heat Capacity of Air & $1200.0$ & $\text{J m}^{-3}\text{K}^{-1}$ & Sensible Heat Exchange \\
-$C_{\text{skin}}$ & Thermal Capacity of Skin Layer & $2.0 \times 10^{4}$ & $\text{J m}^{-2}\text{K}^{-1}$ & Surface Thermodynamics \\ \hline
-\end{tabular}
-\end{table}
+Legacy single-column models frequently restrict the computational vertical domain to a shallow ceiling ($H = 100\,\mathrm{m}$ to $300\,\mathrm{m}$). However, under continuous geostrophic forcing ($U_g = 7\,\mathrm{m/s}$), the shear-driven stable boundary layer and its associated Low-Level Jet (LLJ) expand vertically over a 12-hour simulation window. If the domain top is placed too low, the non-local transport closures collide with the boundary, triggering unphysical spikes in the local Richardson number ($R_i > 10^3$) and causing solver failure.
 
-\subsection{Geometric Features of the 4D Phase Space}
-\label{subsec:geometry}
+To eliminate this boundary congestion, the geometric domain top is fixed unconstrained at:
+\begin{equation}
+H = 500\,\mathrm{m}.
+\label{eq:domain_top}
+\end{equation}
 
-When analyzing this mathematical system, the geometric structures shift from previous lower-dimensional derivations in three important ways:
+The background tropospheric potential temperature stratification above the boundary layer is configured using a realistic publication-grade linear lapse rate ($\gamma_\theta$). This replaces aggressive legacy gradients that acted as unyielding numerical walls, smoothing out the response manifold:
+\begin{equation}
+	\theta(z, t=0) = \theta_a + \gamma_\theta \cdot z, \quad \text{where } \gamma_\theta = 0.004\,\mathrm{K/m},
+\label{eq:lapse_rate}
+\end{equation}
+and $\theta_a = 257\,\mathrm{K}$ denotes the baseline reference air temperature at the surface.
 
-\begin{enumerate}
-    \item \textbf{The Critical Manifold $\mathcal{M}_0$:} Defined strictly in the limit $\varepsilon \to 0$ by setting the fast equation to zero: $\mathcal{F}(e,U,V,T_s)=0$. On the active turbulent branch, $e+\delta = (l_0\Delta)^2$ where $\Delta = \eta\,\gamma\,(U^2+V^2)-K\,G(T_s)$, so $e^* = (l_0\Delta)^2-\delta$.
-    \item \textbf{The Admissibility Threshold:} The active branch exists only when $e^* \ge 0$, equivalently when $|\Delta| \ge \sqrt{\delta}/l_0$; under the positive-branch assumption this becomes $\Delta \ge \sqrt{\delta}/l_0$. In the present closure, regime transition still occurs by crossing the physical boundary at $e=0$.
-    \item \textbf{The Regularized Laminar Floor:} For trajectories driven toward weak turbulence, the full numerical model uses a smooth floor limiter near $e=-\delta$ so that the drag and heat-exchange closures remain well-defined and the state stays in the admissible background-mixing regime. Because $U^2 + V^2$ is rotationally symmetric, the active branch has circular paraboloid geometry in the $(U, V, e)$ coordinates for fixed $T_s$.
-\end{enumerate}
+\subsection{Discrete Grid Specification for AI Prompt Alignment}
+\label{subsec:discrete_grid_spec}
+
+For automated code interpretation and file configuration routines, the vertical coordinate is discretized onto a regular grid. The structural configuration must be explicitly initialized using the following parameter contract:
+
+\begin{itemize}
+    \item \textbf{Grid Size ($N$):} Exactly $N = 250$ vertical nodes, yielding a uniform resolution of $\Delta z = 2.0\,\mathrm{m}$ across the entire domain.
+    \item \textbf{Geostrophic Forcing Vector:} Coded as constants or immutable parameter fields: \texttt{Ug = 7.0} and \texttt{Vg = 0.0} ($\mathrm{m/s}$).
+    \item \textbf{Coriolis Parameter ($f$):} Evaluated at Arctic high-latitude baseline conditions: \texttt{f = 1.0e-4} ($\mathrm{s}^{-1}$).
+    \item \textbf{Surface Aerodynamic Roughness ($z_{0m}, z_{0h}$):} Roughness lengths for momentum and heat are fixed to represent smooth Arctic pack ice: $z_{0m} = 1.0 \times 10^{-4}\,\mathrm{m}$ and $z_{0h} = 1.0 \times 10^{-5}\,\mathrm{m}$.
+\end{itemize}
+
+\subsection{Ice-Soil Thermal Coupling Boundary Conditions}
+\label{subsec:surface_coupling}
+
+The interface between the skin layer temperature ($T_s$, coded as \texttt{Ts}) and the deep ice pack core dictates the surface energy balance. The heat flux into the lower boundary ($G$) is governed by a standard conductive formulation across a shallow diagnostic soil depth ($d_{\mathrm{soil}} = 0.1\,\mathrm{m}$):
+\begin{equation}
+G = \lambda_s \frac{T_s - T_{\mathrm{deep}}}{d_{\mathrm{soil}}},
+\label{eq:conductive_g}
+\end{equation}
+where the ice-soil thermal conductivity is fixed to $\lambda_s = 1.2\,\mathrm{W/m/K}$ and the unperturbed deep core temperature is anchored at $T_{\mathrm{deep}} = 255.5\,\mathrm{K}$.
+
+To guarantee longwave radiation stability ($\sigma T_s^4$) during extreme clear-sky radiative cooling episodes ($R_{\mathrm{down}} = 190\,\mathrm{W/m}^2$), code generators must enforce the runtime physical safeguard limit $T_{s,\min} = 220\,\mathrm{K}$ as established in Section~\ref{subsec:ai_impl_contract}.

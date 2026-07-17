@@ -1,16 +1,41 @@
-\subsection{Fast-Slow Decomposition}
-\label{subsec:fast_slow_decomposition}
+\section{Mathematical Formulation and Governing Equations}
+\label{sec:governing_equations}
 
-To isolate the rapid subgrid-scale turbulent relaxation from the slower evolution of the macroscale atmospheric flow and land surface temperature, we introduce the formal singular perturbation parameter $0 < \varepsilon \ll 1$. By scaling time relative to the slow macroscopic processes, the coupled SBL system can be rigorously cast into a standard GSPT fast-slow framework:
+The continuous, vertically distributed Single-Column Model (SCM) maps the interaction between horizontal momentum, thermodynamic evolution, and turbulent kinetic energy over a flat, homogeneous surface. By decomposing the turbulent fluxes into their localized geometric components, the continuous 1D system is formulated as a set of coupled partial differential equations:
+
+\begin{align}
+\frac{\partial U}{\partial t} &= f(V - V_g) + \frac{\partial}{\partial z} \left( K_m \frac{\partial U}{\partial z} \right), \label{eq:gov_u} \\
+\frac{\partial V}{\partial t} &= -f(U - U_g) + \frac{\partial}{\partial z} \left( K_m \frac{\partial V}{\partial z} \right), \label{eq:gov_v} \\
+\frac{\partial \theta}{\partial t} &= \frac{\partial}{\partial z} \left( K_h \frac{\partial \theta}{\partial z} \right), \label{eq:gov_theta}
+\end{align}
+
+where $U$ and $V$ represent the horizontal components of the wind velocity vector, $\theta$ is the potential temperature, and $f$ is the Coriolis parameter fixed at $1.0 \times 10^{-4}\,\mathrm{s}^{-1}$. The vertical transport is regulated dynamically by the momentum and thermal eddy diffusivities ($K_m$ and $K_h$), which are functions of the underlying turbulent kinetic energy state.
+
+\subsection{The Reduced Fast-Slow TKE Subsystem}
+\label{subsec:gov_tke}
+
+To explicitly capture the rapid stabilization and structural collapse of the stable boundary layer (SBL), the localized turbulent field is driven by a singular perturbation equation for the turbulent kinetic energy $e$. Incorporating the non-dimensional timescale ratio $0 < \varepsilon \ll 1$, the continuous system is coupled via:
 
 \begin{equation}
-\begin{aligned}
-\varepsilon \frac{de}{dt} &= \mathcal{F}(e, \mathbf{y}; \varepsilon), \\
-\frac{d\mathbf{y}}{dt} &= \mathcal{G}(e, \mathbf{y}; \varepsilon),
-\end{aligned}
-\label{eq:gspt_abstract_form}
+\varepsilon \frac{\partial e}{\partial t} = K_m \left[ \left(\frac{\partial U}{\partial z}\right)^2 + \left(\frac{\partial V}{\partial z}\right)^2 \right] - K_h \left( \frac{g}{\theta_0} \frac{\partial \theta}{\partial z} \right) - \frac{e + \delta}{l_0/\sqrt{e+\delta}},
+\label{eq:gov_tke_continuous}
 \end{equation}
 
-where $e$ serves as the fast coordinate representing the turbulent kinetic energy (TKE), and $\mathbf{y} = (U, V, T_s)^T \in \mathbb{R}^3$ represents the vector of slow state variables. The explicit forms of the fast vector field $\mathcal{F}$ and slow vector field $\mathcal{G}$ map directly to the prognostic physical equations detailed in Section~\ref{subsec:mathematical_fast_slow}.
+This PDE form is the continuous analogue of the reduced fast-slow model in Eq.~\eqref{eq:mathematical_full_system}. Here, the mechanical shear production is balanced by the buoyancy destruction and a localized viscous dissipation limit. The background parameter $\delta = 1.0 \times 10^{-4}\,\mathrm{m}^2\mathrm{s}^{-2}$ establishes the physical floor below which turbulence cannot structurally decouple.
 
-This formulation ensures that in the singular limit $\varepsilon \to 0$, the turbulent states are constrained to an invariant manifold where production balances dissipation instantaneously, while the slow variables dictate the secular drift of the entire system across phase space.
+\subsection{Continuous Boundary Interfaces}
+\label{subsec:gov_boundary}
+
+The system of equations requires distinct coupling rules at both boundaries of the $H = 500\,\mathrm{m}$ domain:
+\begin{enumerate}
+    \item \textbf{Upper Boundary ($z = H$):} The fields are clamped strictly to their unperturbed tropospheric profiles:
+    \begin{equation}
+    U(H, t) = U_g, \quad V(H, t) = V_g, \quad \frac{\partial \theta}{\partial z}\Big|_{z=H} = \gamma_\theta, \quad e(H, t) = 0.
+    \end{equation}
+    \item \textbf{Lower Boundary ($z = 0$):} Surface exchange processes match the skin layer energy balance budget ($T_s$) described in Section~\ref{subsec:surface_coupling}, transforming the localized geometric roughness lengths into explicit net fluxes:
+    \begin{equation}
+    C_{\mathrm{skin}} \frac{dT_s}{dt} = R_{\mathrm{down}} - \sigma_{\mathrm{SB}} T_s^4 - \rho c_p C_H \sqrt{e_1 + \delta}(T_s - \theta_1) - \lambda_s \frac{T_s - T_{\mathrm{deep}}}{d_{\mathrm{soil}}},
+    \label{eq:continuous_surface_energy}
+    \end{equation}
+    where index $1$ designates properties evaluated at the first atmospheric grid node above the ice pack surface interface.
+\end{enumerate}

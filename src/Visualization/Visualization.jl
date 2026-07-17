@@ -1,3 +1,5 @@
+#!/usr/bin/env julia
+#src/Visualization/Visualization.jl
 module Visualization
 
 using Dates
@@ -5,14 +7,21 @@ using JSON3
 
 export generate_figure_bundle, generate_bifurcation_figure_bundles
 
-function _tex_document(plot_body::String)
+function _tex_document(plot_body::String; extra_axis_opts::String="")
     return """
 \\documentclass[tikz,border=3pt]{standalone}
 \\usepackage{pgfplots}
 \\pgfplotsset{compat=1.18}
+\\usepgfplotslibrary{colormaps}
 \\begin{document}
 \\begin{tikzpicture}
-\\begin{axis}
+\\begin{axis}[
+  grid=both,
+  grid style={dashed, gray!30},
+  tick label style={font=\\footnotesize},
+  label style={font=\\small},
+  $(extra_axis_opts)
+]
 $(plot_body)
 \\end{axis}
 \\end{tikzpicture}
@@ -30,7 +39,7 @@ function _compile_tex_to_pdf(tex_path::String)
             run(`$(tectonic) --outdir $(tex_dir) $(tex_path)`)
             return isfile(pdf_path)
         catch
-            # Fall through to pdflatex backend.
+            # Fall through to pdflatex backend if tectonic throws an execution error
         end
     end
 
@@ -105,20 +114,23 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
 
     bundles = Dict{String,Any}()
 
-    # Figure A: transcritical map.
+    # Figure A: transcritical map with viridis shading and downsampling safeguard
     fig_a = "figure_bifurcation_transcritical_map"
     tex_a = joinpath("figures", "$(fig_a).tex")
     rel_a = relpath(trans_map_csv, dirname(tex_a))
+    opts_a = "xlabel={\$S\$}, ylabel={\$\\Gamma\$}, colorbar, colormap name=viridis, title={Transcritical Transition Boundary}"
     plot_a = """
 \\addplot[
   only marks,
   mark=*,
   mark size=0.65pt,
+  filter discard warning=false,
+  each nth point=1, % Set to >1 (e.g., 5 or 10) if TeX running out of memory on high-density data sweeps
   scatter,
   scatter src=explicit,
 ] table[x=S,y=Gamma,meta=Delta,col sep=comma] {$(rel_a)};
 """
-    write(tex_a, _tex_document(plot_a))
+    write(tex_a, _tex_document(plot_a; extra_axis_opts=opts_a))
     _compile_tex_to_pdf(tex_a) || error("Failed to compile $(tex_a)")
     bundles[fig_a] = _write_figure_sidecars(
         figure_id=fig_a,
@@ -130,20 +142,22 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
         provenance=provenance,
     )
 
-    # Figure B: fold map.
+    # Figure B: fold map with manifold projection labels
     fig_b = "figure_bifurcation_fold_map"
     tex_b = joinpath("figures", "$(fig_b).tex")
     rel_b = relpath(fold_map_csv, dirname(tex_b))
+    opts_b = "xlabel={\$T_s\$ (K)}, ylabel={\$S\$}, colorbar, colormap name=viridis, title={Fold Bifurcation Manifold Projection}"
     plot_b = """
 \\addplot[
   only marks,
   mark=*,
   mark size=0.65pt,
+  filter discard warning=false,
   scatter,
   scatter src=explicit,
 ] table[x=Ts,y=S,meta=H,col sep=comma] {$(rel_b)};
 """
-    write(tex_b, _tex_document(plot_b))
+    write(tex_b, _tex_document(plot_b; extra_axis_opts=opts_b))
     _compile_tex_to_pdf(tex_b) || error("Failed to compile $(tex_b)")
     bundles[fig_b] = _write_figure_sidecars(
         figure_id=fig_b,
@@ -155,10 +169,11 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
         provenance=provenance,
     )
 
-    # Figure C: transcritical uncertainty envelope.
+    # Figure C: transcritical uncertainty envelope
     fig_c = "figure_bifurcation_transcritical_envelope"
     tex_c = joinpath("figures", "$(fig_c).tex")
     rel_c = relpath(trans_env_csv, dirname(tex_c))
+    opts_c = "xlabel={\$S\$}, ylabel={\$\\gamma_c\$}, legend pos=north west, title={Transcritical Uncertainty Bands}"
     plot_c = """
 \\addplot[thick, black] table[x=S,y=gamma_c_p50,col sep=comma] {$(rel_c)};
 \\addlegendentry{median}
@@ -167,7 +182,7 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
 \\addplot[dashed, red] table[x=S,y=gamma_c_p95,col sep=comma] {$(rel_c)};
 \\addlegendentry{p95}
 """
-    write(tex_c, _tex_document(plot_c))
+    write(tex_c, _tex_document(plot_c; extra_axis_opts=opts_c))
     _compile_tex_to_pdf(tex_c) || error("Failed to compile $(tex_c)")
     bundles[fig_c] = _write_figure_sidecars(
         figure_id=fig_c,
@@ -179,16 +194,17 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
         provenance=provenance,
     )
 
-    # Figure D: fold-point uncertainty summary.
+    # Figure D: fold-point uncertainty summary
     fig_d = "figure_bifurcation_fold_envelope"
     tex_d = joinpath("figures", "$(fig_d).tex")
     rel_d = relpath(fold_env_csv, dirname(tex_d))
+    opts_d = "xlabel={\$T_{s,\\mathrm{p50}}\$ (K)}, ylabel={\$S_{\\mathrm{fold},\\mathrm{p50}}\$}, legend pos=south east, title={Fold-Point Median Coordinates}"
     plot_d = """
 \\addplot[only marks, mark=*, mark size=2.2pt, blue]
   table[x=Ts_p50,y=S_fold_p50,col sep=comma] {$(rel_d)};
 \\addlegendentry{branch medians}
 """
-    write(tex_d, _tex_document(plot_d))
+    write(tex_d, _tex_document(plot_d; extra_axis_opts=opts_d))
     _compile_tex_to_pdf(tex_d) || error("Failed to compile $(tex_d)")
     bundles[fig_d] = _write_figure_sidecars(
         figure_id=fig_d,

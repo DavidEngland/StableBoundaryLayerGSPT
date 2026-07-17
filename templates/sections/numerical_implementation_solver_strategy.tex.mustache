@@ -6,7 +6,7 @@ The reduced GSPT-SBL system in Equation~\eqref{eq:mathematical_full_system} is s
 \subsection{Mathematical Analysis of the Square-Root Singularity}
 \label{subsec:singularity_analysis}
 
-Let $\varphi \coloneqq e + \delta$ represent the shifted TKE coordinate. Under classical mixing-length theory, the fast subsystem in Equation~\eqref{eq:fast_tke} can be written in terms of $\varphi$ as:
+Let $\varphi \coloneqq e + \delta$ represent the shifted TKE coordinate. Under classical mixing-length theory, the fast subsystem in Equation~\eqref{eq:gov_tke_continuous} can be written in terms of $\varphi$ as:
 \begin{equation}
 \varepsilon \frac{d\varphi}{dt} = l_0\,\Delta(\mathbf{y})\,\sqrt{\varphi} - \varphi = \sqrt{\varphi} \left( l_0\,\Delta(\mathbf{y}) - \sqrt{\varphi} \right),
 \label{eq:shifted_fast_ode}
@@ -64,64 +64,60 @@ where $\Phi_m(e) = \sqrt{e + \delta}$. This ensures that the solver sees a diffe
 \paragraph{Implementation consequence.}
 The floor gate is not a physics replacement. It is a numerical safeguard that prevents square-root singularities, step rejection loops, and loss of Newton convergence when the stiff integrator probes the collapse neighborhood.
 
-\subsection{Solver Strategy}
+\subsection{Solver Strategy and Sparsity Structure}
 \label{subsec:solver_strategy}
 
-The preferred time integrators are L-stable implicit methods such as Rosenbrock-Wanner or SDIRK schemes, including \texttt{Rosenbrock23} and \texttt{Rodas5P} in the SciML ecosystem. These methods are well suited to the present model because they handle the fast transient on the TKE coordinate while taking comparatively larger steps on the slow momentum and thermodynamic variables.
+The preferred time integrators are L-stable implicit methods such as Rosenbrock-Wanner or SDIRK schemes, specifically the \texttt{Rodas5P} engine in the SciML ecosystem. These methods are well suited to the present model because they handle the fast transient on the TKE coordinate while taking comparatively larger steps on the slow momentum and thermodynamic variables.
 
-The solver should be supplied with an analytical or automatic-differentiation Jacobian, since the closure terms couple the fast and slow variables through $G(T_s)$, $\sqrt{e+\delta}$, and the Coriolis rotation. A Jacobian-aware implicit method is materially more robust than an explicit scheme, which would be forced into prohibitively small steps during nighttime collapse or recovery.
-
-\paragraph{Recommended configuration.}
-In practical use, the implementation should:
-\begin{enumerate}
-    \item initialize the state in the admissible domain $e > -\delta$,
-    \item evaluate the smooth floor gate and closure terms in the same residual function,
-    \item pass the Jacobian to the stiff solver whenever available, and
-    \item keep tolerances tight enough to resolve the transition layer without resolving unnecessary high-frequency noise.
-\end{enumerate}
+Because the underlying spatial operators are 1D local central-difference operators, they strictly couple adjacent grid nodes ($i-1, i, i+1$). The model maps this structural constraint directly to a \texttt{BandedMatrix} structural Jacobian prototype. By pairing this band structure with matrix coloring vectors, automatic differentiation updates are decoupled from vertical grid scaling, dropping the evaluation cost from an $O(N)$ sweep to an $O(1)$ constant-pass routine.
 
 \subsection{Implementation Contract for AI-Assisted Code Generation}
 \label{subsec:ai_impl_contract}
 
-For reproducible AI-assisted editing in development environments (for example VS Code Copilot or Cursor), the numerical implementation should be treated as a strict software contract rather than descriptive prose.
+For reproducible AI-assisted editing in development environments (such as VS Code Copilot or Cursor), this section defines a strict programmatic template contract. All code modifications must strictly preserve these variable bounds and structural specifications.
 
 \paragraph{Mathematical-to-code variable mapping.}
-The governing state variables are mapped directly to implementation identifiers as follows:
+The governing state variables map directly to implementation identifiers within the unified spatial loop:
 \begin{itemize}
-    \item horizontal momentum $(u, v)$ map to \texttt{U, V},
-    \item potential temperature $\theta$ maps to \texttt{theta},
-    \item surface temperature $T_s$ maps to \texttt{Ts},
-    \item turbulent kinetic energy $e$ maps to closure diagnostics used to compute face diffusivities.
+    \item Horizontal zonal momentum $u$ maps to \texttt{U},
+    \item Horizontal meridional momentum $v$ maps to \texttt{V},
+    \item Potential temperature $\theta$ maps to \texttt{theta},
+    \item Surface skin temperature $T_s$ maps to \texttt{Ts},
+    \item Turbulent kinetic energy $e$ maps to closure diagnostics used to compute face diffusivities.
 \end{itemize}
 
-\paragraph{State layout and stencil assumptions.}
-The SCM ODE state vector uses a block layout:
+\paragraph{Interleaved state layout and stencil assumptions.}
+To leverage efficient matrix coloring and memory-aligned vectorized loops, the SCM state vector is stored in a block-interleaved layout:
 \begin{equation}
-\mathbf{X} = [T_s, U_1,\ldots,U_N, V_1,\ldots,V_N, \theta_1,\ldots,\theta_N]^T.
-\label{eq:state_layout_block}
+\mathbf{X} = [T_s, U_1, V_1, \theta_1, U_2, V_2, \theta_2, \dots, U_N, V_N, \theta_N]^T.
+\label{eq:state_layout_interleaved}
 \end{equation}
-Diffusive transport uses a nearest-neighbor second-order stencil on a uniform grid with spacing $\Delta z$, so each interior node $i$ couples only to $(i-1, i, i+1)$.
+Diffusive transport maps to a tight 3-point central difference stencil on a uniform vertical grid ($\Delta z = 2\,\mathrm{m}$), enforcing a strictly banded Jacobian pattern.
 
 \paragraph{Runtime clamp logic for non-local height.}
-The diagnosed non-local coupling height is clamped explicitly at runtime:
+The diagnosed non-local coupling height is clamped explicitly at runtime to prevent unphysical boundary layer extensions under strong background stratification:
 \begin{equation}
 h_{\mathrm{eff}} = \max\left(h_{\min},\, \min\left(h_{\mathrm{diagnosed}},\, h_{\max}\right)\right),
 \label{eq:nonlocal_h_clamp}
 \end{equation}
-with default bounds $h_{\min}=20\,\mathrm{m}$ and $h_{\max}=400\,\mathrm{m}$ for the SHEBA configuration unless overridden.
+with default bounds strictly hardcoded to $h_{\min}=20\,\mathrm{m}$ and $h_{\max}=400\,\mathrm{m}$ under the SHEBA validation configuration.
 
 \paragraph{Automatic differentiation type-generic requirement.}
-To support sparse automatic differentiation Jacobians, internal flux routines, face buffers, and intermediate arrays must remain type-generic. In particular, workspace buffers must accept either \texttt{Float64} or dual-valued types during Jacobian construction, and closures must avoid forced scalar casts that break dual propagation.
+To support colored automatic differentiation via \texttt{ForwardDiff.jl}, internal flux routines, face buffers, and intermediate arrays must remain fully type-generic. Reusable workspace buffers must dynamically instantiate to accept either \texttt{Float64} or dual-valued types (\texttt{ForwardDiff.Dual}) depending on the incoming state vector, avoiding any explicit scalar casting that breaks dual-number propagation.
 
-\paragraph{Solver and library stack.}
-The stiff ODE system is integrated with \texttt{Rodas5P} from \texttt{OrdinaryDiffEq.jl}. Jacobian evaluation can be configured for finite differences or automatic differentiation, and structural sparsity is provided through a sparse Jacobian prototype consistent with the 1D local stencil.
+\paragraph{Validated Physical Safeguard Limits.}
+To maintain longwave radiation balance ($\sigma T_s^4$) and stable surface energy closure under extreme clear-sky Arctic cooling, the surface temperature state is protected by a strict physical safeguard floor:
+\begin{equation}
+T_{s,\min} = 220\,\mathrm{K}.
+\label{eq:ts_physical_floor}
+\end{equation}
 
-\subsection{Numerical Workflow and Code Implementation}
+\subsection{Numerical Workflow and Code Reference}
 \label{subsec:numerical_workflow}
 
-The implementation pipeline is straightforward. The full state vector is assembled, the fast-slow residual is evaluated in a single right-hand side function, and the stiff solver advances the system through the collapse and recovery phases. During strong cooling, the trajectory may spend long intervals near the admissibility boundary, so the integrator must prioritize stability and smoothness over aggressive extrapolation.
+The implementation pipeline is straightforward. The full state vector is assembled, the fast-slow residual is evaluated in a single right-hand side function, and the stiff solver advances the system through the collapse and recovery phases.
 
-To facilitate reproducibility, a self-contained Julia implementation of the complete gated 4D GSPT-SBL system is provided below, leveraging the SciML `DifferentialEquations.jl` stack with automatic differentiation:
+To ensure reproducibility, a self-contained Julia reference implementation of the complete gated 4D system is provided below, leveraging the SciML \texttt{DifferentialEquations.jl} stack with automatic differentiation:
 
 \begin{verbatim}
 using DifferentialEquations
@@ -129,43 +125,44 @@ using LinearAlgebra
 using ForwardDiff
 
 # ====================================================================
-# 1. Physical and Numerical Parameters (CASES99 Baseline)
+# 1. Physical and Numerical Parameters (SHEBA Optimized Baseline)
 # ====================================================================
-const Ug      = 10.0         # Zonal geostrophic wind (m/s)
-const Vg      = 0.0          # Meridional geostrophic wind (m/s)
-const Ta      = 285.15       # Reference air temperature (K)
-const Tdeep   = 283.15       # Deep soil temperature (K)
-const Rdown   = 260.0        # Downward longwave radiation (W/m^2)
-const f_cor   = 1.0e-4       # Coriolis parameter (s^-1)
+const Ug        = 7.0          # Zonal geostrophic wind (m/s)
+const Vg        = 0.0          # Meridional geostrophic wind (m/s)
+const Ta        = 257.0        # Reference air temperature (K)
+const Tdeep     = 255.5        # Deep soil/ice core temperature (K)
+const Rdown     = 190.0        # Downward longwave radiation (W/m^2)
+const f_cor     = 1.0e-4       # Coriolis parameter (s^-1)
 
-const epsilon = 0.01         # Fast-slow timescale ratio (eps << 1)
-const delta   = 1.0e-4       # Background TKE floor (m^2/s^2)
-const K_buoy  = 0.32         # Buoyant destruction scale (m/s^2)
-const beta    = 15.0         # Stability sensitivity parameter
-const h_bl    = 50.0         # Boundary layer bulk scale height (m)
-const l0      = 15.0         # Master turbulent mixing length (m)
-const gamma   = 1.4e-3       # Effective momentum drag scaling (s^-1)
-const CH      = 1.2e-3       # Thermal exchange coefficient
-const eta     = 15.0         # Shear production efficiency
+const epsilon   = 0.01         # Fast-slow timescale ratio (eps << 1)
+const delta     = 1.0e-4       # Background TKE floor (m^2/s^2)
+const K_buoy    = 0.32         # Buoyant destruction scale (m/s^2)
+const beta      = 15.0         # Stability sensitivity parameter
+const h_bl      = 300.0        # Boundary layer bulk scale height (m)
+const l0        = 15.0         # Master turbulent mixing length (m)
+const gamma     = 1.4e-3       # Effective momentum drag scaling (s^-1)
+const CH        = 1.2e-3       # Thermal exchange coefficient
+const eta       = 1.5          # Shear production efficiency (SHEBA tuned)
 
-const sigma_SB = 5.670374e-8 # Stefan-Boltzmann constant (W/m^2/K^4)
-const lambda   = 1.2         # Soil thermal conductivity (W/m/K)
-const d_soil   = 0.5         # Soil coupling depth (m)
-const rho_cp   = 1200.0      # Volumetric heat capacity of air (J/m^3/K)
-const C_skin   = 2.0e4       # Thermal capacity of skin layer (J/m^2/K)
+const sigma_SB  = 5.670374e-8  # Stefan-Boltzmann constant (W/m^2/K^4)
+const lambda    = 1.2          # Soil/Ice thermal conductivity (W/m/K)
+const d_soil    = 0.1          # Soil coupling depth (m)
+const rho_cp    = 1200.0       # Volumetric heat capacity of air (J/m^3/K)
+const C_skin    = 2.0e4        # Thermal capacity of skin layer (J/m^2/K)
 
 # Numerical Safeguard Parameters
-const alpha_safe = 1.0e-6    # Damping scale for the safeguard floor gate
+const alpha_safe = 1.0e-6      # Damping scale for the safeguard floor gate
+const ts_min     = 220.0       # Validated physical Arctic surface floor (K)
 
 # ====================================================================
-# 2. Vector Field Definition
+# 2. Vector Field Definition (AD-Safe, Type-Generic Structure)
 # ====================================================================
 function gspt_sbl_dynamics!(dx, x, p, t)
     # State mapping: x = [e, U, V, Ts]
     e  = x[1]
     U  = x[2]
     V  = x[3]
-    Ts = x[4]
+    Ts = max(x[4], ts_min) # Apply physical safety floor inline
 
     # Shifted TKE coordinate
     phi = e + delta
@@ -200,16 +197,14 @@ function gspt_sbl_dynamics!(dx, x, p, t)
 end
 
 # ====================================================================
-# 3. Solver Execution and Integration setup
+# 3. Solver Execution and Integration Setup
 # ====================================================================
-# Initial Conditions: Active turbulent state transitioning to night
-x0 = [0.05, 8.0, -2.0, 284.15]
-tspan = (0.0, 3600.0) # Integrate for 1 hour
+# Initial Conditions: Cold active Arctic boundary layer
+x0 = [0.05, 5.0, -1.0, 250.0]
+tspan = (0.0, 43200.0) # Full 12-hour production window
 
 prob = ODEProblem(gspt_sbl_dynamics!, x0, tspan)
 
-# Solve using Rodas5P (5th order A-L-stable Rosenbrock method)
+# Solve using Rodas5P (5th order A-L-stable Rosenbrock method with AD)
 sol = solve(prob, Rodas5P(autodiff=true), reltol=1.0e-6, abstol=1.0e-8)
 \end{verbatim}
-
-In this formulation, the numerical method is part of the model design: the ODE solver is not merely a post-processing tool, but the mechanism that preserves the geometric structure of the reduced manifold while allowing the coupled atmosphere-surface system to evolve through a stiff nocturnal transition.
