@@ -33,6 +33,8 @@ struct SCMParameters{T,W}
     R_down::T
     lambda_s::T
     d_soil::T
+    z0m::T          # Added: Momentum roughness length
+    z0h::T          # Added: Thermal roughness length
     k_min_surf::T
     ts_min::T
     ts_max::T
@@ -44,6 +46,7 @@ struct SCMParameters{T,W}
     workspace::W
 end
 
+# Usage helper
 function _usage()
     println("Usage: julia scm/run_case.jl [options]")
     println("Options:")
@@ -57,6 +60,8 @@ function _usage()
     println("  --theta-top-bc <neumann|dirichlet|relaxation>  Upper thermal BC")
     println("  --theta-top <K>                    Upper boundary reference theta")
     println("  --lambda-top <1/s>                 Relaxation coefficient for top BC")
+    println("  --z0m <meters>                     Momentum roughness length")
+    println("  --z0h <meters>                     Thermal roughness length")
     println("  --k-min-surf <m2/s>                Background surface diffusivity floor")
     println("  --ts-min <K>                       Lower anomaly-guard surface temperature")
     println("  --ts-max <K>                       Upper anomaly-guard surface temperature")
@@ -88,6 +93,8 @@ function parse_args(args::Vector{String})
         "theta_top_bc" => "neumann",
         "theta_top" => nothing,
         "lambda_top" => nothing,
+        "z0m" => nothing, # Custom override
+        "z0h" => nothing, # Custom override
         "k_min_surf" => 1.0e-3,
         "ts_min" => 180.0,
         "ts_max" => 350.0,
@@ -102,49 +109,55 @@ function parse_args(args::Vector{String})
             _usage()
             exit(0)
         elseif a == "--case" && i < length(args)
-            cfg["case"] = lowercase(args[i + 1])
+            cfg["case"] = lowercase(args[i+1])
             i += 2
         elseif a == "--duration" && i < length(args)
-            cfg["duration_hours"] = parse(Float64, args[i + 1])
+            cfg["duration_hours"] = parse(Float64, args[i+1])
             i += 2
         elseif a == "--dt" && i < length(args)
-            cfg["dt"] = parse(Float64, args[i + 1])
+            cfg["dt"] = parse(Float64, args[i+1])
             i += 2
         elseif a == "--grid-size" && i < length(args)
-            cfg["N"] = parse(Int, args[i + 1])
+            cfg["N"] = parse(Int, args[i+1])
             i += 2
         elseif a == "--dz" && i < length(args)
-            cfg["dz"] = parse(Float64, args[i + 1])
+            cfg["dz"] = parse(Float64, args[i+1])
             i += 2
         elseif a == "--outdir" && i < length(args)
-            cfg["outdir"] = args[i + 1]
+            cfg["outdir"] = args[i+1]
             i += 2
         elseif a == "--profile-every" && i < length(args)
-            cfg["profile_every_seconds"] = parse(Float64, args[i + 1])
+            cfg["profile_every_seconds"] = parse(Float64, args[i+1])
             i += 2
         elseif a == "--theta-top-bc" && i < length(args)
-            cfg["theta_top_bc"] = lowercase(args[i + 1])
+            cfg["theta_top_bc"] = lowercase(args[i+1])
             i += 2
         elseif a == "--theta-top" && i < length(args)
-            cfg["theta_top"] = parse(Float64, args[i + 1])
+            cfg["theta_top"] = parse(Float64, args[i+1])
             i += 2
         elseif a == "--lambda-top" && i < length(args)
-            cfg["lambda_top"] = parse(Float64, args[i + 1])
+            cfg["lambda_top"] = parse(Float64, args[i+1])
+            i += 2
+        elseif a == "--z0m" && i < length(args)
+            cfg["z0m"] = parse(Float64, args[i+1])
+            i += 2
+        elseif a == "--z0h" && i < length(args)
+            cfg["z0h"] = parse(Float64, args[i+1])
             i += 2
         elseif a == "--k-min-surf" && i < length(args)
-            cfg["k_min_surf"] = parse(Float64, args[i + 1])
+            cfg["k_min_surf"] = parse(Float64, args[i+1])
             i += 2
         elseif a == "--ts-min" && i < length(args)
-            cfg["ts_min"] = parse(Float64, args[i + 1])
+            cfg["ts_min"] = parse(Float64, args[i+1])
             i += 2
         elseif a == "--ts-max" && i < length(args)
-            cfg["ts_max"] = parse(Float64, args[i + 1])
+            cfg["ts_max"] = parse(Float64, args[i+1])
             i += 2
         elseif a == "--debug-print" && i < length(args)
-            cfg["debug_print"] = _parse_bool(args[i + 1])
+            cfg["debug_print"] = _parse_bool(args[i+1])
             i += 2
         elseif a == "--save-jld2" && i < length(args)
-            cfg["save_jld2"] = _parse_bool(args[i + 1])
+            cfg["save_jld2"] = _parse_bool(args[i+1])
             i += 2
         else
             error("Unknown or incomplete argument: $(a). Use --help for options.")
@@ -176,13 +189,15 @@ function _base_case_params(N::Int, dz::Float64)
         "delta" => 1.0e-4,
         "K_buoy" => 1.0,
         "beta" => 1.0,
-        "l_0" => 120.0,
-        "eta" => 0.12,
-        "xi" => 1.0e-2,
+        "l_0" => 15.0,        # Corrected: Physical SBL mixing limit (not 120.0 m)
+        "eta" => 1.5,         # Corrected: Scaled MOST shear efficiency (not 0.12)
+        "xi" => 1.0e-3,
         "C_skin" => 2.0e4,
         "R_down" => 240.0,
         "lambda_s" => 1.2,
         "d_soil" => 0.10,
+        "z0m" => 0.1,         # Default momentum roughness length
+        "z0h" => 0.01,        # Default thermal roughness length
         "k_min_surf" => 1.0e-3,
         "ts_min" => 180.0,
         "ts_max" => 350.0,
@@ -204,6 +219,8 @@ function build_case(case_name::String, N::Int, dz::Float64)
         d["theta_a"] = 265.0
         d["T_deep"] = 262.0
         d["R_down"] = 245.0
+        d["z0m"] = 0.1
+        d["z0h"] = 0.01
         d["theta_top_bc"] = :dirichlet
         d["theta_top"] = 265.0
 
@@ -212,11 +229,14 @@ function build_case(case_name::String, N::Int, dz::Float64)
         theta0 = d["theta_a"] .+ 0.01 .* z
         Ts0 = d["theta_a"] - 1.0
     elseif case_name == "idealized_sbl"
+        # Setup matches CASES99 prairie grass site configuration
         d["Ug"] = 10.0
         d["theta_a"] = 280.0
         d["T_deep"] = 276.0
         d["R_down"] = 300.0
         d["beta"] = 1.2
+        d["z0m"] = 0.02
+        d["z0h"] = 0.005
         d["theta_top_bc"] = :neumann
 
         U0 = 0.8 .* d["Ug"] .* (1 .- exp.(-z ./ 100.0))
@@ -247,6 +267,8 @@ function build_case(case_name::String, N::Int, dz::Float64)
         d["R_down"],
         d["lambda_s"],
         d["d_soil"],
+        d["z0m"],
+        d["z0h"],
         d["k_min_surf"],
         d["ts_min"],
         d["ts_max"],
@@ -260,9 +282,9 @@ function build_case(case_name::String, N::Int, dz::Float64)
 
     X0 = zeros(Float64, 3N + 1)
     X0[1] = Ts0
-    X0[2:(N + 1)] .= U0
-    X0[(N + 2):(2N + 1)] .= V0
-    X0[(2N + 2):(3N + 1)] .= theta0
+    X0[2:(N+1)] .= U0
+    X0[(N+2):(2N+1)] .= V0
+    X0[(2N+2):(3N+1)] .= theta0
 
     return X0, p
 end
@@ -294,6 +316,8 @@ function _apply_top_bc_overrides!(p::SCMParameters, theta_top_bc::String, theta_
         p.R_down,
         p.lambda_s,
         p.d_soil,
+        p.z0m,
+        p.z0h,
         p.k_min_surf,
         p.ts_min,
         p.ts_max,
@@ -307,6 +331,9 @@ function _apply_top_bc_overrides!(p::SCMParameters, theta_top_bc::String, theta_
 end
 
 function _apply_runtime_overrides!(p::SCMParameters, cfg)
+    z0m_val = isnothing(cfg["z0m"]) ? p.z0m : Float64(cfg["z0m"])
+    z0h_val = isnothing(cfg["z0h"]) ? p.z0h : Float64(cfg["z0h"])
+
     return SCMParameters(
         p.N,
         p.dz,
@@ -327,6 +354,8 @@ function _apply_runtime_overrides!(p::SCMParameters, cfg)
         p.R_down,
         p.lambda_s,
         p.d_soil,
+        z0m_val,
+        z0h_val,
         Float64(cfg["k_min_surf"]),
         Float64(cfg["ts_min"]),
         Float64(cfg["ts_max"]),
@@ -358,6 +387,7 @@ function _scalar_timeseries_columns(time_series)
     return cols
 end
 
+# Enhanced Parameter Snapshot for Reporting/Paper
 function _parameter_snapshot(p::SCMParameters)
     return Dict(
         "Ug" => p.Ug,
@@ -368,6 +398,12 @@ function _parameter_snapshot(p::SCMParameters)
         "R_down" => p.R_down,
         "lambda_s" => p.lambda_s,
         "d_soil" => p.d_soil,
+        "z0m" => p.z0m,                 # Exported to paper/JSON
+        "z0h" => p.z0h,                 # Exported to paper/JSON
+        "l_0" => p.l_0,                 # Exported to paper/JSON
+        "eta" => p.eta,                 # Exported to paper/JSON
+        "delta" => p.delta,
+        "xi" => p.xi,
         "k_min_surf" => p.k_min_surf,
         "ts_min" => p.ts_min,
         "ts_max" => p.ts_max,
