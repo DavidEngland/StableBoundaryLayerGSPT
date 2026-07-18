@@ -1,6 +1,11 @@
+
+#!/usr/bin/env julia
+#StableBoundaryLayerGSPT: Two-Layer GSPT Model for the Stable Boundary Layer
+# scm/two_layer_gspt.jl
 using ComponentArrays  # For clean, named variable access
 using DifferentialEquations
 using Plots
+using StableBoundaryLayerGSPT.Geometry: compute_manifold_equilibrium
 
 # ==========================================
 # 1. PARAMETERS & HYDRODYNAMIC CLOSURES
@@ -101,7 +106,21 @@ sol = solve(prob, Rosenbrock23(), reltol=1e-6, abstol=1e-8)
 t_hours = sol.t ./ 3600.0
 e1_history = [u.e1 for u in sol.u]
 Ts_history = [u.Ts for u in sol.u]
+e_m0_history = Float64[]
+fold_history = Float64[]
+
+sizehint!(e_m0_history, length(sol.u))
+sizehint!(fold_history, length(sol.u))
+
+for u in sol.u
+    slow_state = (U1 = u.U1, V1 = u.V1, θ1 = u.θ1, Ts = u.Ts)
+    geom = compute_manifold_equilibrium(slow_state, SBL_PARAMS; e_guess = u.e1)
+    push!(e_m0_history, geom.e_eq)
+    push!(fold_history, geom.fold_diagnostic)
+end
 
 p1 = plot(t_hours, e1_history, ylabel="TKE (e1)", xlabel="Time (hours)", label="Fast Dynamics", lw=2)
 p2 = plot(Ts_history, e1_history, xlabel="Skin Temp (Ts)", ylabel="TKE (e1)", label="Trajectory Projection", lw=2)
-plot(p1, p2, layout=(1,2), size=(900, 400))
+plot!(p2, Ts_history, e_m0_history, label="M₀ Equilibrium", lw=2, ls=:dash)
+p3 = plot(t_hours, fold_history, xlabel="Time (hours)", ylabel="∂g/∂e₁", label="Fold Diagnostic", lw=2, color=:black)
+plot(p1, p2, p3, layout=(1,3), size=(1200, 400))
