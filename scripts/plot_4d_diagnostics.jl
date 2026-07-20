@@ -7,6 +7,7 @@ using Plots
 using Plots.PlotMeasures: mm
 using Statistics
 using LinearAlgebra
+using JSON
 
 function parse_args(args::Vector{String})
     solution_csv = ""
@@ -16,10 +17,10 @@ function parse_args(args::Vector{String})
     while i <= length(args)
         arg = args[i]
         if arg == "--solution" && i < length(args)
-            solution_csv = args[i + 1]
+            solution_csv = args[i+1]
             i += 2
         elseif arg == "--out" && i < length(args)
-            out_path = args[i + 1]
+            out_path = args[i+1]
             i += 2
         else
             error("Unknown or incomplete argument: $(arg)")
@@ -39,28 +40,83 @@ Ts = df.Ts
 e = df.e
 t_hours = df.t ./ 3600.0
 
-# Panel 1: Hodograph with geostrophic reference from late-time mean.
-Ug_ref = mean(U[end-min(20, length(U)-1):end])
-Vg_ref = mean(V[end-min(20, length(V)-1):end])
-p1 = plot(U, V, linewidth=2, label="Trajectory", xlabel="U (m s^-1)", ylabel="V (m s^-1)", title="Wind Hodograph")
-scatter!(p1, [Ug_ref], [Vg_ref], markersize=5, marker=:star5, label="Geostrophic core")
+# --- Provenance Integration: Extract True Geostrophic Forcing Parameters ---
+ug_true = 0.0
+vg_true = 0.0
+param_found = false
+run_dir = dirname(solution_csv)
 
-# Panel 2: e(t) and Ts(t) with twin y-axis style via overlay.
-p2 = plot(t_hours, e, linewidth=2, color=:blue, label="e(t)", xlabel="Time (h)", ylabel="TKE (m^2 s^-2)", title="TKE and Skin Temperature")
+possible_json_paths = [
+    joinpath(run_dir, "run_manifest.json"),
+    joinpath(run_dir, "provenance.json"),
+    joinpath(run_dir, "summary.json"),
+    joinpath(run_dir, "..", "summary.json")
+]
+
+for path in possible_json_paths
+    if isfile(path)
+        try
+            data = JSON.parsefile(path)
+            # Handle nested parameter summaries or flat configurations
+            target_dict = haskey(data, "parameters") ? data["parameters"] : data
+            if haskey(target_dict, "U_g")
+                ug_true = Float64(target_dict["U_g"])
+                param_found = true
+            end
+            if haskey(target_dict, "V_g")
+                vg_true = Float64(target_dict["V_g"])
+            end
+            if param_found
+                ;
+                break;
+            end
+        catch
+            # Fall back to next file if parsing fails
+        end
+    end
+end
+
+# If completely isolated from metadata, assume standard rotated forcing alignment
+if !param_found
+    @warn "No parameter summary JSON located. Falling back to bulk trajectory center estimation."
+    ug_true = mean(U[(end-min(40, length(U)-1)):end])
+    vg_true = mean(V[(end-min(40, length(V)-1)):end])
+end
+
+# Panel 1: Wind Hodograph with true, parameter-locked geostrophic core
+p1 = plot(U, V, linewidth=2, color=:black, label="Trajectory", xlabel="U (m s⁻¹)", ylabel="V (m s⁻¹)", title="Wind Hodograph")
+scatter!(p1, [ug_true], [vg_true], markersize=7, marker=:star5, color=:gold, linecolor=:black, label="True Geostrophic Forcing")
+
+# Panel 2: TKE and Skin Temp with clean twin y-axis legend separation
+p2 = plot(t_hours, e, linewidth=2, color=:blue, label="e(t) [Left]", xlabel="Time (h)", ylabel="TKE (m² s⁻²)", title="TKE and Skin Temperature", legend=:topleft)
 p2r = twinx(p2)
-plot!(p2r, t_hours, Ts, linewidth=2, color=:red, label="Ts(t)", ylabel="Ts (K)")
+plot!(p2r, t_hours, Ts, linewidth=2, color=:red, label="Ts(t) [Right]", ylabel="Ts (K)", legend=:topright)
 
-# Panel 3: 3D trajectory with fitted elliptic paraboloid geometry.
-# Fit Ts(U,V) = c0 + c1 U + c2 V + c3 U^2 + c4 UV + c5 V^2.
-X = hcat(ones(length(U)), U, V, U .^ 2, U .* V, V .^ 2)
-coef = X \ Ts
-Ts_fit = X * coef
-residual = Ts - Ts_fit
+# --- GSPT Manifold Isolation: Exclude Fast Initial Transient Shock From Fit ---
+# Isolate the surface fit to late-time data (last 60% of run hours) where the system is on the slow manifold
+late_idx = findall(t_hours .>= (maximum(t_hours) * 0.40))
+if isempty(late_idx)
+    ;
+    late_idx = 1:length(U);
+end
 
-u_min, u_max = extrema(U)
-v_min, v_max = extrema(V)
-u_pad = 0.08 * max(abs(u_max - u_min), 1.0)
-v_pad = 0.08 * max(abs(v_max - v_min), 1.0)
+U_late = U[late_idx]
+V_late = V[late_idx]
+Ts_late = Ts[late_idx]
+
+X_late = hcat(ones(length(U_late)), U_late, V_late, U_late .^ 2, U_late .* V_late, V_late .^ 2)
+coef = X_late \ Ts_late
+
+# Evaluate surface residuals across the full execution path to show convergence
+X_full = hcat(ones(length(U)), U, V, U .^ 2, U .* V, V .^ 2)
+Ts_fit_full = X_full * coef
+residual = Ts - Ts_fit_full
+rmse_late = sqrt(mean(residual[late_idx] .^ 2))
+
+u_min, u_max = extrema(U_late)
+v_min, v_max = extrema(V_late)
+u_pad = 0.15 * max(abs(u_max - u_min), 1.0)
+v_pad = 0.15 * max(abs(v_max - v_min), 1.0)
 u_grid = range(u_min - u_pad, u_max + u_pad; length=70)
 v_grid = range(v_min - v_pad, v_max + v_pad; length=70)
 
@@ -75,65 +131,57 @@ p3 = surface(
     U_surf,
     V_surf,
     Ts_surf,
-    alpha=0.35,
-    color=:lightgray,
-    label="",
+    alpha=0.30,
+    color=:viridis,
     xlabel="U",
     ylabel="V",
     zlabel="Ts",
-    title="3D Elliptic Paraboloid Fit",
-    bottom_margin=10mm,
-    left_margin=8mm,
-    right_margin=8mm,
+    title="Isolated GSPT Slow Manifold Fit",
+    bottom_margin=10mm, left_margin=8mm, right_margin=8mm,
     legend=false,
 )
-plot!(p3, U, V, Ts, linewidth=3, color=:black, label="")
+plot!(p3, U, V, Ts, linewidth=3, color=:black, label="System Trajectory")
 
-# Panel 4: Residual diagnostics and curvature summary.
-p4 = scatter(
+# Panel 4: Residual tracking showing the initial state crashing onto the slow manifold
+p4 = plot(
     t_hours,
     residual,
-    markersize=3,
-    alpha=0.7,
+    linewidth=2,
     color=:darkgreen,
-    label="Ts - Ts_fit",
+    label="Ts Residual",
     xlabel="Time (h)",
     ylabel="Residual (K)",
-    title="Quadratic Fit Residuals",
-    bottom_margin=10mm,
-    left_margin=8mm,
-    right_margin=8mm,
+    title="Manifold Deviation over Time",
+    bottom_margin=10mm, left_margin=8mm, right_margin=8mm,
 )
 hline!(p4, [0.0], color=:black, linestyle=:dash, linewidth=1.5, label="")
+vline!(p4, [maximum(t_hours) * 0.40], color=:gray, linestyle=:dot, linewidth=1.5, label="Fit Boundaries")
 
-# Hessian of the quadratic form gives principal curvatures in U-V coordinates.
 H = [2.0 * coef[4] coef[5]; coef[5] 2.0 * coef[6]]
 eigvals_H = eigvals(H)
-rmse = sqrt(mean(residual .^ 2))
 annotate!(
     p4,
-    t_hours[1],
-    maximum(residual),
+    maximum(t_hours) * 0.45,
+    maximum(residual) * 0.8,
     text(
-        "k1=$(round(eigvals_H[1], sigdigits=4)), k2=$(round(eigvals_H[2], sigdigits=4)), RMSE=$(round(rmse, sigdigits=4))",
+        "k1=$(round(eigvals_H[1], sigdigits=4))\nk2=$(round(eigvals_H[2], sigdigits=4))\nLate RMSE=$(round(rmse_late, sigdigits=4))",
         :left,
         8,
+        :black
     ),
 )
 
 layout = @layout [a b; c d]
 plt = plot(
-    p1,
-    p2,
-    p3,
-    p4;
+    p1, p2, p3, p4;
     layout=layout,
     size=(2000, 1180),
     margin=6mm,
     bottom_margin=12mm,
 )
+
 mkpath(dirname(out_path))
 savefig(plt, out_path)
 
-println("Diagnostic plot generated")
+println("Diagnostic plot generated successfully.")
 println("figure=$(out_path)")
