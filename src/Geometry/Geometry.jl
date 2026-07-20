@@ -2,7 +2,7 @@ module Geometry
 
 using ForwardDiff
 
-export critical_manifold, compute_manifold_equilibrium
+export critical_manifold, compute_manifold_equilibrium, fast_manifold_residual
 
 """Return the legacy critical-manifold estimate from diagnostic state variables."""
 function critical_manifold(state::NamedTuple)
@@ -14,7 +14,7 @@ function critical_manifold(state::NamedTuple)
 end
 
 """Evaluate the scalar fast-equation residual for a fixed slow state."""
-function _fast_residual(slow_state, p, e1)
+function fast_manifold_residual(slow_state, p, e1)
     U1 = Float64(getproperty(slow_state, :U1))
     V1 = Float64(getproperty(slow_state, :V1))
     θ1 = Float64(getproperty(slow_state, :θ1))
@@ -57,8 +57,8 @@ function compute_manifold_equilibrium(slow_state, p; e_guess=0.4, max_iter=20, t
     iteration_count = 0
 
     for iteration in 1:max_iter
-        residual = _fast_residual(slow_state, p, e_eq)
-        derivative = ForwardDiff.derivative(e -> _fast_residual(slow_state, p, e), e_eq)
+        residual = fast_manifold_residual(slow_state, p, e_eq)
+        derivative = ForwardDiff.derivative(e -> fast_manifold_residual(slow_state, p, e), e_eq)
 
         if abs(derivative) < 1e-12
             iteration_count = iteration
@@ -71,7 +71,7 @@ function compute_manifold_equilibrium(slow_state, p; e_guess=0.4, max_iter=20, t
 
         while damping >= 1.0 / 1024.0
             candidate = max(e_eq - damping * step, 0.0)
-            candidate_residual = abs(_fast_residual(slow_state, p, candidate))
+            candidate_residual = abs(fast_manifold_residual(slow_state, p, candidate))
 
             if candidate_residual <= abs(residual)
                 break
@@ -89,10 +89,11 @@ function compute_manifold_equilibrium(slow_state, p; e_guess=0.4, max_iter=20, t
         end
     end
 
-    residual = _fast_residual(slow_state, p, e_eq)
-    fold_diagnostic = ForwardDiff.derivative(e -> _fast_residual(slow_state, p, e), e_eq)
+    residual = fast_manifold_residual(slow_state, p, e_eq)
+    fold_diagnostic = ForwardDiff.derivative(e -> fast_manifold_residual(slow_state, p, e), e_eq)
+    thermal_inversion = θ1 - Ts
 
-    return (; e_eq, fold_diagnostic, residual, converged, iterations = iteration_count)
+    return (; e_eq, fold_diagnostic, residual, converged, iterations = iteration_count, S_sq, N_sq, thermal_inversion, physics_guess)
 end
 
 end

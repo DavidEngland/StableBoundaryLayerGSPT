@@ -1,4 +1,4 @@
-.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all assemble-manuscript paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports test clean
+.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all assemble-manuscript paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports sweep-two-layer-envelope test clean
 
 DATASET ?= CASES99
 
@@ -154,6 +154,9 @@ scm-report:
 	@echo "Rendered semantic wrapper PDF: $(SCM_WRAPPER_PDF_PATH)"
 
 scm-all: scm-run scm-plot scm-report
+
+sweep-two-layer-envelope:
+	julia --project=. scripts/sweep_two_layer_envelope.jl --ug-min 2.0 --ug-max 15.0 --ug-step 1.0 --duration-hours 6.0 --dt-seconds 300.0 --outdir results/two_layer_gspt
 
 run-gabls1:
 	$(MAKE) scm-all SCM_CASE=gabls1 SCM_OUTDIR=results/gabls1

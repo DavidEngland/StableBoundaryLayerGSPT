@@ -31,9 +31,20 @@ using StableBoundaryLayerGSPT.Geometry: compute_manifold_equilibrium
     )
 
     geom = compute_manifold_equilibrium(strong_shear_state, test_p; e_guess = 0.5)
+    cooler_surface_state = (
+        U1 = 5.0,
+        V1 = 0.0,
+        θ1 = 273.15,
+        Ts = 270.15,
+    )
+
+    geom_cooler = compute_manifold_equilibrium(cooler_surface_state, test_p; e_guess = 0.5)
 
     @test geom.converged
     @test geom.e_eq > 0.0
     @test geom.fold_diagnostic < 0.0
     @test abs(geom.residual) < 1e-7
+    @test geom.thermal_inversion == 0.0
+    @test geom_cooler.thermal_inversion > geom.thermal_inversion
+    @test geom_cooler.e_eq != geom.e_eq
 end
