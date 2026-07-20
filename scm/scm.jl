@@ -89,7 +89,9 @@ function scm_gspt_tendencies!(dX, X, p, t)
     η = p.eta
     ξ = p.xi
     kappa = 0.4
-    Pr_t = 1.0
+    Pr_t_base = p.pr_t_base
+    Pr_t_slope = p.pr_t_slope
+    use_dynamic_pr_t = p.use_dynamic_pr_t
 
     # Land Surface Properties
     C_skin = p.C_skin
@@ -98,9 +100,11 @@ function scm_gspt_tendencies!(dX, X, p, t)
     rho_cp = 1200.0
     lambda_s = p.lambda_s
     d_soil = p.d_soil
-    K_min_surf = hasproperty(p, :k_min_surf) ? p.k_min_surf : 1.0e-3
-    Ts_min = hasproperty(p, :ts_min) ? p.ts_min : 180.0
-    Ts_max = hasproperty(p, :ts_max) ? p.ts_max : 350.0
+    K_min_surf = p.k_min_surf
+    ell_min_surf = p.ell_min_surf
+    use_ell_floor_surf = p.use_ell_floor_surf
+    Ts_min = p.ts_min
+    Ts_max = p.ts_max
 
     # Extract optional BC configuration once (avoid hasproperty checks in hot code)
     # Ideally, define these strictly on p's type so they resolve at compile time.
@@ -155,7 +159,12 @@ function scm_gspt_tendencies!(dX, X, p, t)
 
         # Evaluate Local Exchange Strengths
         K_m_faces[i] = ell_z * sqrt(e_star_xi + δ)
-        K_h_faces[i] = K_m_faces[i] / Pr_t
+        Pr_t_local = if use_dynamic_pr_t
+            Pr_t_base + Pr_t_slope * tanh(max(zero(eltype(U)), G_local))
+        else
+            Pr_t_base
+        end
+        K_h_faces[i] = K_m_faces[i] / max(Pr_t_local, eps(Pr_t_local))
     end
 
     # 5. Process Interior Cells (Divergence of fluxes)
@@ -185,17 +194,24 @@ function scm_gspt_tendencies!(dX, X, p, t)
     ell_surf = (kappa * z_centers[1]) / (1.0 + (kappa * z_centers[1]) / l_0)
     h_eff_surf = _effective_h_scale(p, U[1], V[1])
     ell_surf *= exp(-z_centers[1] / h_eff_surf)
-    stability_arg_surf = clamp(β * dth_dz_surf * ell_surf / theta_a, -40.0, 40.0)
+    ell_eff_surf = use_ell_floor_surf ? hypot(ell_surf, ell_min_surf) : ell_surf
+
+    stability_arg_surf = clamp(β * dth_dz_surf * ell_eff_surf / theta_a, -40.0, 40.0)
     G_surf = expm1(stability_arg_surf)
-    Δ_surf = η * (ell_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * G_surf
+    Δ_surf = η * (ell_eff_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * ell_eff_surf * G_surf
 
     Q_surf = (l_0 * Δ_surf)^2 - δ
     e_star_surf = 0.5 * (Q_surf + hypot(Q_surf, ξ))
 
     # Smooth nonzero background transport at the surface. This preserves coupling
     # even when ell_surf -> 0 and e_star_surf -> 0.
-    K_m_surf = K_min_surf + ell_surf * sqrt(e_star_surf + δ)
-    K_h_surf = K_m_surf / Pr_t
+    K_m_surf = K_min_surf + ell_eff_surf * sqrt(e_star_surf + δ)
+    Pr_t_surf = if use_dynamic_pr_t
+        Pr_t_base + Pr_t_slope * tanh(max(zero(eltype(U)), G_surf))
+    else
+        Pr_t_base
+    end
+    K_h_surf = K_m_surf / max(Pr_t_surf, eps(Pr_t_surf))
 
     if T_s < Ts_min || T_s > Ts_max
         reason = if T_s < Ts_min

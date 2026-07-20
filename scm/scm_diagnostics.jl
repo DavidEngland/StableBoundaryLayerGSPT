@@ -96,7 +96,9 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
     l0 = p.l_0
     eta = p.eta
     xi = p.xi
-    Pr_t = 1.0
+    Pr_t_base = p.pr_t_base
+    Pr_t_slope = p.pr_t_slope
+    use_dynamic_pr_t = p.use_dynamic_pr_t
 
     Km = zeros(eltype(U), N - 1)
     Kh = zeros(eltype(U), N - 1)
@@ -104,6 +106,7 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
     e_xi = zeros(eltype(U), N - 1)
     shear2 = zeros(eltype(U), N - 1)
     Ri_g = zeros(eltype(U), N - 1)
+    Pr_t_faces = zeros(eltype(U), N - 1)
 
     @inbounds for i in 1:(N - 1)
         dU_dz = (U[i + 1] - U[i]) / dz
@@ -120,21 +123,28 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
         arg = clamp(beta * dth_dz * ell / theta_a, -40.0, 40.0)
         G = expm1(arg)
 
-        delta_local = eta * (ell^2) * s2 - K_buoy * G
+        delta_local = eta * (ell^2) * s2 - K_buoy * ell * G
         Q = (l0 * delta_local)^2 - delta
         e_star = 0.5 * (Q + hypot(Q, xi))
 
+        Pr_t_local = if use_dynamic_pr_t
+            Pr_t_base + Pr_t_slope * tanh(max(zero(eltype(U)), G))
+        else
+            Pr_t_base
+        end
+
         Km[i] = ell * sqrt(e_star + delta)
-        Kh[i] = Km[i] / Pr_t
+        Kh[i] = Km[i] / max(Pr_t_local, eps(Pr_t_local))
         Delta[i] = delta_local
         e_xi[i] = e_star
         shear2[i] = s2
+        Pr_t_faces[i] = Pr_t_local
 
         buoy = cfg.g * dth_dz / theta_a
         Ri_g[i] = buoy / max(s2, cfg.ri_eps)
     end
 
-    return (Km=Km, Kh=Kh, Delta=Delta, e_xi=e_xi, shear2=shear2, Ri_g=Ri_g)
+    return (Km=Km, Kh=Kh, Delta=Delta, e_xi=e_xi, shear2=shear2, Ri_g=Ri_g, Pr_t=Pr_t_faces)
 end
 
 """
@@ -159,6 +169,11 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     theta_a = p.theta_a
     eta = p.eta
     K_buoy = p.K_buoy
+    Pr_t_base = p.pr_t_base
+    Pr_t_slope = p.pr_t_slope
+    use_dynamic_pr_t = p.use_dynamic_pr_t
+    ell_min_surf = p.ell_min_surf
+    use_ell_floor_surf = p.use_ell_floor_surf
 
     # Surface closure uses the same manifold relation as interior faces.
     dU_dz_surf = (U[1] - 0.0) / dz
@@ -167,14 +182,19 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     ell_surf = mixing_length(z_centers[1], l0; kappa=cfg.kappa)
     h_eff_surf = effective_h_scale(p, U[1], V[1])
     ell_surf *= exp(-z_centers[1] / h_eff_surf)
-    G_surf = expm1(clamp(beta * dth_dz_surf * ell_surf / theta_a, -40.0, 40.0))
-    Delta_surf = eta * (ell_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * G_surf
+    ell_eff_surf = use_ell_floor_surf ? hypot(ell_surf, ell_min_surf) : ell_surf
+    G_surf = expm1(clamp(beta * dth_dz_surf * ell_eff_surf / theta_a, -40.0, 40.0))
+    Delta_surf = eta * (ell_eff_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * ell_eff_surf * G_surf
     Q_surf = (l0 * Delta_surf)^2 - delta
     e_surf = 0.5 * (Q_surf + hypot(Q_surf, p.xi))
     # Maintain a smooth background floor in surface exchange coefficients.
-    K_m_surf = cfg.k_min_surf + ell_surf * sqrt(e_surf + delta)
-    Pr_t = 1.0
-    K_h_surf = K_m_surf / Pr_t
+    K_m_surf = cfg.k_min_surf + ell_eff_surf * sqrt(e_surf + delta)
+    Pr_t_surf = if use_dynamic_pr_t
+        Pr_t_base + Pr_t_slope * tanh(max(0.0, G_surf))
+    else
+        Pr_t_base
+    end
+    K_h_surf = K_m_surf / max(Pr_t_surf, eps(Pr_t_surf))
 
     flux_H_surf = K_h_surf * (theta[1] - T_s) / dz
     flux_U_surf = K_m_surf * (U[1] - 0.0) / dz
@@ -241,11 +261,15 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
         surface_delta=Delta_surf,
         surface_e_xi=e_surf,
         near_fold=near_fold,
+        pr_t_surface=Pr_t_surf,
+        pr_t_face_min=minimum(closure.Pr_t),
+        pr_t_face_max=maximum(closure.Pr_t),
         U=collect(U),
         V=collect(V),
         theta=collect(theta),
         Km_faces=closure.Km,
         Kh_faces=closure.Kh,
+        Pr_t_faces=closure.Pr_t,
         Delta_faces=closure.Delta,
         e_xi_faces=closure.e_xi,
         shear2_faces=closure.shear2,
@@ -304,6 +328,7 @@ function build_hovmoller_payload(time_series, p)
     Ri = zeros(Float64, nt, nf)
     Delta = zeros(Float64, nt, nf)
     e_xi = zeros(Float64, nt, nf)
+    Pr_t = zeros(Float64, nt, nf)
 
     t = zeros(Float64, nt)
     @inbounds for i in 1:nt
@@ -319,6 +344,7 @@ function build_hovmoller_payload(time_series, p)
         Ri[i, :] .= row.Ri_faces
         Delta[i, :] .= row.Delta_faces
         e_xi[i, :] .= row.e_xi_faces
+        Pr_t[i, :] .= row.Pr_t_faces
     end
 
     return (
@@ -333,6 +359,7 @@ function build_hovmoller_payload(time_series, p)
         Kh=Kh,
         shear=shear,
         Ri=Ri,
+        Pr_t=Pr_t,
         Delta=Delta,
         e_xi=e_xi,
     )

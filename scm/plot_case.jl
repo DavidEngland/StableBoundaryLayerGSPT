@@ -41,6 +41,11 @@ struct SCMParameters{T,W}
     z0m::T
     z0h::T
     k_min_surf::T
+    pr_t_base::T
+    pr_t_slope::T
+    use_dynamic_pr_t::Bool
+    ell_min_surf::T
+    use_ell_floor_surf::Bool
     ts_min::T
     ts_max::T
     theta_top_bc::Symbol

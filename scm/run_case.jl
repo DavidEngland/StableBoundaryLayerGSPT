@@ -43,6 +43,11 @@ struct SCMParameters{T,W}
     z0m::T          # Added: Momentum roughness length
     z0h::T          # Added: Thermal roughness length
     k_min_surf::T
+    pr_t_base::T
+    pr_t_slope::T
+    use_dynamic_pr_t::Bool
+    ell_min_surf::T
+    use_ell_floor_surf::Bool
     ts_min::T
     ts_max::T
     theta_top_bc::Symbol
@@ -76,6 +81,11 @@ function _usage()
     println("  --nonlocal-h-min <meters>          Lower clamp for non-local h")
     println("  --nonlocal-h-max <meters>          Upper clamp for non-local h")
     println("  --k-min-surf <m2/s>                Background surface diffusivity floor")
+    println("  --pr-t-base <value>                Baseline turbulent Prandtl number")
+    println("  --pr-t-slope <value>               Stability response for dynamic Prandtl")
+    println("  --use-dynamic-pr-t <true|false>    Enable stability-aware turbulent Prandtl")
+    println("  --ell-min-surf <meters>            Surface mixing-length floor")
+    println("  --use-ell-floor-surf <true|false>  Enable surface mixing-length floor")
     println("  --ts-min <K>                       Lower anomaly-guard surface temperature")
     println("  --ts-max <K>                       Upper anomaly-guard surface temperature")
     println("  --debug-print <true|false>         Emit periodic SEB diagnostics")
@@ -117,6 +127,11 @@ function parse_args(args::Vector{String})
         "nonlocal_h_min" => nothing,
         "nonlocal_h_max" => nothing,
         "k_min_surf" => 1.0e-3,
+        "pr_t_base" => 1.0,
+        "pr_t_slope" => 2.0,
+        "use_dynamic_pr_t" => false,
+        "ell_min_surf" => 0.10,
+        "use_ell_floor_surf" => false,
         "ts_min" => 180.0,
         "ts_max" => 350.0,
         "debug_print" => false,
@@ -188,6 +203,21 @@ function parse_args(args::Vector{String})
         elseif a == "--k-min-surf" && i < length(args)
             cfg["k_min_surf"] = parse(Float64, args[i+1])
             i += 2
+        elseif a == "--pr-t-base" && i < length(args)
+            cfg["pr_t_base"] = parse(Float64, args[i+1])
+            i += 2
+        elseif a == "--pr-t-slope" && i < length(args)
+            cfg["pr_t_slope"] = parse(Float64, args[i+1])
+            i += 2
+        elseif a == "--use-dynamic-pr-t" && i < length(args)
+            cfg["use_dynamic_pr_t"] = _parse_bool(args[i+1])
+            i += 2
+        elseif a == "--ell-min-surf" && i < length(args)
+            cfg["ell_min_surf"] = parse(Float64, args[i+1])
+            i += 2
+        elseif a == "--use-ell-floor-surf" && i < length(args)
+            cfg["use_ell_floor_surf"] = _parse_bool(args[i+1])
+            i += 2
         elseif a == "--ts-min" && i < length(args)
             cfg["ts_min"] = parse(Float64, args[i+1])
             i += 2
@@ -257,6 +287,11 @@ function _base_case_params(N::Int, dz::Float64)
         "z0m" => 0.1,         # Default momentum roughness length
         "z0h" => 0.01,        # Default thermal roughness length
         "k_min_surf" => 1.0e-3,
+        "pr_t_base" => 1.0,
+        "pr_t_slope" => 2.0,
+        "use_dynamic_pr_t" => false,
+        "ell_min_surf" => 0.10,
+        "use_ell_floor_surf" => false,
         "ts_min" => 180.0,
         "ts_max" => 350.0,
         "theta_top_bc" => :neumann,
@@ -360,6 +395,11 @@ function build_case(case_name::String, N::Int, dz::Float64; theta_lapse_rate_ove
         d["z0m"],
         d["z0h"],
         d["k_min_surf"],
+        d["pr_t_base"],
+        d["pr_t_slope"],
+        d["use_dynamic_pr_t"],
+        d["ell_min_surf"],
+        d["use_ell_floor_surf"],
         d["ts_min"],
         d["ts_max"],
         d["theta_top_bc"],
@@ -416,6 +456,11 @@ function _apply_top_bc_overrides!(p::SCMParameters, theta_top_bc::String, theta_
         p.z0m,
         p.z0h,
         p.k_min_surf,
+        p.pr_t_base,
+        p.pr_t_slope,
+        p.use_dynamic_pr_t,
+        p.ell_min_surf,
+        p.use_ell_floor_surf,
         p.ts_min,
         p.ts_max,
         bc,
@@ -466,6 +511,11 @@ function _apply_runtime_overrides!(p::SCMParameters, cfg)
         z0m_val,
         z0h_val,
         Float64(cfg["k_min_surf"]),
+        Float64(cfg["pr_t_base"]),
+        Float64(cfg["pr_t_slope"]),
+        Bool(cfg["use_dynamic_pr_t"]),
+        Float64(cfg["ell_min_surf"]),
+        Bool(cfg["use_ell_floor_surf"]),
         Float64(cfg["ts_min"]),
         Float64(cfg["ts_max"]),
         p.theta_top_bc,
@@ -519,6 +569,11 @@ function _parameter_snapshot(p::SCMParameters)
         "delta" => p.delta,
         "xi" => p.xi,
         "k_min_surf" => p.k_min_surf,
+        "pr_t_base" => p.pr_t_base,
+        "pr_t_slope" => p.pr_t_slope,
+        "use_dynamic_pr_t" => p.use_dynamic_pr_t,
+        "ell_min_surf" => p.ell_min_surf,
+        "use_ell_floor_surf" => p.use_ell_floor_surf,
         "ts_min" => p.ts_min,
         "ts_max" => p.ts_max,
         "theta_top_bc" => string(p.theta_top_bc),
