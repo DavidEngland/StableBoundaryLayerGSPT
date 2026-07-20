@@ -1,0 +1,21 @@
+# Prose literal lint allowlist
+# Format: <relative-path>:<1-based-line>:<numeric-token>
+# Notes:
+# - Keep this file minimal and intentional.
+# - Entries here are accepted hardcoded values in narrative/comparative prose.
+
+templates/sections/closures.tex.mustache:16:0.4
+templates/sections/closures.tex.mustache:23:20.0
+templates/sections/closures.tex.mustache:23:400.0
+templates/sections/closures.tex.mustache:28:1.5
+templates/sections/closures.tex.mustache:29:15.0
+
+templates/sections/comparative_metrics.tex.mustache:9:0.02
+templates/sections/comparative_metrics.tex.mustache:10:8
+templates/sections/comparative_metrics.tex.mustache:11:15.0
+templates/sections/comparative_metrics.tex.mustache:11:1.5
+
+templates/sections/numerical_verification_physical_interpretation.tex.mustache:9:0.02
+templates/sections/numerical_verification_physical_interpretation.tex.mustache:10:8
+templates/sections/numerical_verification_physical_interpretation.tex.mustache:11:15.0
+templates/sections/numerical_verification_physical_interpretation.tex.mustache:11:1.5

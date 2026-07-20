@@ -5,10 +5,37 @@ using DataFrames
 using Dates
 using JSON3
 using LinearAlgebra
+using Printf
 using Statistics
 
 const DEFAULT_DATASET = "CASES99"
 const DEFAULT_GENERATED_DATE_HUMAN = "July 13, 2026"
+const SUPPORTED_DATASETS = ["CASES99", "FLOSS", "SHEBA"]
+const DEFAULT_PROSE_LINT_ALLOWLIST_PATH = "config/prose_lint_allowlist.txt"
+const PROVENANCE_PARAM_KEYS = [
+    "epsilon",
+    "delta",
+    "xi",
+    "beta",
+    "h",
+    "l0",
+    "z0m",
+    "z0h",
+    "T_deep",
+    "U_g",
+    "R_down",
+    "f_coriolis",
+    "K",
+    "kappa",
+    "nonlocal_h_min",
+    "nonlocal_h_max",
+    "nonlocal_h_weight",
+    "shear_production_efficiency",
+    "d_soil",
+    "rho_cp",
+    "lambda_soil",
+    "sigma_sb",
+]
 
 function first_existing_dir(paths::Vector{String})
     for path in paths
@@ -25,6 +52,11 @@ end
 function parse_args(args::Vector{String})
     dataset = DEFAULT_DATASET
     generated_date_human = DEFAULT_GENERATED_DATE_HUMAN
+    write_parameter_macros_only = false
+    check_parameter_drift = false
+    lint_prose_literals = false
+    lint_prose_strict = false
+    lint_prose_allowlist_path = DEFAULT_PROSE_LINT_ALLOWLIST_PATH
 
     i = 1
     while i <= length(args)
@@ -35,11 +67,26 @@ function parse_args(args::Vector{String})
         elseif arg == "--date" && i < length(args)
             generated_date_human = args[i+1]
             i += 2
+        elseif arg == "--write-parameter-macros-only"
+            write_parameter_macros_only = true
+            i += 1
+        elseif arg == "--check-parameter-drift"
+            check_parameter_drift = true
+            i += 1
+        elseif arg == "--lint-prose-literals"
+            lint_prose_literals = true
+            i += 1
+        elseif arg == "--lint-prose-strict"
+            lint_prose_strict = true
+            i += 1
+        elseif arg == "--lint-prose-allowlist" && i < length(args)
+            lint_prose_allowlist_path = args[i+1]
+            i += 2
         else
             error("Unknown or incomplete argument: $(arg)")
         end
     end
-    return uppercase(String(strip(dataset))), String(strip(generated_date_human))
+    return uppercase(String(strip(dataset))), String(strip(generated_date_human)), write_parameter_macros_only, check_parameter_drift, lint_prose_literals, lint_prose_strict, String(strip(lint_prose_allowlist_path))
 end
 
 function read_text(path::String; fallback::String="")
@@ -87,6 +134,7 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
         "numerical_implementation_solver_strategy.tex.mustache",
         "numerical_verification_physical_interpretation.tex.mustache",
         "closures.tex.mustache",
+        "parameters_table.tex.mustache",
         "parameters_geometry.tex.mustache",
     ]
 
@@ -125,6 +173,419 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
     end
 
     return content_joined
+end
+
+function sanitize_macro_fragment(value::String)
+    cleaned = replace(value, r"[^A-Za-z]" => "")
+    return isempty(cleaned) ? "Unknown" : uppercase(cleaned)
+end
+
+function normalize_numeric_text(value::Float64)
+    if abs(value) >= 1e4 || (abs(value) > 0 && abs(value) < 1e-3)
+        sci = lowercase(string(value))
+        if occursin("e", sci)
+            parts = split(sci, "e")
+            coeff = parts[1]
+            exponent = parse(Int, parts[2])
+            return "$(coeff) \\times 10^{$(exponent)}"
+        end
+    end
+
+    rounded = round(value; digits=8)
+    text = string(rounded)
+    if occursin(".", text)
+        text = replace(text, r"0+$" => "")
+        text = replace(text, r"\.$" => "")
+    end
+    return text
+end
+
+function texify_number(value)
+    value isa Number || return latex_escape(string(value))
+    return normalize_numeric_text(Float64(value))
+end
+
+function find_dataset_summary_path(dataset::String)
+    latest_summary = joinpath("results", dataset, "latest", "summary.json")
+    if isfile(latest_summary)
+        return latest_summary
+    end
+
+    run_root = joinpath("results", dataset)
+    if isdir(run_root)
+        run_dirs = sort(filter(name -> startswith(name, "run_") && isdir(joinpath(run_root, name)), readdir(run_root)); rev=true)
+        for run_dir in run_dirs
+            candidate = joinpath(run_root, run_dir, "summary.json")
+            if isfile(candidate)
+                return candidate
+            end
+        end
+    end
+
+    return ""
+end
+
+function read_dataset_parameters(dataset::String)
+    summary_path = find_dataset_summary_path(dataset)
+    isempty(summary_path) && return nothing
+
+    summary_obj = JSON3.read(read(summary_path, String))
+    params_obj = getnested(summary_obj, ["parameters"], nothing)
+    params_obj === nothing && return nothing
+
+    params = Dict{String,Float64}()
+    for (k, v) in pairs(params_obj)
+        if v isa Number
+            params[string(k)] = Float64(v)
+        end
+    end
+    return Dict(
+        "summary_path" => summary_path,
+        "parameters" => params,
+    )
+end
+
+function parameter_to_macro_name(param_key::String)
+    overrides = Dict(
+        "z0m" => "SBLParamZZeroM",
+        "z0h" => "SBLParamZZeroH",
+        "l0" => "SBLParamLZero",
+    )
+    if haskey(overrides, param_key)
+        return overrides[param_key]
+    end
+
+    digit_words = Dict(
+        '0' => "Zero",
+        '1' => "One",
+        '2' => "Two",
+        '3' => "Three",
+        '4' => "Four",
+        '5' => "Five",
+        '6' => "Six",
+        '7' => "Seven",
+        '8' => "Eight",
+        '9' => "Nine",
+    )
+
+    parts = split(param_key, '_')
+    normalized = String[]
+    for part in parts
+        out = IOBuffer()
+        for ch in lowercase(part)
+            if haskey(digit_words, ch)
+                print(out, digit_words[ch])
+            else
+                print(out, ch)
+            end
+        end
+        push!(normalized, uppercasefirst(String(take!(out))))
+    end
+    return "SBLParam" * join(normalized, "")
+end
+
+function parameter_to_context_key(param_key::String)
+    return "param_" * lowercase(param_key) * "_tex"
+end
+
+function parameter_to_code_context_key(param_key::String)
+    return "param_" * lowercase(param_key) * "_code"
+end
+
+function codeify_number(value::Float64)
+    return lowercase(string(value))
+end
+
+function write_parameter_macro_bundle(active_dataset::String)
+    mkpath(joinpath("reports", "generated", "parameters"))
+
+    datasets_data = Dict{String,Dict}()
+    for ds in SUPPORTED_DATASETS
+        data = read_dataset_parameters(ds)
+        if data === nothing
+            if ds == active_dataset
+                error("Missing required active dataset summary for $(active_dataset). Expected results/$(active_dataset)/latest/summary.json or a run_*/summary.json.")
+            end
+            @warn "Skipping parameter macro export for $(ds): no summary.json found."
+            continue
+        end
+        datasets_data[ds] = data
+    end
+
+    haskey(datasets_data, active_dataset) || error("Cannot render manuscript parameters: active dataset $(active_dataset) has no summary payload.")
+
+    active_params = datasets_data[active_dataset]["parameters"]::Dict{String,Float64}
+    context = Dict{String,String}(
+        "active_dataset" => active_dataset,
+        "active_parameter_macros_path" => "parameters/parameters_all.tex",
+    )
+
+    for (k, v) in active_params
+        context[parameter_to_context_key(k)] = texify_number(v)
+        context[parameter_to_code_context_key(k)] = codeify_number(v)
+    end
+
+    if haskey(datasets_data, "CASES99")
+        p = datasets_data["CASES99"]["parameters"]::Dict{String,Float64}
+        context["cases_z0m_tex"] = haskey(p, "z0m") ? texify_number(p["z0m"]) : "n/a"
+        context["cases_z0h_tex"] = haskey(p, "z0h") ? texify_number(p["z0h"]) : "n/a"
+    else
+        context["cases_z0m_tex"] = "n/a"
+        context["cases_z0h_tex"] = "n/a"
+    end
+    if haskey(datasets_data, "FLOSS")
+        p = datasets_data["FLOSS"]["parameters"]::Dict{String,Float64}
+        context["floss_z0m_tex"] = haskey(p, "z0m") ? texify_number(p["z0m"]) : "n/a"
+        context["floss_z0h_tex"] = haskey(p, "z0h") ? texify_number(p["z0h"]) : "n/a"
+    else
+        context["floss_z0m_tex"] = "n/a"
+        context["floss_z0h_tex"] = "n/a"
+    end
+
+    macro_lines = String[]
+    push!(macro_lines, "% Auto-generated by scripts/assemble_manuscript.jl. Do not edit by hand.")
+    push!(macro_lines, "% Active dataset: $(active_dataset)")
+    push!(macro_lines, "\\providecommand{\\SBLActiveDataset}{$(latex_escape(active_dataset))}")
+    push!(macro_lines, "\\providecommand{\\ActiveDataset}{\\SBLActiveDataset}")
+    push!(macro_lines, "")
+
+    for ds in sort(collect(keys(datasets_data)))
+        ds_params = datasets_data[ds]["parameters"]::Dict{String,Float64}
+        ds_tag = sanitize_macro_fragment(ds)
+        push!(macro_lines, "% Dataset: $(ds)")
+        for key in sort(collect(keys(ds_params)))
+            value_tex = texify_number(ds_params[key])
+            macro_name = "\\SBL$(ds_tag)" * parameter_to_macro_name(key)
+            push!(macro_lines, "\\providecommand{$(macro_name)}{$(value_tex)}")
+        end
+        push!(macro_lines, "")
+    end
+
+    push!(macro_lines, "% Active dataset aliases")
+    for key in sort(collect(keys(active_params)))
+        value_tex = texify_number(active_params[key])
+        macro_name = "\\" * parameter_to_macro_name(key)
+        push!(macro_lines, "\\providecommand{$(macro_name)}{$(value_tex)}")
+    end
+
+    macro_path = joinpath("reports", "generated", "parameters", "parameters_all.tex")
+    write(macro_path, join(macro_lines, "\n") * "\n")
+    return context, macro_path, active_params
+end
+
+function load_datasets_data(active_dataset::String)
+    datasets_data = Dict{String,Dict}()
+    for ds in SUPPORTED_DATASETS
+        data = read_dataset_parameters(ds)
+        if data === nothing
+            if ds == active_dataset
+                error("Missing required active dataset summary for $(active_dataset). Expected results/$(active_dataset)/latest/summary.json or a run_*/summary.json.")
+            end
+            @warn "Skipping dataset $(ds) during prose lint: no summary.json found."
+            continue
+        end
+        datasets_data[ds] = data
+    end
+    haskey(datasets_data, active_dataset) || error("Cannot lint prose literals: active dataset $(active_dataset) has no summary payload.")
+    return datasets_data
+end
+
+function trim_decimal_string(s::String)
+    out = replace(s, r"0+$" => "")
+    out = replace(out, r"\.$" => "")
+    return isempty(out) ? "0" : out
+end
+
+function numeric_spellings(v::Float64)
+    tokens = Set{String}()
+    push!(tokens, lowercase(string(v)))
+    push!(tokens, trim_decimal_string(@sprintf("%.12f", v)))
+    push!(tokens, trim_decimal_string(@sprintf("%.8f", v)))
+    push!(tokens, lowercase(@sprintf("%.12g", v)))
+    return filter(t -> !isempty(t), collect(tokens))
+end
+
+function build_whitelist_numeric_tokens(datasets_data::Dict{String,Dict})
+    token_to_keys = Dict{String,Set{String}}()
+    for (_ds, data) in datasets_data
+        params = data["parameters"]::Dict{String,Float64}
+        for key in PROVENANCE_PARAM_KEYS
+            haskey(params, key) || continue
+            for token in numeric_spellings(params[key])
+                if !haskey(token_to_keys, token)
+                    token_to_keys[token] = Set{String}()
+                end
+                push!(token_to_keys[token], key)
+            end
+        end
+    end
+    return token_to_keys
+end
+
+function load_prose_lint_allowlist(path::String)
+    allowlist = Set{Tuple{String,Int,String}}()
+    if !isfile(path)
+        return allowlist
+    end
+
+    for (idx, raw) in enumerate(eachline(path))
+        line = strip(raw)
+        if isempty(line) || startswith(line, "#")
+            continue
+        end
+
+        parts = split(line, ':')
+        if length(parts) != 3
+            @warn "Ignoring invalid prose lint allowlist entry at $(path):$(idx): $(line)"
+            continue
+        end
+
+        rel_path = strip(parts[1])
+        line_no = try
+            parse(Int, strip(parts[2]))
+        catch
+            @warn "Ignoring invalid line number in prose lint allowlist entry at $(path):$(idx): $(line)"
+            continue
+        end
+        token = lowercase(strip(parts[3]))
+        push!(allowlist, (rel_path, line_no, token))
+    end
+    return allowlist
+end
+
+function lint_prose_literals!(active_dataset::String; strict::Bool=false, allowlist_path::String=DEFAULT_PROSE_LINT_ALLOWLIST_PATH)
+    datasets_data = load_datasets_data(active_dataset)
+    token_to_keys = build_whitelist_numeric_tokens(datasets_data)
+    number_re = r"(?<![A-Za-z0-9_\\])[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?(?!\^)"
+
+    findings = Tuple{String,Int,String,String,Vector{String}}[]
+    allowlist = load_prose_lint_allowlist(allowlist_path)
+    root = "templates"
+    if !isdir(root)
+        @warn "Skipping prose literal lint: templates directory not found."
+        return 0
+    end
+
+    for (dir, _, files) in walkdir(root)
+        for file in files
+            endswith(file, ".tex.mustache") || continue
+            path = joinpath(dir, file)
+            lines = split(read(path, String), '\n')
+            in_verbatim = false
+            for (idx, line) in enumerate(lines)
+                if occursin("\\begin{verbatim}", line)
+                    in_verbatim = true
+                end
+                if in_verbatim
+                    if occursin("\\end{verbatim}", line)
+                        in_verbatim = false
+                    end
+                    continue
+                end
+                if occursin("\\SBLParam", line) || occursin("{{param_", line)
+                    continue
+                end
+                seen_tokens_on_line = Set{String}()
+                for m in eachmatch(number_re, line)
+                    token = lowercase(m.match)
+                    token in seen_tokens_on_line && continue
+                    push!(seen_tokens_on_line, token)
+
+                    # Avoid false positives from TeX scientific notation fragments like 10^{-4}.
+                    after = m.offset + length(m.match)
+                    if token == "10" && after <= lastindex(line) && line[after] == '^'
+                        continue
+                    end
+
+                    haskey(token_to_keys, token) || continue
+                    keys = sort(collect(token_to_keys[token]))
+                    push!(findings, (path, idx, token, strip(line), keys))
+                end
+            end
+        end
+    end
+
+    actionable_findings = Tuple{String,Int,String,String,Vector{String}}[]
+    ignored_count = 0
+    for finding in findings
+        path, line_no, token, source_line, keys = finding
+        if (path, line_no, token) in allowlist
+            ignored_count += 1
+            continue
+        end
+        push!(actionable_findings, finding)
+    end
+
+    if isempty(actionable_findings)
+        println("[lint-prose] no hardcoded provenance literals detected in templates/*.tex.mustache")
+        if ignored_count > 0
+            println("[lint-prose] ignored $(ignored_count) allowlisted finding(s) from $(allowlist_path)")
+        end
+        return 0
+    end
+
+    println("[lint-prose] detected $(length(actionable_findings)) potential hardcoded provenance literal(s):")
+    if ignored_count > 0
+        println("[lint-prose] ignored $(ignored_count) allowlisted finding(s) from $(allowlist_path)")
+    end
+    for (path, line_no, token, source_line, keys) in actionable_findings
+        println("  - $(path):$(line_no) token=$(token) keys=$(join(keys, ","))")
+        println("    $(source_line)")
+    end
+
+    if strict
+        error("Prose literal lint failed in strict mode with $(length(actionable_findings)) finding(s).")
+    end
+    return length(actionable_findings)
+end
+
+function verify_parameter_macro_bundle!(macro_path::String, active_dataset::String, active_params::Dict{String,Float64})
+    content = read(macro_path, String)
+    missing = String[]
+
+    drift_keys = [
+        "epsilon",
+        "delta",
+        "xi",
+        "beta",
+        "h",
+        "l0",
+        "z0m",
+        "z0h",
+        "T_deep",
+        "U_g",
+        "R_down",
+        "f_coriolis",
+        "K",
+        "kappa",
+        "nonlocal_h_min",
+        "nonlocal_h_max",
+        "nonlocal_h_weight",
+        "shear_production_efficiency",
+        "d_soil",
+        "rho_cp",
+        "lambda_soil",
+        "sigma_sb",
+    ]
+
+    ds_tag = sanitize_macro_fragment(active_dataset)
+    for key in drift_keys
+        haskey(active_params, key) || continue
+
+        alias_expected = "\\providecommand{\\" * parameter_to_macro_name(key) * "}{$(texify_number(active_params[key]))}"
+        dataset_expected = "\\providecommand{\\SBL$(ds_tag)" * parameter_to_macro_name(key) * "}{$(texify_number(active_params[key]))}"
+
+        if !occursin(alias_expected, content)
+            push!(missing, alias_expected)
+        end
+        if !occursin(dataset_expected, content)
+            push!(missing, dataset_expected)
+        end
+    end
+
+    if !isempty(missing)
+        error("Parameter drift check failed. Missing or mismatched macro definitions: $(join(missing, " | "))")
+    end
 end
 
 function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinpath("reports", "generated"))
@@ -521,7 +982,23 @@ function latest_solution_csv(dataset::String)
     return latest_path
 end
 
-dataset, generated_date_human = parse_args(ARGS)
+dataset, generated_date_human, write_parameter_macros_only, check_parameter_drift, lint_prose_literals, lint_prose_strict, lint_prose_allowlist_path = parse_args(ARGS)
+
+if lint_prose_literals
+    count = lint_prose_literals!(dataset; strict=lint_prose_strict, allowlist_path=lint_prose_allowlist_path)
+    println("[lint-prose] completed with $(count) finding(s).")
+    exit(0)
+end
+
+parameter_context, parameter_macro_path, active_params = write_parameter_macro_bundle(dataset)
+if check_parameter_drift
+    verify_parameter_macro_bundle!(parameter_macro_path, dataset, active_params)
+end
+if write_parameter_macros_only
+    println("Generated parameter macro bundle:")
+    println(parameter_macro_path)
+    exit(0)
+end
 
 mkpath("reports/generated")
 
@@ -553,6 +1030,7 @@ section_context = Dict(
     "sheba_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("SHEBA"))),
 )
 merge!(section_context, read_scm_summary_context())
+merge!(section_context, parameter_context)
 template_sections_tex = build_tex_template_sections("templates/sections", section_context)
 abstract_tex = build_optional_tex_template(
     "templates/sections/abstract.tex.mustache",
@@ -567,6 +1045,7 @@ tex_context = Dict(
     "abstract_tex" => abstract_tex,
     "template_sections_tex" => template_sections_tex,
     "figure_tex_includes" => figure_tex_includes,
+    "active_parameter_macros_path" => parameter_context["active_parameter_macros_path"],
 )
 
 md_context = Dict(

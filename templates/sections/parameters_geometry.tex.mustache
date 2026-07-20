@@ -1,12 +1,12 @@
 \section{Physical Parameters, Geometric Domain, and Grid Configuration}
 \label{sec:parameters_geometry}
 
-The validation of the high-resolution single-column GSPT-SBL configuration is framed explicitly around clear-sky stable regimes observed during the Surface Heat Budget of the Arctic Ocean (SHEBA) field campaign. Simulating these long-lived Arctic winter nights requires a rigorous alignment between continuous vertical boundary conditions, soil-ice core interfaces, and the underlying discrete computational grid.
+The validation of the high-resolution single-column GSPT-SBL configuration is framed around the active campaign regime (\ActiveDataset). Simulating long-lived stable nights requires a rigorous alignment between continuous vertical boundary conditions, soil-ice core interfaces, and the underlying discrete computational grid.
 
 \subsection{Vertical Domain Architecture and Stratification Floor}
 \label{subsec:domain_stratification}
 
-Legacy single-column models frequently restrict the computational vertical domain to a shallow ceiling ($H = 100\,\mathrm{m}$ to $300\,\mathrm{m}$). However, under continuous geostrophic forcing ($U_g = 7\,\mathrm{m/s}$), the shear-driven stable boundary layer and its associated Low-Level Jet (LLJ) expand vertically over a 12-hour simulation window. If the domain top is placed too low, the non-local transport closures collide with the boundary, triggering unphysical spikes in the local Richardson number ($R_i > 10^3$) and causing solver failure.
+Legacy single-column models frequently restrict the computational vertical domain to a shallow ceiling ($H = 100\,\mathrm{m}$ to $300\,\mathrm{m}$). However, under continuous geostrophic forcing ($U_g = \SBLParamUG\,\mathrm{m/s}$), the shear-driven stable boundary layer and its associated Low-Level Jet (LLJ) expand vertically over a 12-hour simulation window. If the domain top is placed too low, the non-local transport closures collide with the boundary, triggering unphysical spikes in the local Richardson number ($R_i > 10^3$) and causing solver failure.
 
 To eliminate this boundary congestion, the geometric domain top is fixed unconstrained at:
 \begin{equation}
@@ -19,7 +19,7 @@ The background tropospheric potential temperature stratification above the bound
 	\theta(z, t=0) = \theta_a + \gamma_\theta \cdot z, \quad \text{where } \gamma_\theta = 0.004\,\mathrm{K/m},
 \label{eq:lapse_rate}
 \end{equation}
-and $\theta_a = 257\,\mathrm{K}$ denotes the baseline reference air temperature at the surface.
+and $\theta_a = \SBLParamTA\,\mathrm{K}$ denotes the baseline reference air temperature at the surface.
 
 \subsection{Discrete Grid Specification for AI Prompt Alignment}
 \label{subsec:discrete_grid_spec}
@@ -28,19 +28,19 @@ For automated code interpretation and file configuration routines, the vertical 
 
 \begin{itemize}
     \item \textbf{Grid Size ($N$):} Exactly $N = 250$ vertical nodes, yielding a uniform resolution of $\Delta z = 2.0\,\mathrm{m}$ across the entire domain.
-    \item \textbf{Geostrophic Forcing Vector:} Coded as constants or immutable parameter fields: \texttt{Ug = 7.0} and \texttt{Vg = 0.0} ($\mathrm{m/s}$).
-    \item \textbf{Coriolis Parameter ($f$):} Evaluated at Arctic high-latitude baseline conditions: \texttt{f = 1.0e-4} ($\mathrm{s}^{-1}$).
-    \item \textbf{Surface Aerodynamic Roughness ($z_{0m}, z_{0h}$):} Roughness lengths for momentum and heat are fixed to represent smooth Arctic pack ice: $z_{0m} = 1.0 \times 10^{-4}\,\mathrm{m}$ and $z_{0h} = 1.0 \times 10^{-5}\,\mathrm{m}$.
+    \item \textbf{Geostrophic Forcing Vector:} Coded as constants or immutable parameter fields: \texttt{Ug = \SBLParamUG} and \texttt{Vg = \SBLParamVG} ($\mathrm{m/s}$).
+    \item \textbf{Coriolis Parameter ($f$):} Evaluated at campaign latitude conditions: \texttt{f = \SBLParamFCoriolis} ($\mathrm{s}^{-1}$).
+    \item \textbf{Surface Aerodynamic Roughness ($z_{0m}, z_{0h}$):} Roughness lengths for momentum and heat follow the active dataset configuration: $z_{0m} = \SBLParamZZeroM\,\mathrm{m}$ and $z_{0h} = \SBLParamZZeroH\,\mathrm{m}$.
 \end{itemize}
 
 \subsection{Ice-Soil Thermal Coupling Boundary Conditions}
 \label{subsec:surface_coupling}
 
-The interface between the skin layer temperature ($T_s$, coded as \texttt{Ts}) and the deep ice pack core dictates the surface energy balance. The heat flux into the lower boundary ($G$) is governed by a standard conductive formulation across a shallow diagnostic soil depth ($d_{\mathrm{soil}} = 0.1\,\mathrm{m}$):
+The interface between the skin layer temperature ($T_s$, coded as \texttt{Ts}) and the deep substrate core dictates the surface energy balance. The heat flux into the lower boundary ($G$) is governed by a standard conductive formulation across a shallow diagnostic soil depth ($d_{\mathrm{soil}} = \SBLParamDSoil\,\mathrm{m}$):
 \begin{equation}
 G = \lambda_s \frac{T_s - T_{\mathrm{deep}}}{d_{\mathrm{soil}}},
 \label{eq:conductive_g}
 \end{equation}
-where the ice-soil thermal conductivity is fixed to $\lambda_s = 1.2\,\mathrm{W/m/K}$ and the unperturbed deep core temperature is anchored at $T_{\mathrm{deep}} = 255.5\,\mathrm{K}$.
+where the ice-soil thermal conductivity is fixed to $\lambda_s = \SBLParamLambdaSoil\,\mathrm{W/m/K}$ and the unperturbed deep core temperature is anchored at $T_{\mathrm{deep}} = \SBLParamTDeep\,\mathrm{K}$.
 
-To guarantee longwave radiation stability ($\sigma T_s^4$) during extreme clear-sky radiative cooling episodes ($R_{\mathrm{down}} = 190\,\mathrm{W/m}^2$), code generators must enforce the runtime physical safeguard limit $T_{s,\min} = 220\,\mathrm{K}$ as established in Section~\ref{subsec:ai_impl_contract}.
+To guarantee longwave radiation stability ($\sigma T_s^4$) during extreme clear-sky radiative cooling episodes ($R_{\mathrm{down}} = \SBLParamRDown\,\mathrm{W/m}^2$), code generators must enforce the runtime physical safeguard limit $T_{s,\min} = 220\,\mathrm{K}$ as established in Section~\ref{subsec:ai_impl_contract}.

@@ -9,7 +9,7 @@ The continuous, vertically distributed Single-Column Model (SCM) maps the intera
 \frac{\partial \theta}{\partial t} &= \frac{\partial}{\partial z} \left( K_h \frac{\partial \theta}{\partial z} \right), \label{eq:gov_theta}
 \end{align}
 
-where $U$ and $V$ represent the horizontal components of the wind velocity vector, $\theta$ is the potential temperature, and $f$ is the Coriolis parameter fixed at $1.0 \times 10^{-4}\,\mathrm{s}^{-1}$. The vertical transport is regulated dynamically by the momentum and thermal eddy diffusivities ($K_m$ and $K_h$), which are functions of the underlying turbulent kinetic energy state.
+where $U$ and $V$ represent the horizontal components of the wind velocity vector, $\theta$ is the potential temperature, and $f$ is the Coriolis parameter fixed at $\SBLParamFCoriolis\,\mathrm{s}^{-1}$. The vertical transport is regulated dynamically by the momentum and thermal eddy diffusivities ($K_m$ and $K_h$), which are functions of the underlying turbulent kinetic energy state.
 
 \subsection{The Reduced Fast-Slow TKE Subsystem}
 \label{subsec:gov_tke}
@@ -21,21 +21,22 @@ To explicitly capture the rapid stabilization and structural collapse of the sta
 \label{eq:gov_tke_continuous}
 \end{equation}
 
-This PDE form is the continuous analogue of the reduced fast-slow model in Eq.~\eqref{eq:mathematical_full_system}. Here, the mechanical shear production is balanced by the buoyancy destruction and a localized viscous dissipation limit. The background parameter $\delta = 1.0 \times 10^{-4}\,\mathrm{m}^2\mathrm{s}^{-2}$ establishes the physical floor below which turbulence cannot structurally decouple.
+This PDE form is the continuous analogue of the reduced fast-slow model. Here, the mechanical shear production is balanced by the buoyancy destruction and a localized viscous dissipation limit. The background parameter $\delta = \SBLParamDelta\,\mathrm{m}^2\mathrm{s}^{-2}$ establishes the physical floor below which turbulence cannot structurally decouple.
 
-\subsection{Continuous Boundary Interfaces}
+\subsection{Boundary Interfaces and Finite Volume Discretization}
 \label{subsec:gov_boundary}
 
-The system of equations requires distinct coupling rules at both boundaries of the $H = 500\,\mathrm{m}$ domain:
+The continuous system requires distinct coupling rules at both boundaries of the $H = 500\,\mathrm{m}$ domain, matching the flexible options implemented in the simulation pipeline:
 \begin{enumerate}
-    \item \textbf{Upper Boundary ($z = H$):} The fields are clamped strictly to their unperturbed tropospheric profiles:
+    \item \textbf{Upper Boundary ($z = H$):} The momentum fields are clamped strictly to their unperturbed geostrophic profiles ($U = U_g$, $V = V_g$, $e = 0$). The thermodynamic field accommodates either Dirichlet clamping ($\theta = \theta_{\mathrm{top}}$), a linear Newtonian relaxation flux ($- \lambda_{\mathrm{top}}(\theta - \theta_{\mathrm{top}})$), or a vanishing Neumann condition ($\partial \theta / \partial z = 0$).
+    \item \textbf{Lower Boundary ($z = 0$):} Surface exchange processes match the skin layer energy balance budget ($T_s$), transforming the localized geometric roughness lengths into explicit regularized gradient fluxes:
     \begin{equation}
-    U(H, t) = U_g, \quad V(H, t) = V_g, \quad \frac{\partial \theta}{\partial z}\Big|_{z=H} = \gamma_\theta, \quad e(H, t) = 0.
-    \end{equation}
-    \item \textbf{Lower Boundary ($z = 0$):} Surface exchange processes match the skin layer energy balance budget ($T_s$) described in Section~\ref{subsec:surface_coupling}, transforming the localized geometric roughness lengths into explicit net fluxes:
-    \begin{equation}
-    C_{\mathrm{skin}} \frac{dT_s}{dt} = R_{\mathrm{down}} - \sigma_{\mathrm{SB}} T_s^4 - \rho c_p C_H \sqrt{e_1 + \delta}(T_s - \theta_1) - \lambda_s \frac{T_s - T_{\mathrm{deep}}}{d_{\mathrm{soil}}},
+    C_{\mathrm{skin}} \frac{dT_s}{dt} = R_{\mathrm{down}} - \sigma_{\mathrm{SB}} T_s^4 - \rho c_p K_{h,\mathrm{surf}} \left( \frac{T_s - \theta_1}{\Delta z_{\mathrm{surf}}} \right) - \lambda_s \frac{T_s - T_{\mathrm{deep}}}{d_{\mathrm{soil}}},
     \label{eq:continuous_surface_energy}
     \end{equation}
-    where index $1$ designates properties evaluated at the first atmospheric grid node above the ice pack surface interface.
+    where $\theta_1$ designates the potential temperature evaluated at the first atmospheric grid level.
 \end{enumerate}
+
+\begin{remark}
+To ensure structural consistency with the finite-volume discretization of the code, the boundary vertical gradients at the surface are evaluated using a half-cell vertical grid step $\Delta z_{\mathrm{surf}} \equiv z_1$, representing the exact physical distance from the ground interface to the first interior node center. A matching half-cell adjustment $\Delta z_{\mathrm{top}} \equiv H - z_N$ regulates Dirichlet boundaries at the domain top.
+\end{remark}

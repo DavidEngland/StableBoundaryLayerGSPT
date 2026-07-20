@@ -29,8 +29,12 @@ Bypassing diagnostic functions requires that the structural parameters $l_0$ and
     \item \textbf{Master Length Scale ($l_0$):} Following classical Blackadar-type interpolation, the local mixing length $\ell$ is limited by an asymptotic master scale $l_0$ via $\ell^{-1} = (\kappa z)^{-1} + l_0^{-1}$. In highly stratified nocturnal layers, buoyancy forces cap the maximum vertical eddy size. Long-term validation runs over the deep $H = 500\,\mathrm{m}$ SHEBA domain bind this bulk structural macroscale to $l_0 = 15.0\,\mathrm{m}$ (coded as \texttt{l0}) to ensure structural stability during rapid radiative cooling.
 \end{itemize}
 
-Using the smooth safeguard floor gate defined in Eq.~\eqref{eq:smooth_gate}, the physical turbulent diffusivities are evaluated within the continuous vertical loop as:
+Bypassing non-differentiable algebraic switching gates yields a smooth, regularized $C^\infty$ embedding formulation. Under a baseline unity turbulent Prandtl number assumption ($Pr_t = 1$), the physical vertical eddy diffusivities are evaluated across the interior grid nodes as:
 \begin{equation}
-K_m = l_0 \sqrt{\max(e + \delta, 1.0\times 10^{-12})}, \quad K_h = l_0 \sqrt{\max(e + \delta, 1.0\times 10^{-12})}.
+K_m = l_0 \sqrt{e + \delta}, \quad K_h = l_0 \sqrt{e + \delta}.
+\label{eq:embedded_diffusivities}
 \end{equation}
-To ensure strict type-compatibility with automatic differentiation pipelines, these radical evaluation blocks must remain fully generic, avoiding explicit downcasting to \texttt{Float64} scalars that would scrub the forward-pass perturbation components from the underlying dual numbers.
+
+\begin{remark}
+Because the background safety floor parameter $\delta = 1.0 \times 10^{-4}\,\mathrm{m}^2\mathrm{s}^{-2}$ is strictly positive, the radicand in Eq.~\eqref{eq:embedded_diffusivities} remains strictly bounded away from zero across all physically accessible states down to the laminar floor ($e \to -\delta$). This completely eliminates the need for non-differentiable numerical truncation gates (e.g., hard $\max$ or conditional branching statements). The resulting formulation remains infinitely differentiable, preserving a continuous and bounded closure Jacobian $J_K$ while maintaining complete generic type-compatibility with forward-mode automatic differentiation pipelines.
+\end{remark}

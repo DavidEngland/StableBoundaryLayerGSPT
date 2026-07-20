@@ -1,4 +1,4 @@
-.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all assemble-manuscript paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports sweep-two-layer-envelope test clean
+.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all generate-parameter-macros generate-parameter-macros-all check-parameter-drift check-parameter-drift-all lint-prose lint-prose-strict assemble-manuscript paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports sweep-two-layer-envelope test clean
 
 DATASET ?= CASES99
 
@@ -27,6 +27,9 @@ SCM_WRAPPER_PDF_PATH ?= $(SCM_OUTDIR)/$(SCM_WRAPPER_PDF_NAME)
 SCM_WRITE_COMPAT_WRAPPER ?= 0
 BIFURCATION_VERBOSE ?= 0
 BIFURCATION_LOG_DIR ?= results/_logs
+PARAMETER_SUMMARIES := results/CASES99/latest/summary.json results/FLOSS/latest/summary.json results/SHEBA/latest/summary.json
+PARAMETER_MACRO_BUNDLE := reports/generated/parameters/parameters_all.tex
+PROSE_LINT_ALLOWLIST := config/prose_lint_allowlist.txt
 
 bootstrap:
 	julia --project=. -e 'using Pkg; Pkg.instantiate()'
@@ -103,12 +106,38 @@ bifurcation-sheba:
 # Optimized: Parallelization-friendly prerequisite tree
 bifurcation-all: bifurcation-cases99 bifurcation-floss bifurcation-sheba
 
-assemble-manuscript:
+
+$(PARAMETER_MACRO_BUNDLE): scripts/assemble_manuscript.jl $(PARAMETER_SUMMARIES)
+	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET) --write-parameter-macros-only
+
+generate-parameter-macros: $(PARAMETER_MACRO_BUNDLE)
+
+generate-parameter-macros-all:
+	$(MAKE) generate-parameter-macros DATASET=CASES99
+	$(MAKE) generate-parameter-macros DATASET=FLOSS
+	$(MAKE) generate-parameter-macros DATASET=SHEBA
+
+check-parameter-drift: scripts/assemble_manuscript.jl $(PARAMETER_SUMMARIES)
+	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET) --write-parameter-macros-only --check-parameter-drift
+
+check-parameter-drift-all:
+	$(MAKE) check-parameter-drift DATASET=CASES99
+	$(MAKE) check-parameter-drift DATASET=FLOSS
+	$(MAKE) check-parameter-drift DATASET=SHEBA
+
+lint-prose: scripts/assemble_manuscript.jl $(PARAMETER_SUMMARIES) $(PROSE_LINT_ALLOWLIST)
+	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET) --lint-prose-literals
+
+lint-prose-strict: scripts/assemble_manuscript.jl $(PARAMETER_SUMMARIES) $(PROSE_LINT_ALLOWLIST)
+	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET) --lint-prose-literals --lint-prose-strict
+
+assemble-manuscript: generate-parameter-macros
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET)
 
 paper-all:
 	$(MAKE) clean
 	$(MAKE) run-solver-all
+	$(MAKE) generate-parameter-macros
 	julia --project=. scripts/sweep_bifurcation.jl --dataset $(DATASET)
 	julia --project=. scripts/plot_4d_diagnostics.jl --solution results/$(DATASET)/latest/solution.csv --out reports/generated/figures/4d_sbl_diagnostics.png
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET)

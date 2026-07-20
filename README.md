@@ -43,9 +43,22 @@ bash scripts/stablebl bundle --synthetic --dataset CASES99
 make run-gabls1
 make run-sheba
 make run-sheba-high-top
+
+# Parameter-manifest synchronization
+make generate-parameter-macros DATASET=CASES99
+make check-parameter-drift DATASET=CASES99
+make check-parameter-drift-all
+
+# Prose literal linting (warn mode and fail-fast mode)
+make lint-prose DATASET=CASES99
+make lint-prose-strict DATASET=CASES99
+
+# Approved narrative exceptions live in config/prose_lint_allowlist.txt
 ```
 
 `scripts/stablebl paper` now auto-generates the 4D solver trajectory and diagnostic geometry plot, writes it under `reports/generated/figures/`, assembles `reports/generated/paper.tex`, and compiles the PDF so collaborators can reproduce manuscript figures without manual steps.
+
+The manuscript build now generates `reports/generated/parameters/parameters_all.tex` from dataset summary payloads (`results/*/latest/summary.json`) so table values and in-text parameters can stay synchronized with simulation outputs.
 
 For SCM-specific workflow details and CLI options, see `scm/ReadMe.md`.
 

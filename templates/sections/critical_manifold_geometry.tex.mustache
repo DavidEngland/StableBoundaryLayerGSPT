@@ -1,20 +1,22 @@
 \subsection{Critical Manifold Geometry and Stability Properties}
 \label{subsec:critical_manifold_geometry}
 
-In the singular limit $\varepsilon \to 0$, the fast TKE coordinate relaxes instantaneously to its equilibrium state. This defines the critical manifold $\mathcal{M}_0$ of the system as an invariant algebraic variety embedded within the four-dimensional state space:
+In the singular limit $\varepsilon \to 0$, the fast TKE coordinate relaxes instantaneously to its local equilibrium state. This defines the critical manifold $\mathcal{M}_0$ of the system as an invariant algebraic variety embedded within the four-dimensional state space:
 
 \begin{equation}
-\mathcal{M}_0 = \left\{(U,V,T_s,e) \in \mathbb{R}^4 \;\middle|\; l_0 \left[\eta\,\gamma\,(U^2+V^2) - K\,G(T_s)\right] \sqrt{e+\delta} - (e+\delta) = 0\right\}.
+\mathcal{M}_0 = \left\{(U,V,T_s,e) \in \mathbb{R}^4 \;\middle|\; (e+\delta)\left[l_0 \left(\eta\,\gamma\,(U^2+V^2) - K\,G(T_s)\right) - (e+\delta)\right] = 0\right\}.
 \end{equation}
 
-In SCM realizations, the damping-scale contribution entering $\gamma$ is evaluated with the state-dependent $h_{\text{eff}}$ (Eq.~\ref{eq:heff_emergent}), coupling column momentum back into the local manifold geometry.
+In SCM realizations, the damping-scale contribution entering $\gamma$ is evaluated with the state-dependent $h_{\text{eff}}$, coupling column momentum back into the local manifold geometry.
 
-Factoring this expression yields two distinct sheets: a trivial laminar floor sheet where $e = -\delta$, and an active turbulent branch given by the paraboloid:
+Factoring this expression yields two distinct sheets: a trivial laminar floor sheet where $e = -\delta$, and an active turbulent branch governed by the linear relation:
 
 \begin{equation}
-e^* = (l_0\Delta)^2 - \delta, \qquad \text{where} \quad \Delta(U,V,T_s) = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
-\label{eq:critical_branch_paraboloid}
+e^* = l_0\Delta - \delta, \qquad \text{where} \quad \Delta(U,V,T_s) = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
+\label{eq:critical_branch_linear}
 \end{equation}
+
+Setting $e^* = 0$ reveals that the active branch terminates precisely at the analytical critical transition condition $\Delta = \delta / l_0$. At this boundary interface, the attracting active sheet intersects the physical admissibility threshold, causing the system to undergo a boundary-mediated regime transition onto the regularized laminar floor.
 
 \begin{proposition}[Thermal Downward Translation]
 \label{prop:thermal_shift_proof}
@@ -22,8 +24,8 @@ Let the surface stability function satisfy $\partial G / \partial T_s < 0$ every
 \end{proposition}
 
 \paragraph{Proof.}
-Differentiating the equilibrium TKE state $e^*$ with respect to the slow thermodynamic variable $T_s$ yields:
+Differentiating the equilibrium TKE state $e^* $ on the active sheet with respect to the slow thermodynamic variable $T_s$ yields:
 \begin{equation}
-\frac{\partial e^*}{\partial T_s} = 2 l_0^2 \, \Delta(U,V,T_s) \, \left( -K \frac{\partial G}{\partial T_s} \right).
+\frac{\partial e^*}{\partial T_s} = l_0 \left( -K \frac{\partial G}{\partial T_s} \right).
 \end{equation}
-Since $K > 0$ and $\partial G / \partial T_s < 0$, the term $\left(-K \frac{\partial G}{\partial T_s}\right)$ is strictly positive. For any active turbulent state where mechanical shear exceeds buoyant destruction ($\Delta > 0$), it follows that $\partial e^* / \partial T_s > 0$. Therefore, a decrease in surface temperature ($\Delta T_s < 0$) yields a strict reduction in the equilibrium TKE value ($\Delta e^* < 0$), translating the active paraboloid downward toward the laminar boundary. $\blacksquare$
+Since the characteristic length scale $l_0 > 0$, the scaling coefficient $K > 0$, and the stability gradient $\partial G / \partial T_s < 0$, the term $\left(-K \frac{\partial G}{\partial T_s}\right)$ is strictly positive. It follows that $\partial e^* / \partial T_s > 0$ holds uniformly across the active domain. Therefore, a monotonic decrease in surface temperature ($\Delta T_s < 0$) yields a strict reduction in the equilibrium TKE value ($\Delta e^* < 0$), translating the active manifold sheet downward toward the laminar boundary. $\blacksquare$

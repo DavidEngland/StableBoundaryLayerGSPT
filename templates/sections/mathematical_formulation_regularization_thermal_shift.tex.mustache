@@ -1,59 +1,63 @@
 \section{Mathematical Formulation, Regularization, and Thermal Shift}
 \label{sec:mathematical_formulation}
 
-This section formalizes the reduced Geometric Singular Perturbation Theory (GSPT) description of the Stable Boundary Layer (SBL). The formulation separates the rapid subgrid-scale turbulent adjustment from the slower surface-energy and rotational evolution.
+This section formalizes the reduced Geometric Singular Perturbation Theory (GSPT) description of the Stable Boundary Layer (SBL). The formulation separates the rapid subgrid-scale turbulent adjustment from the slower surface-energy and rotational evolution, establishing a low-dimensional structural framework before moving to the fully distributed multi-layer column model.
 
 \subsection{Fast-Slow Structure and Dimensional Scaling}
 \label{subsec:mathematical_fast_slow}
 
-The concrete prognostic system for the state vector $\mathbf{x} = (U, V, T_s, e)^T$ is given by:
+The core four-dimensional prognostic system for the state vector $\mathbf{x} = (U, V, T_s, e)^T$ is formulated as:
 \begin{equation}
 \begin{aligned}
-\frac{dU}{dt} &= f(V - V_g) - C_D \frac{\sqrt{U^2+V^2}}{h} U \Phi_m(e), \\
-\frac{dV}{dt} &= -f(U - U_g) - C_D \frac{\sqrt{U^2+V^2}}{h} V \Phi_m(e), \\
-\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}}\left(R_{\downarrow} - \sigma_{\text{SB}}T_s^4 - \lambda\frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H\sqrt{U^2+V^2}\,(T_s - T_a)\Phi_h(e)\right), \\
-\varepsilon\frac{de}{dt} &= l_0 \left[\eta\,\gamma\,(U^2+V^2) - K\,G(T_s)\right] \Phi_m(e) - (e+\delta).
+\frac{dU}{dt} &= f(V - V_g) - C_D \frac{\sqrt{U^2+V^2}}{h} U \sqrt{e+\delta}, \\
+\frac{dV}{dt} &= -f(U - U_g) - C_D \frac{\sqrt{U^2+V^2}}{h} V \sqrt{e+\delta}, \\
+\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}}\left(R_{\downarrow} - \sigma_{\text{SB}}T_s^4 - \lambda\frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H\sqrt{U^2+V^2}\,(T_s - T_a)\sqrt{e+\delta}\right), \\
+\varepsilon\frac{de}{dt} &= l_0 \left[\eta\,\gamma\,(U^2+V^2) - K\,G(T_s)\right] - (e+\delta).
 \end{aligned}
 \label{eq:mathematical_full_system}
 \end{equation}
 
-Here, $f$ is the Coriolis frequency, $h$ is the boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant acceleration scale. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The transport functions are modeled as $\Phi_{m,h}(e) = \sqrt{e + \delta}$ to maintain consistency with classical mixing-length theory.
+Here, $f$ is the Coriolis frequency, $h$ is the bulk boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant acceleration scale. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The momentum and thermal transport terms scale with $\sqrt{e+\delta}$ to maintain asymptotic consistency with classical mixing-length theory.
 
-In the multi-layer SCM closure, the constant scale height $h$ is replaced by an emergent effective scale height $h_{\text{eff}}$ that feeds resolved momentum back into the damping coefficients:
+\begin{remark}
+In contrast to traditional quadratic formulations, the fast tracking equation in Eq.~\eqref{eq:mathematical_full_system} balances production and relaxation linearly. In the singular limit $\varepsilon \to 0$, this linear coupling ensures that the active critical manifold tracks a flat, boundary-mediated transition threshold ($e^* = l_0\Delta - \delta$), completely removing non-physical square-root singularities from the underlying Jacobian matrix.
+\end{remark}
+
+In the multi-layer SCM closure, the constant scale height $h$ is replaced by an emergent effective scale height $h_{\text{eff}}$ that feeds resolved column momentum back into the local log-law damping coefficients:
 \begin{equation}
 h_{\text{eff}} = \operatorname{clamp}\!\left((1-w)h_0 + w\,\frac{\sqrt{U^2 + V^2 + \delta_u}}{\max(|f|, f_{\text{floor}})},\; h_{\min},\; h_{\max}\right),
 \label{eq:heff_emergent}
 \end{equation}
 where $w \in [0,1]$ is the non-local blend weight and $\delta_u$ is a small velocity floor regularizer.
 
-\subsection{Geometric Analysis: Boundary Crossings vs. Fold Catastrophes}
+\subsection{Geometric Analysis: Boundary Crossings vs. Thermodynamic Folds}
 \label{subsec:geometric_consequences}
 
-GSPT allows us to formally distinguish between two distinct physical transitions that are often conflated in boundary-layer literature:
+GSPT allows us to formally distinguish between two distinct physical transitions that are frequently conflated in boundary-layer literature:
 \begin{itemize}
-    \item \textbf{The Boundary Crossing:} This occurs when the fast trajectory crosses the physical threshold $e = 0$. Here, the critical manifold remains normally hyperbolic, but the transport coefficients transition to their background molecular/residual values.
-    \item \textbf{The Fold Catastrophe ($\mathcal{C}_{\text{fold}}$):} This is an emergent property of the coupled slow flow on $\mathcal{M}_0$. It occurs where the tangent space of the critical manifold becomes parallel to the fast direction, satisfying:
+    \item \textbf{The Gated Boundary Crossing:} On the fast timescale, the active turbulent sheet $\mathcal{M}_0^{\text{act}}$ remains normally hyperbolic right up to the physical decoupling threshold. Rather than undergoing an interior fast saddle-node jump, the active branch terminates cleanly where it intersects the physical admissibility boundary at $\Delta = \delta / l_0$. Incorporating the smooth hyperbolic embedding scale $\xi = \SBLParamXi$ regularizes this boundary crossing, transforming a sharp algebraic cutoff into a smooth, differentiable vector field patch.
+    \item \textbf{The Thermodynamic SEB Fold ($\mathcal{C}_{\text{fold}}$):} While the fast TKE subsystem remains structurally stable, an emergent fold catastrophe can materialize within the slow surface thermodynamic equations on the regularized manifold. This occurs where the slow flow tracks onto a region where the tangent space of the surface energy balance becomes parallel to the fast direction, satisfying:
     \begin{equation}
     \mathcal{C}_{\text{fold}} = \left\{ (U, V, T_s, e) \in \mathcal{M}_0 \ \middle|\ \det \left( \text{D}_{\mathbf{y}} e^*_{\xi} \right) = 0 \right\}.
     \end{equation}
-    In equivalent SEB form, this corresponds to a loss of slow thermodynamic Jacobian rank:
+    In equivalent algebraic form, this corresponds to a complete loss of rank in the slow thermodynamic Jacobian (with thermal response slope controlled by $\beta = \SBLParamBeta$):
     \begin{equation}
-    \frac{\partial}{\partial T_s}\left(R_{\downarrow} - \sigma_{\mathrm{SB}}T_s^4 - \rho c_p C_H\sqrt{e^*(T_s,U,V)+\delta}(T_s-T_a) - \frac{K_g}{d_g}(T_s-T_g)\right)=0.
+    \frac{\partial}{\partial T_s}\left(R_{\downarrow} - \sigma_{\mathrm{SB}}T_s^4 - \rho c_p C_H\sqrt{U^2+V^2}\,(T_s-T_a)\sqrt{e^*_{\xi}(T_s,U,V)+\delta} - \lambda\frac{T_s-T_{\mathrm{deep}}}{d_{\mathrm{soil}}}\right)=0.
     \label{eq:seb_fold_condition}
     \end{equation}
-    At this fold line, normal hyperbolicity is completely lost, forcing the slow flow to jump along the fast fibers toward the stable laminar sheet—manifesting physically as SBL collapse.
+    When the slow cooling trajectory encounters this thermodynamic limit, the surface system can no longer maintain a localized balance between radiative loss and turbulent heat replenishment. This forces the state variable to transition rapidly along the regularized manifold toward the insulated laminar floor—providing a clear geometric explanation for sudden nocturnal temperature drops.
 \end{itemize}
 
 \subsection{Tri-Height Observability Diagnostics}
 \label{subsec:triheight_observability}
 
-To track how $h_{\text{eff}}$ modifies vertical structure during transition, we diagnose three operational heights in SCM outputs:
+To track how the emergent $h_{\text{eff}}$ modifies the continuous vertical structure of the column during these transitions, we diagnose three operational boundary heights from the SCM output arrays:
 \begin{equation}
 \begin{aligned}
-h_D &= \inf\{z : D(z) < 0.05\}, \qquad D(z)=K_m(z)/\max_z K_m(z),\\
+h_D &= \inf\{z : D(z) < 0.05\}, \qquad \text{where} \quad D(z)=K_m(z)/\max_z K_m(z),\\
 h_e &= \inf\{z : e(z) < \epsilon_e\},\\
 h_{\partial e} &= \operatorname*{arg\,max}_z\left(-\frac{\partial e}{\partial z}\right).
 \end{aligned}
 \label{eq:triheight_diagnostics}
 \end{equation}
-These correspond to the geometric decoupling interface, energetic turbulent floor, and maximum-curvature transition height, respectively.
+These variables correspond to the geometric decoupling interface, the energetic turbulent floor, and the maximum-curvature inversion transition height, respectively, providing a clear window into the structural modifications of the vertical column.

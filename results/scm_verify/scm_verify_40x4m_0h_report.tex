@@ -3,7 +3,7 @@
 \label{sec:scm_case_scm_verify_scm_verify_40x4m_0h_report}
 
 This section was generated automatically from the SCM diagnostics artifact
-\texttt{ results/scm\_verify/summary.json }. The simulation completed with \texttt{ OrdinaryDiffEqRosenbrock.Rodas5P\{0, ADTypes.AutoFiniteDiff\{Val\{:forward\}, Val\{:forward\}, Val\{:hcentral\}, Nothing, Nothing, Int64\}, Nothing, typeof(OrdinaryDiffEqCore.DEFAULT\_PRECS), Val\{:forward\}(), true, nothing, typeof(OrdinaryDiffEqCore.trivial\_limiter!), typeof(OrdinaryDiffEqCore.trivial\_limiter!)\} }
+\texttt{ results/scm\_verify/summary.json }. The simulation completed with \texttt{ OrdinaryDiffEqRosenbrock.Rodas5P\{0, ADTypes.AutoForwardDiff\{nothing, Nothing\}, Nothing, typeof(OrdinaryDiffEqCore.DEFAULT\_PRECS), Val\{:forward\}(), true, nothing, typeof(OrdinaryDiffEqCore.trivial\_limiter!), typeof(OrdinaryDiffEqCore.trivial\_limiter!)\} }
 and returned \texttt{ Success }.
 
 \subsection{Core Run Metadata}
@@ -12,8 +12,8 @@ and returned \texttt{ Success }.
   \item Output directory: \texttt{ results/scm\_verify }
   \item Number of saved time samples: 13
   \item Number of profile snapshots: 1
-  \item Solver accepted/rejected steps: 46 / 0
-  \item RHS evaluations: 6028
+  \item Solver accepted/rejected steps: 39 / 0
+  \item RHS evaluations: 5072
   \item Solver tolerances: $\mathrm{abstol}=1.000 \times 10^{-8}$, $\mathrm{reltol}=1.000 \times 10^{-6}$
 \end{itemize}
 
@@ -51,9 +51,9 @@ Top relaxation coefficient & $\lambda_{top}$ & 0.000000\,s$^{-1}$ \\
   \item Fold-proximity fraction:
   $0.000000\%$
   \item Diffusivity bounds:
-  $K_m \in [0.079174,\,9.569262]~\mathrm{m^2\,s^{-1}}$
+  $K_m \in [0.066692,\,9.530307]~\mathrm{m^2\,s^{-1}}$
   \item Richardson number bounds:
-  $Ri \in [0.035577,\,0.883884]$
+  $Ri \in [0.035577,\,1.028607]$
 \end{itemize}
 
 \subsection{Generated Artifacts}
@@ -97,31 +97,37 @@ Top relaxation coefficient & $\lambda_{top}$ & 0.000000\,s$^{-1}$ \\
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig04_profiles_u_theta_km.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig03b_hovmoller_km_exi.png}}
   \caption{Vertical profiles of U, theta, and Km at representative times}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig05_surface_energy_budget.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig04_profiles_u_theta_km.png}}
   \caption{Surface energy budget components (R\_n, H, G, storage)}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig06_phase_delta_exi.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig05_surface_energy_budget.png}}
   \caption{Phase portrait on regularized manifold (Delta vs e\_xi)}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig07_diffusivity_vs_ri.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig06_phase_delta_exi.png}}
   \caption{Eddy diffusivity response (Km, Kh) versus stability/Richardson number}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig08_fold_proximity.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig07_diffusivity_vs_ri.png}}
   \caption{Fold proximity diagnostics versus time}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig08_fold_proximity.png}}
+  \caption{fig08 fold proximity.png}
 \end{figure}
 
