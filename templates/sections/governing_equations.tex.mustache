@@ -28,7 +28,11 @@ In the vertically collapsed reduced model, the corresponding bulk forcing diagno
 \begin{equation}
 \Delta(U,V,T_s)=\eta\,\gamma\,(U^2+V^2)-K\,G(T_s),
 \end{equation}
-where $\Delta_{\mathrm{col}}$ resolves local shear-stratification competition in $z$, while $\Delta(U,V,T_s)$ captures its state-space projection on the reduced manifold.
+where the bounded thermodynamic closure is
+\begin{equation}
+G(T_s)=\tanh\!\left(\beta\,\frac{T_a-T_s}{T_a}\right),
+\end{equation}
+so $\Delta_{\mathrm{col}}$ resolves local shear-stratification competition in $z$, while $\Delta(U,V,T_s)$ captures its state-space projection on the reduced manifold and shifts downward under nocturnal cooling.
 
 This PDE form is the continuous analogue of the reduced fast-slow model. Mechanical production and buoyancy destruction enter through $\Delta_{\mathrm{col}}$, while the activated gate and nonlinear dissipation preserve well-posedness near the laminar boundary. The background parameter $\delta = \SBLParamDelta\,\mathrm{m}^2\mathrm{s}^{-2}$ establishes the physical floor below which turbulence cannot structurally decouple.
 

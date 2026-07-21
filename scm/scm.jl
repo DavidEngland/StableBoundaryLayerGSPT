@@ -63,7 +63,7 @@ end
     T = promote_type(S, G)
     arg = convert(T, stability_arg)
     g_cap = max(convert(T, g_stability_max), convert(T, 1.0e-12))
-    return g_cap * tanh(arg / g_cap)
+    return g_cap * tanh(arg)
 end
 
 """

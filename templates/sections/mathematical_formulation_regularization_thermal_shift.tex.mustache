@@ -20,8 +20,12 @@ with
 \begin{equation}
 \Delta(U,V,T_s)=\eta\,\gamma\,(U^2+V^2)-K\,G(T_s).
 \end{equation}
+with the bounded stability response
+\begin{equation}
+G(T_s)=\tanh\!\left(\beta\,\frac{T_a-T_s}{T_a}\right),
+\end{equation}
 
-Here, $f$ is the Coriolis frequency, $h$ is the bulk boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant acceleration scale. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The momentum and thermal transport terms scale with $\sqrt{e+\delta}$ to maintain asymptotic consistency with classical mixing-length theory.
+Here, $f$ is the Coriolis frequency, $h$ is the bulk boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant acceleration scale. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The bounded tanh response prevents runaway buoyancy growth under deep inversions, and the momentum and thermal transport terms scale with $\sqrt{e+\delta}$ to maintain asymptotic consistency with classical mixing-length theory.
 
 \begin{remark}
 The activated production factor $\frac{e+\delta}{\sqrt{e+\delta}+\alpha}$ and the Kolmogorov-type dissipation term $-(e+\delta)^{3/2}/l_0$ remove boundary non-Lipschitz behavior while preserving the folded fast-slow geometry. In the singular limit, the reduced branch structure is organized by fold and transcritical sets rather than by a single linear threshold.

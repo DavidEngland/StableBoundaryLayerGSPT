@@ -165,7 +165,8 @@ function gspt_sbl_dynamics!(dx, x, p, t)
     psi = sqrt(phi + 1.0e-15) / (sqrt(phi + 1.0e-15) + alpha_safe)
 
     # 2.2 Physical Auxiliary Functions
-    G_Ts = exp(beta * (Ta - Ts) / Ta) - 1.0
+    # Bounded tanh stability response prevents runaway buoyancy growth under deep inversions.
+    G_Ts = tanh(beta * (Ta - Ts) / Ta)
 
     # Net mechanical production minus buoyancy balance
     shear_prod = eta * gamma_eff * (U^2 + V^2)

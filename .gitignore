@@ -2,7 +2,7 @@ Manifest.toml
 .DS_Store
 
 bak/*.*
-
+media/*.{pdf,pptx}
 results/**/run_*/
 results/**/bifurcation_*/
 reports/generated/**
