@@ -44,6 +44,8 @@ struct SCMParameters{T,W}
     pr_t_base::T
     pr_t_slope::T
     use_dynamic_pr_t::Bool
+    g_stability_max::T
+    k_exchange_min::T
     ell_min_surf::T
     use_ell_floor_surf::Bool
     ts_min::T

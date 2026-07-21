@@ -59,6 +59,13 @@ function _effective_h_scale(p, U_ref::Real, V_ref::Real)
     return (one(T) - weight) * h_local + weight * h_nonlocal
 end
 
+@inline function _bounded_stability_response(stability_arg::S, g_stability_max::G) where {S<:Real,G<:Real}
+    T = promote_type(S, G)
+    arg = convert(T, stability_arg)
+    g_cap = max(convert(T, g_stability_max), convert(T, 1.0e-12))
+    return g_cap * tanh(arg / g_cap)
+end
+
 """
     scm_gspt_tendencies!(dX, X, p, t)
 
@@ -96,6 +103,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
     Pr_t_base = p.pr_t_base
     Pr_t_slope = p.pr_t_slope
     use_dynamic_pr_t = p.use_dynamic_pr_t
+    g_stability_max = hasproperty(p, :g_stability_max) ? convert(Float64, p.g_stability_max) : 1.0
 
     C_skin = p.C_skin
     R_down = p.R_down
@@ -104,6 +112,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
     lambda_s = p.lambda_s
     d_soil = p.d_soil
     K_min_surf = p.k_min_surf
+    K_exchange_min = hasproperty(p, :k_exchange_min) ? convert(Float64, p.k_exchange_min) : 0.0
     ell_min_surf = p.ell_min_surf
     use_ell_floor_surf = p.use_ell_floor_surf
 
@@ -164,7 +173,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
         ell_z = sqrt(ell_z_raw^2 + ell_min_interior^2)
 
         stability_arg = clamp(β_stab * dth_dz * ell_z / theta_a, -40.0, 40.0)
-        G_local = expm1(stability_arg)
+        G_local = _bounded_stability_response(stability_arg, g_stability_max)
 
         # Net Forcing Δ = η * S^2 - K_buoy * G
         S2_local = dU_dz^2 + dV_dz^2
@@ -224,7 +233,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
     ell_eff_surf = use_ell_floor_surf ? sqrt(ell_surf^2 + ell_min_surf^2) : ell_surf
 
     stability_arg_surf = clamp(β_stab * dth_dz_surf * ell_eff_surf / theta_a, -40.0, 40.0)
-    G_surf = expm1(stability_arg_surf)
+    G_surf = _bounded_stability_response(stability_arg_surf, g_stability_max)
 
     S2_surf = dU_dz_surf^2 + dV_dz_surf^2
     Δ_surf = η * S2_surf - K_buoy * G_surf
@@ -243,7 +252,8 @@ function scm_gspt_tendencies!(dX, X, p, t)
     if use_dynamic_pr_t
         Pr_t_surf += Pr_t_slope * tanh(max(zero(T), G_surf))
     end
-    K_h_surf = K_m_surf / max(Pr_t_surf, eps(T))
+    K_h_surf_raw = K_m_surf / max(Pr_t_surf, eps(T))
+    K_h_surf = sqrt(K_h_surf_raw^2 + K_exchange_min^2)
 
     # Surface Anomaly Check
     if T_s < Ts_min || T_s > Ts_max
@@ -256,8 +266,8 @@ function scm_gspt_tendencies!(dX, X, p, t)
         wind_1 = hypot(U[1], V[1])
         T_rad = (R_down / sigma_SB)^0.25
         state_summary = @sprintf(
-            "  - Skin Temp (T_s): %.2f K\n  - Radiative Equilibrium (T_rad): %.2f K\n  - Air Temp (theta_1): %.2f K (z=%.2f m)\n  - Air Temp (theta_2): %.2f K\n  - Wind |V|=%.2f m/s\n  - Surface K_h: %.6f m^2/s",
-            T_s, T_rad, theta_1, dz_surf, theta_2, wind_1, K_h_surf
+            "  - Skin Temp (T_s): %.2f K\n  - Radiative Equilibrium (T_rad): %.2f K\n  - Air Temp (theta_1): %.2f K (z=%.2f m)\n  - Air Temp (theta_2): %.2f K\n  - Wind |V|=%.2f m/s\n  - Surface K_h (raw): %.6f m^2/s\n  - Surface K_h (eff): %.6f m^2/s",
+            T_s, T_rad, theta_1, dz_surf, theta_2, wind_1, K_h_surf_raw, K_h_surf
         )
         throw(SurfaceAnomalyException(Float64(t), Float64(T_s), reason, state_summary))
     end

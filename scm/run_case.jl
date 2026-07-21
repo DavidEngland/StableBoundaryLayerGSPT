@@ -46,6 +46,8 @@ struct SCMParameters{T,W}
     pr_t_base::T
     pr_t_slope::T
     use_dynamic_pr_t::Bool
+    g_stability_max::T
+    k_exchange_min::T
     ell_min_surf::T
     use_ell_floor_surf::Bool
     ts_min::T
@@ -84,6 +86,8 @@ function _usage()
     println("  --pr-t-base <value>                Baseline turbulent Prandtl number")
     println("  --pr-t-slope <value>               Stability response for dynamic Prandtl")
     println("  --use-dynamic-pr-t <true|false>    Enable stability-aware turbulent Prandtl")
+    println("  --g-stability-max <value>          Saturation limit for smooth stability response G")
+    println("  --k-exchange-min <m2/s>            Smooth lower bound for surface thermal exchange")
     println("  --ell-min-surf <meters>            Surface mixing-length floor")
     println("  --use-ell-floor-surf <true|false>  Enable surface mixing-length floor")
     println("  --ts-min <K>                       Lower anomaly-guard surface temperature")
@@ -130,6 +134,8 @@ function parse_args(args::Vector{String})
         "pr_t_base" => 1.0,
         "pr_t_slope" => 2.0,
         "use_dynamic_pr_t" => false,
+        "g_stability_max" => 1.0,
+        "k_exchange_min" => 1.0e-4,
         "ell_min_surf" => 0.10,
         "use_ell_floor_surf" => false,
         "ts_min" => 180.0,
@@ -212,6 +218,12 @@ function parse_args(args::Vector{String})
         elseif a == "--use-dynamic-pr-t" && i < length(args)
             cfg["use_dynamic_pr_t"] = _parse_bool(args[i+1])
             i += 2
+        elseif a == "--g-stability-max" && i < length(args)
+            cfg["g_stability_max"] = parse(Float64, args[i+1])
+            i += 2
+        elseif a == "--k-exchange-min" && i < length(args)
+            cfg["k_exchange_min"] = parse(Float64, args[i+1])
+            i += 2
         elseif a == "--ell-min-surf" && i < length(args)
             cfg["ell_min_surf"] = parse(Float64, args[i+1])
             i += 2
@@ -290,6 +302,8 @@ function _base_case_params(N::Int, dz::Float64)
         "pr_t_base" => 1.0,
         "pr_t_slope" => 2.0,
         "use_dynamic_pr_t" => false,
+        "g_stability_max" => 1.0,
+        "k_exchange_min" => 1.0e-4,
         "ell_min_surf" => 0.10,
         "use_ell_floor_surf" => false,
         "ts_min" => 180.0,
@@ -398,6 +412,8 @@ function build_case(case_name::String, N::Int, dz::Float64; theta_lapse_rate_ove
         d["pr_t_base"],
         d["pr_t_slope"],
         d["use_dynamic_pr_t"],
+        d["g_stability_max"],
+        d["k_exchange_min"],
         d["ell_min_surf"],
         d["use_ell_floor_surf"],
         d["ts_min"],
@@ -459,6 +475,8 @@ function _apply_top_bc_overrides!(p::SCMParameters, theta_top_bc::String, theta_
         p.pr_t_base,
         p.pr_t_slope,
         p.use_dynamic_pr_t,
+        p.g_stability_max,
+        p.k_exchange_min,
         p.ell_min_surf,
         p.use_ell_floor_surf,
         p.ts_min,
@@ -514,6 +532,8 @@ function _apply_runtime_overrides!(p::SCMParameters, cfg)
         Float64(cfg["pr_t_base"]),
         Float64(cfg["pr_t_slope"]),
         Bool(cfg["use_dynamic_pr_t"]),
+        Float64(cfg["g_stability_max"]),
+        Float64(cfg["k_exchange_min"]),
         Float64(cfg["ell_min_surf"]),
         Bool(cfg["use_ell_floor_surf"]),
         Float64(cfg["ts_min"]),
@@ -572,6 +592,8 @@ function _parameter_snapshot(p::SCMParameters)
         "pr_t_base" => p.pr_t_base,
         "pr_t_slope" => p.pr_t_slope,
         "use_dynamic_pr_t" => p.use_dynamic_pr_t,
+        "g_stability_max" => p.g_stability_max,
+        "k_exchange_min" => p.k_exchange_min,
         "ell_min_surf" => p.ell_min_surf,
         "use_ell_floor_surf" => p.use_ell_floor_surf,
         "ts_min" => p.ts_min,

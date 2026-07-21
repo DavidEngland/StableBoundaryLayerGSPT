@@ -188,7 +188,12 @@ sweep-two-layer-envelope:
 	julia --project=. scripts/sweep_two_layer_envelope.jl --ug-min 2.0 --ug-max 15.0 --ug-step 1.0 --duration-hours 6.0 --dt-seconds 300.0 --outdir results/two_layer_gspt
 
 run-gabls1:
-	$(MAKE) scm-all SCM_CASE=gabls1 SCM_OUTDIR=results/gabls1
+	$(MAKE) scm-all \
+		SCM_CASE=gabls1 \
+		SCM_GRID_SIZE=200 \
+		SCM_DZ=2.0 \
+		SCM_DURATION=12.0 \
+		SCM_OUTDIR=results/gabls1
 
 run-idealized-sbl:
 	$(MAKE) scm-all SCM_CASE=idealized_sbl SCM_OUTDIR=results/idealized_sbl

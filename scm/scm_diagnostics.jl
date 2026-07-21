@@ -23,6 +23,11 @@ end
 """Finite-volume mixing length used by the SCM closure."""
 mixing_length(z::Real, l0::Real; kappa::Real=0.4) = (kappa * z) / (1.0 + (kappa * z) / l0)
 
+@inline function bounded_stability_response(stability_arg::Real, g_stability_max::Real)
+    g_cap = max(Float64(g_stability_max), eps(Float64))
+    return g_cap * tanh(Float64(stability_arg) / g_cap)
+end
+
 function effective_h_scale(p, U_ref::Real, V_ref::Real)
     h_local = hasproperty(p, :h) ? Float64(p.h) : 100.0
     use_nonlocal = hasproperty(p, :use_nonlocal_h) && Float64(p.use_nonlocal_h) > 0.5
@@ -99,6 +104,7 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
     Pr_t_base = p.pr_t_base
     Pr_t_slope = p.pr_t_slope
     use_dynamic_pr_t = p.use_dynamic_pr_t
+    g_stability_max = hasproperty(p, :g_stability_max) ? p.g_stability_max : 1.0
 
     Km = zeros(eltype(U), N - 1)
     Kh = zeros(eltype(U), N - 1)
@@ -121,7 +127,7 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
         ell *= exp(-zf / h_eff)
         s2 = dU_dz^2 + dV_dz^2
         arg = clamp(beta * dth_dz * ell / theta_a, -40.0, 40.0)
-        G = expm1(arg)
+        G = bounded_stability_response(arg, g_stability_max)
 
         delta_local = eta * (ell^2) * s2 - K_buoy * ell * G
         Q = (l0 * delta_local)^2 - delta
@@ -172,6 +178,8 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     Pr_t_base = p.pr_t_base
     Pr_t_slope = p.pr_t_slope
     use_dynamic_pr_t = p.use_dynamic_pr_t
+    g_stability_max = hasproperty(p, :g_stability_max) ? p.g_stability_max : 1.0
+    k_exchange_min = hasproperty(p, :k_exchange_min) ? p.k_exchange_min : 0.0
     ell_min_surf = p.ell_min_surf
     use_ell_floor_surf = p.use_ell_floor_surf
 
@@ -183,7 +191,7 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     h_eff_surf = effective_h_scale(p, U[1], V[1])
     ell_surf *= exp(-z_centers[1] / h_eff_surf)
     ell_eff_surf = use_ell_floor_surf ? hypot(ell_surf, ell_min_surf) : ell_surf
-    G_surf = expm1(clamp(beta * dth_dz_surf * ell_eff_surf / theta_a, -40.0, 40.0))
+    G_surf = bounded_stability_response(clamp(beta * dth_dz_surf * ell_eff_surf / theta_a, -40.0, 40.0), g_stability_max)
     Delta_surf = eta * (ell_eff_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * ell_eff_surf * G_surf
     Q_surf = (l0 * Delta_surf)^2 - delta
     e_surf = 0.5 * (Q_surf + hypot(Q_surf, p.xi))
@@ -194,7 +202,8 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     else
         Pr_t_base
     end
-    K_h_surf = K_m_surf / max(Pr_t_surf, eps(Pr_t_surf))
+    K_h_surf_raw = K_m_surf / max(Pr_t_surf, eps(Pr_t_surf))
+    K_h_surf = hypot(K_h_surf_raw, k_exchange_min)
 
     flux_H_surf = K_h_surf * (theta[1] - T_s) / dz
     flux_U_surf = K_m_surf * (U[1] - 0.0) / dz
@@ -254,6 +263,7 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
         ri_max=ri_max,
         monin_obukhov_length=monin_L,
         km_surface=K_m_surf,
+        kh_surface_raw=K_h_surf_raw,
         kh_surface=K_h_surf,
         max_shear=max_shear,
         surface_wind_speed=speed_sfc,

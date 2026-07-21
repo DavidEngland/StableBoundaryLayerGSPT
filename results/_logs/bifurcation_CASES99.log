@@ -951,6 +951,6 @@ Output written on figures/figure_bifurcation_fold_envelope.pdf (1 page, 67228 b
 ytes).
 Transcript written on figures/figure_bifurcation_fold_envelope.log.
 Bifurcation sweep complete
-run_dir=results/CASES99/bifurcation_20260720_175028
-summary=results/CASES99/bifurcation_20260720_175028/bifurcation_summary.json
+run_dir=results/CASES99/bifurcation_20260721_063116
+summary=results/CASES99/bifurcation_20260721_063116/bifurcation_summary.json
 report_fragment=reports/generated/diagnostics/03_bifurcation_sweep.md
