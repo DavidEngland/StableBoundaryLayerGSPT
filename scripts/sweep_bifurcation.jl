@@ -77,12 +77,15 @@ function write_report_fragment(dataset::String, run_dir::String, summary::Abstra
            "- fold_map.csv\n" *
            "- transcritical_envelope.csv\n" *
            "- fold_envelope.csv\n" *
+           "- parameter_sensitivity_envelope.csv\n" *
             "- bifurcation_summary.json\n\n" *
             "## Figure Bundles\n\n" *
             "- figure_bifurcation_transcritical_map (pdf/tex/md/json)\n" *
             "- figure_bifurcation_fold_map (pdf/tex/md/json)\n" *
             "- figure_bifurcation_transcritical_envelope (pdf/tex/md/json)\n" *
-            "- figure_bifurcation_fold_envelope (pdf/tex/md/json)\n"
+            "- figure_bifurcation_fold_envelope (pdf/tex/md/json)\n" *
+            "- figure_bifurcation_transcritical_distance_map (pdf/tex/md/json)\n" *
+            "- figure_bifurcation_parameter_sensitivity_envelope (pdf/tex/md/json)\n"
     write(out_path, text)
     return out_path
 end
@@ -106,12 +109,14 @@ transcritical_map_path = joinpath(run_dir, "transcritical_map.csv")
 fold_map_path = joinpath(run_dir, "fold_map.csv")
 transcritical_env_path = joinpath(run_dir, "transcritical_envelope.csv")
 fold_env_path = joinpath(run_dir, "fold_envelope.csv")
+parameter_sensitivity_env_path = joinpath(run_dir, "parameter_sensitivity_envelope.csv")
 summary_path = joinpath(run_dir, "bifurcation_summary.json")
 
 CSV.write(transcritical_map_path, analysis.transcritical_map)
 CSV.write(fold_map_path, analysis.fold_map)
 CSV.write(transcritical_env_path, analysis.transcritical_envelope)
 CSV.write(fold_env_path, analysis.fold_envelope)
+CSV.write(parameter_sensitivity_env_path, analysis.parameter_sensitivity_envelope)
 
 git_commit = get(ENV, "GIT_COMMIT", "unknown")
 provenance = StableBoundaryLayerGSPT.Provenance.build_provenance_record(
@@ -132,6 +137,7 @@ summary_payload = Dict(
         "fold_map" => fold_map_path,
         "transcritical_envelope" => transcritical_env_path,
         "fold_envelope" => fold_env_path,
+        "parameter_sensitivity_envelope" => parameter_sensitivity_env_path,
     ),
     "provenance" => provenance,
 )

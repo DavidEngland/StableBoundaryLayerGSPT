@@ -613,6 +613,14 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
             title="Trajectory flow field mapping the non-folding boundary crossing. The phase portraits confirm that the system transitions smoothly onto the regularized background laminar floor without undergoing an interior saddle-node collapse.",
             label="fig:transcritical_map",
         ),
+        "figure_bifurcation_transcritical_distance_map" => (
+            title="Distance-to-threshold map for the transcritical boundary crossing. Smaller values indicate states close to the critical exchange surface where the laminar branch changes stability.",
+            label="fig:transcritical_distance_map",
+        ),
+        "figure_bifurcation_parameter_sensitivity_envelope" => (
+            title="Sensitivity envelope for transcritical threshold statistics under coupled parameter scaling. The median and extrema summarize threshold migration as closure controls are perturbed.",
+            label="fig:parameter_sensitivity_envelope",
+        ),
         "4d_sbl_diagnostics" => (
             title="Complete 4D time-series trajectories and phase-space projections for the nocturnal stable boundary layer simulated under CASES99 conditions. The panels illustrate the rapid initial turbulent decay followed by the slow ageostrophic development of the nocturnal low-level jet.",
             label="fig:sbl_diagnostics",
@@ -693,7 +701,9 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
     preferred_stems = [
         "figure_gspt_manifold_tikz",
         "figure_bifurcation_transcritical_map",
+        "figure_bifurcation_transcritical_distance_map",
         "figure_bifurcation_transcritical_envelope",
+        "figure_bifurcation_parameter_sensitivity_envelope",
         "figure_bifurcation_fold_map",
         "figure_bifurcation_fold_envelope",
         "4d_sbl_diagnostics",

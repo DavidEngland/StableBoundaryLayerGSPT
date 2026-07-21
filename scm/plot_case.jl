@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-
+# scm/plot_case.jl: Generate diagnostic figures from a StableBoundaryLayerGSPT SCM payload
 using Printf
 using Statistics
 import JLD2

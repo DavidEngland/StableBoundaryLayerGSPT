@@ -67,6 +67,13 @@ while the fast subsystem can remain locally normally hyperbolic away from the is
 \paragraph{3. Physical and Modeling Implications.}
 This separation removes the false equivalence between a regularized boundary intersection ($e_\xi^*$ crossing at $e=0$) and a thermodynamic fold catastrophe. The distinction is essential for interpreting intermittency, collapse-recovery asymmetry, and relaxation oscillations without introducing ad hoc switching rules.
 
+\paragraph{4. Surface Temperature Relaxation Oscillations.}
+With surface skin temperature $T_s$ acting as the sole slow thermodynamic variable governed by the surface heat capacity $C_s$,
+\begin{equation}
+C_s \frac{\mathrm{d}T_s}{\mathrm{d}t} = R_{\mathrm{net}}(T_s) + H(T_s,e) + G_{\mathrm{soil}}(T_s),
+\end{equation}
+the combined $(U,V,T_s,e)$ phase space exhibits canonical relaxation oscillations. On the active sheet ($e^*>0$), downward sensible heat flux $H>0$ buffers radiative cooling and produces a slow thermal decay ($T_s \downarrow$). As $T_s$ falls, stability $G(T_s)$ grows until $\Delta$ crosses the collapse threshold. Upon fast quenching ($e \to 0$), sensible heat supply terminates ($H \to 0$), the surface cools rapidly, and the decoupled flow aloft accelerates ($U^2+V^2 \uparrow$). The resulting shear buildup eventually restores $\Delta>0$, driving a fast bursting transition ($e \to e^*$) and closing the relaxation loop without artificial numerical resets.
+
 \begin{proposition}[Thermal Downward Translation]
 \label{prop:thermal_shift_proof}
 Let the surface stability function satisfy $\partial G / \partial T_s < 0$ everywhere in the physical domain. Continuous radiative cooling of the surface skin temperature ($T_s \downarrow$) induces a uniform, monotonic downward geometric translation of the active critical manifold along the fast coordinate axis.

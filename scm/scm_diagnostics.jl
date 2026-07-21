@@ -1,3 +1,5 @@
+#!/usr/bin/env julia
+# scm/scm_diagnostics.jl: Core StableBoundaryLayerGSPT SCM diagnostic calculations
 using LinearAlgebra
 using Statistics
 

@@ -266,6 +266,13 @@ function _build_grid(N::Int, dz::Float64)
     return z_centers, z_faces
 end
 
+function _require_kelvin_temperature(value::Real, label::AbstractString; floor::Float64=100.0)
+    temp = Float64(value)
+    isfinite(temp) || error("$(label) must be finite Kelvin, got $(value)")
+    temp >= floor || error("$(label)=$(temp) K looks like a missing Kelvin offset or sign error; expected a positive Kelvin temperature")
+    return temp
+end
+
 function _base_case_params(N::Int, dz::Float64)
     z_centers, z_faces = _build_grid(N, dz)
     ws = SCMWorkspace(zeros(N - 1), zeros(N - 1))
@@ -378,6 +385,12 @@ function build_case(case_name::String, N::Int, dz::Float64; theta_lapse_rate_ove
     else
         error("Unknown case: $(case_name). Supported: gabls1, idealized_sbl, sheba")
     end
+
+    d["theta_a"] = _require_kelvin_temperature(d["theta_a"], "theta_a")
+    d["T_deep"] = _require_kelvin_temperature(d["T_deep"], "T_deep")
+    d["theta_top"] = _require_kelvin_temperature(d["theta_top"], "theta_top")
+    Ts0 = _require_kelvin_temperature(Ts0, "Ts0")
+    minimum(theta0) >= 100.0 || error("Initial theta profile contains sub-Kelvin/negative values; check the lapse-rate sign and temperature units")
 
     p = SCMParameters(
         d["N"],

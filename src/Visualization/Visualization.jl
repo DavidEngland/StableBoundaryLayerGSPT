@@ -4,15 +4,19 @@ module Visualization
 
 using Dates
 using JSON3
+using SHA
 
 export generate_figure_bundle, generate_bifurcation_figure_bundles
+
+const FIGURES_DIR = "figures"
+const REPORTS_FIGURES_DIR = joinpath("reports", "generated", "figures")
 
 function _tex_document(plot_body::String; extra_axis_opts::String="")
     return """
 \\documentclass[tikz,border=3pt]{standalone}
 \\usepackage{pgfplots}
 \\pgfplotsset{compat=1.18}
-\\usepgfplotslibrary{colormaps}
+\\usepgfplotslibrary{colormaps,fillbetween}
 \\begin{document}
 \\begin{tikzpicture}
 \\begin{axis}[
@@ -32,24 +36,113 @@ end
 function _compile_tex_to_pdf(tex_path::String)
     tex_dir = dirname(tex_path)
     pdf_path = replace(tex_path, ".tex" => ".pdf")
+    compile_log = replace(tex_path, ".tex" => ".compile.log")
 
     tectonic = Sys.which("tectonic")
-    if tectonic !== nothing
-        try
-            run(`$(tectonic) --outdir $(tex_dir) $(tex_path)`)
-            return isfile(pdf_path)
-        catch
-            # Fall through to pdflatex backend if tectonic throws an execution error
+    pdflatex = Sys.which("pdflatex")
+    compiled_ok = false
+
+    mktempdir() do tmpdir
+        if tectonic !== nothing
+            ok = open(compile_log, "w") do io
+                success(pipeline(`$(tectonic) --outdir $(tmpdir) $(tex_path)`, stdout=io, stderr=io))
+            end
+            tmp_pdf = joinpath(tmpdir, basename(pdf_path))
+            if ok && isfile(tmp_pdf) && filesize(tmp_pdf) > 0
+                cp(tmp_pdf, pdf_path; force=true)
+                compiled_ok = true
+            end
+        end
+
+        if !compiled_ok && pdflatex !== nothing
+            ok = open(compile_log, tectonic === nothing ? "w" : "a") do io
+                if tectonic !== nothing
+                    write(io, "\n--- pdflatex fallback ---\n")
+                end
+                success(
+                    pipeline(
+                        `$(pdflatex) -interaction=nonstopmode -halt-on-error -output-directory $(tmpdir) $(tex_path)`,
+                        stdout=io,
+                        stderr=io,
+                    ),
+                )
+            end
+            tmp_pdf = joinpath(tmpdir, basename(pdf_path))
+            if ok && isfile(tmp_pdf) && filesize(tmp_pdf) > 0
+                cp(tmp_pdf, pdf_path; force=true)
+                compiled_ok = true
+            end
         end
     end
 
-    pdflatex = Sys.which("pdflatex")
-    if pdflatex !== nothing
-        run(`$(pdflatex) -interaction=nonstopmode -halt-on-error -output-directory $(tex_dir) $(tex_path)`)
-        return isfile(pdf_path)
+    if compiled_ok
+        return true
     end
 
-    error("No TeX compiler found. Install pdflatex or tectonic to generate PDF figures.")
+    if tectonic === nothing && pdflatex === nothing
+        error("No TeX compiler found. Install pdflatex or tectonic to generate PDF figures.")
+    end
+    error("Failed to compile $(tex_path). See $(compile_log) for diagnostics.")
+end
+
+function _sha256_file(path::String)
+    return bytes2hex(sha256(read(path)))
+end
+
+function _validate_csv_columns(csv_path::String, required_columns::Vector{String})
+    header = try
+        open(readline, csv_path)
+    catch
+        error("Could not read CSV header from $(csv_path)")
+    end
+    present_columns = split(chomp(header), ',')
+    missing_columns = setdiff(required_columns, present_columns)
+    isempty(missing_columns) ||
+        error("CSV $(csv_path) is missing required columns: $(join(missing_columns, ", "))")
+end
+
+function _csv_row_count(csv_path::String)
+    rows = 0
+    open(csv_path, "r") do io
+        for _ in eachline(io)
+            rows += 1
+        end
+    end
+    return max(rows - 1, 0)
+end
+
+function _auto_each_nth(npoints::Integer)
+    if npoints > 500_000
+        return 10
+    elseif npoints > 100_000
+        return 5
+    end
+    return 1
+end
+
+function _build_figure(
+    ;
+    figure_id::String,
+    dataset::String,
+    caption::String,
+    description::String,
+    source_csv::String,
+    plot_body::String,
+    extra_axis_opts::String,
+    provenance::AbstractDict{String,<:Any},
+)
+    tex_path = joinpath(FIGURES_DIR, "$(figure_id).tex")
+    write(tex_path, _tex_document(plot_body; extra_axis_opts=extra_axis_opts))
+    _compile_tex_to_pdf(tex_path) || error("Failed to compile $(tex_path)")
+    return _write_figure_sidecars(
+        figure_id=figure_id,
+        dataset=dataset,
+        caption=caption,
+        description=description,
+        source_csv=source_csv,
+        tex_path=tex_path,
+        provenance=provenance,
+    )
 end
 
 function _write_figure_sidecars(
@@ -83,6 +176,8 @@ function _write_figure_sidecars(
         "script" => "scripts/sweep_bifurcation.jl",
         "generated" => string(Dates.now()),
         "source_csv" => source_csv,
+        "source_csv_sha256" => _sha256_file(source_csv),
+        "runtime" => Dict("julia_version" => string(VERSION), "hostname" => get(ENV, "HOSTNAME", "unknown")),
         "paths" => Dict("pdf" => pdf_path, "tex" => tex_path, "md" => md_path, "json" => json_path),
         "provenance" => provenance,
     )
@@ -91,33 +186,46 @@ function _write_figure_sidecars(
         JSON3.pretty(io, sidecar)
     end
 
-    mkpath("reports/generated/figures")
-    cp(pdf_path, joinpath("reports/generated/figures", basename(pdf_path)); force=true)
-    cp(tex_path, joinpath("reports/generated/figures", basename(tex_path)); force=true)
-    cp(md_path, joinpath("reports/generated/figures", basename(md_path)); force=true)
-    cp(json_path, joinpath("reports/generated/figures", basename(json_path)); force=true)
+    mkpath(REPORTS_FIGURES_DIR)
+    for src in (pdf_path, tex_path, md_path, json_path)
+        dst = joinpath(REPORTS_FIGURES_DIR, basename(src))
+        try
+            cp(src, dst; force=true)
+        catch err
+            @warn "Failed to copy figure artifact" source=src destination=dst exception=err
+        end
+    end
 
     return Dict("pdf" => pdf_path, "tex" => tex_path, "md" => md_path, "json" => json_path)
 end
 
 """Generate TikZ/PDF figure bundles for bifurcation maps and uncertainty envelopes."""
 function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, provenance::AbstractDict{String,<:Any})
-    mkpath("figures")
+    mkpath(FIGURES_DIR)
 
     trans_map_csv = joinpath(run_dir, "transcritical_map.csv")
     fold_map_csv = joinpath(run_dir, "fold_map.csv")
     trans_env_csv = joinpath(run_dir, "transcritical_envelope.csv")
     fold_env_csv = joinpath(run_dir, "fold_envelope.csv")
+    sensitivity_env_csv = joinpath(run_dir, "parameter_sensitivity_envelope.csv")
 
-    all(isfile, [trans_map_csv, fold_map_csv, trans_env_csv, fold_env_csv]) ||
+    all(isfile, [trans_map_csv, fold_map_csv, trans_env_csv, fold_env_csv, sensitivity_env_csv]) ||
         error("Missing required bifurcation CSV artifacts in $(run_dir)")
+
+    _validate_csv_columns(trans_map_csv, ["S", "Gamma", "Delta", "distance_to_transcritical"])
+    _validate_csv_columns(fold_map_csv, ["Ts", "S", "H"])
+    _validate_csv_columns(trans_env_csv, ["S", "gamma_c_p05", "gamma_c_p50", "gamma_c_p95"])
+    _validate_csv_columns(fold_env_csv, ["Ts_p50", "S_fold_p50"])
+    _validate_csv_columns(sensitivity_env_csv, ["scale", "gamma_c_min", "gamma_c_p50", "gamma_c_max"])
+
+    trans_map_nth = _auto_each_nth(_csv_row_count(trans_map_csv))
+    fold_map_nth = _auto_each_nth(_csv_row_count(fold_map_csv))
 
     bundles = Dict{String,Any}()
 
     # Figure A: transcritical map with viridis shading and downsampling safeguard
     fig_a = "figure_bifurcation_transcritical_map"
-    tex_a = joinpath("figures", "$(fig_a).tex")
-    rel_a = relpath(trans_map_csv, dirname(tex_a))
+        rel_a = abspath(trans_map_csv)
     opts_a = "xlabel={\$S\$}, ylabel={\$\\Gamma\$}, colorbar, colormap name=viridis, title={Transcritical Transition Boundary}"
     plot_a = """
 \\addplot[
@@ -125,27 +233,25 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
   mark=*,
   mark size=0.65pt,
   filter discard warning=false,
-  each nth point=1, % Set to >1 (e.g., 5 or 10) if TeX running out of memory on high-density data sweeps
+    each nth point=$(trans_map_nth),
   scatter,
   scatter src=explicit,
 ] table[x=S,y=Gamma,meta=Delta,col sep=comma] {$(rel_a)};
 """
-    write(tex_a, _tex_document(plot_a; extra_axis_opts=opts_a))
-    _compile_tex_to_pdf(tex_a) || error("Failed to compile $(tex_a)")
-    bundles[fig_a] = _write_figure_sidecars(
+        bundles[fig_a] = _build_figure(
         figure_id=fig_a,
         dataset=dataset,
         caption="Transcritical map in (S, Gamma) space colored by Delta.",
         description="Synthetic sweep map identifying turbulent/laminar boundary geometry.",
         source_csv=trans_map_csv,
-        tex_path=tex_a,
+                plot_body=plot_a,
+                extra_axis_opts=opts_a,
         provenance=provenance,
     )
 
     # Figure B: fold map with manifold projection labels
     fig_b = "figure_bifurcation_fold_map"
-    tex_b = joinpath("figures", "$(fig_b).tex")
-    rel_b = relpath(fold_map_csv, dirname(tex_b))
+        rel_b = abspath(fold_map_csv)
     opts_b = "xlabel={\$T_s\$ (K)}, ylabel={\$S\$}, colorbar, colormap name=viridis, title={Fold Bifurcation Manifold Projection}"
     plot_b = """
 \\addplot[
@@ -153,66 +259,111 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
   mark=*,
   mark size=0.65pt,
   filter discard warning=false,
+    each nth point=$(fold_map_nth),
   scatter,
   scatter src=explicit,
 ] table[x=Ts,y=S,meta=H,col sep=comma] {$(rel_b)};
 """
-    write(tex_b, _tex_document(plot_b; extra_axis_opts=opts_b))
-    _compile_tex_to_pdf(tex_b) || error("Failed to compile $(tex_b)")
-    bundles[fig_b] = _write_figure_sidecars(
+        bundles[fig_b] = _build_figure(
         figure_id=fig_b,
         dataset=dataset,
         caption="Fold map in (Ts, S) space colored by manifold proxy H.",
         description="Synthetic reduced-manifold fold diagnostic map.",
         source_csv=fold_map_csv,
-        tex_path=tex_b,
+                plot_body=plot_b,
+                extra_axis_opts=opts_b,
         provenance=provenance,
     )
 
     # Figure C: transcritical uncertainty envelope
     fig_c = "figure_bifurcation_transcritical_envelope"
-    tex_c = joinpath("figures", "$(fig_c).tex")
-    rel_c = relpath(trans_env_csv, dirname(tex_c))
+    rel_c = abspath(trans_env_csv)
     opts_c = "xlabel={\$S\$}, ylabel={\$\\gamma_c\$}, legend pos=north west, title={Transcritical Uncertainty Bands}"
     plot_c = """
+\\addplot[name path=p95, draw=none] table[x=S,y=gamma_c_p95,col sep=comma] {$(rel_c)};
+\\addplot[name path=p05, draw=none] table[x=S,y=gamma_c_p05,col sep=comma] {$(rel_c)};
+\\addplot[blue!20, fill opacity=0.35] fill between[of=p95 and p05];
+\\addlegendentry{p05--p95}
 \\addplot[thick, black] table[x=S,y=gamma_c_p50,col sep=comma] {$(rel_c)};
 \\addlegendentry{median}
-\\addplot[dashed, blue] table[x=S,y=gamma_c_p05,col sep=comma] {$(rel_c)};
-\\addlegendentry{p05}
-\\addplot[dashed, red] table[x=S,y=gamma_c_p95,col sep=comma] {$(rel_c)};
-\\addlegendentry{p95}
 """
-    write(tex_c, _tex_document(plot_c; extra_axis_opts=opts_c))
-    _compile_tex_to_pdf(tex_c) || error("Failed to compile $(tex_c)")
-    bundles[fig_c] = _write_figure_sidecars(
+    bundles[fig_c] = _build_figure(
         figure_id=fig_c,
         dataset=dataset,
-        caption="Transcritical threshold uncertainty envelope with p05/p50/p95 bands.",
+        caption="Transcritical threshold uncertainty envelope with shaded p05--p95 band and median curve.",
         description="Monte Carlo envelope for Gamma_c(S).",
         source_csv=trans_env_csv,
-        tex_path=tex_c,
+        plot_body=plot_c,
+        extra_axis_opts=opts_c,
         provenance=provenance,
     )
 
     # Figure D: fold-point uncertainty summary
     fig_d = "figure_bifurcation_fold_envelope"
-    tex_d = joinpath("figures", "$(fig_d).tex")
-    rel_d = relpath(fold_env_csv, dirname(tex_d))
+    rel_d = abspath(fold_env_csv)
     opts_d = "xlabel={\$T_{s,\\mathrm{p50}}\$ (K)}, ylabel={\$S_{\\mathrm{fold},\\mathrm{p50}}\$}, legend pos=south east, title={Fold-Point Median Coordinates}"
     plot_d = """
 \\addplot[only marks, mark=*, mark size=2.2pt, blue]
   table[x=Ts_p50,y=S_fold_p50,col sep=comma] {$(rel_d)};
 \\addlegendentry{branch medians}
 """
-    write(tex_d, _tex_document(plot_d; extra_axis_opts=opts_d))
-    _compile_tex_to_pdf(tex_d) || error("Failed to compile $(tex_d)")
-    bundles[fig_d] = _write_figure_sidecars(
+    bundles[fig_d] = _build_figure(
         figure_id=fig_d,
         dataset=dataset,
         caption="Fold-point medians in (Ts, S) with branch-wise uncertainty CSV sidecars.",
         description="Summary of fold-point uncertainty for plus/minus branches.",
         source_csv=fold_env_csv,
-        tex_path=tex_d,
+        plot_body=plot_d,
+        extra_axis_opts=opts_d,
+        provenance=provenance,
+    )
+
+    # Figure E: transcritical distance map to highlight near-threshold bands.
+    fig_e = "figure_bifurcation_transcritical_distance_map"
+        rel_e = abspath(trans_map_csv)
+    opts_e = "xlabel={\$S\$}, ylabel={\$\\Gamma\$}, colorbar, colormap name=viridis, title={Transcritical Distance Field}"
+    plot_e = """
+\\addplot[
+  only marks,
+  mark=square*,
+  mark size=0.65pt,
+  filter discard warning=false,
+    each nth point=$(trans_map_nth),
+  scatter,
+  scatter src=explicit,
+] table[x=S,y=Gamma,meta=distance_to_transcritical,col sep=comma] {$(rel_e)};
+"""
+        bundles[fig_e] = _build_figure(
+        figure_id=fig_e,
+        dataset=dataset,
+        caption="Transcritical distance field in (S, Gamma) space using absolute distance to Delta=0.",
+        description="Heatmap-style scatter highlighting near-threshold regions for boundary-crossing transitions.",
+        source_csv=trans_map_csv,
+                plot_body=plot_e,
+                extra_axis_opts=opts_e,
+        provenance=provenance,
+    )
+
+    # Figure F: parameter-sensitivity envelope for transcritical thresholds.
+    fig_f = "figure_bifurcation_parameter_sensitivity_envelope"
+    rel_f = abspath(sensitivity_env_csv)
+    opts_f = "xlabel={scale multiplier}, ylabel={critical threshold}, legend pos=north west, title={Parameter Sensitivity Envelope}"
+    plot_f = """
+\\addplot[name path=gmax, draw=none] table[x=scale,y=gamma_c_max,col sep=comma] {$(rel_f)};
+\\addplot[name path=gmin, draw=none] table[x=scale,y=gamma_c_min,col sep=comma] {$(rel_f)};
+\\addplot[red!20, fill opacity=0.35] fill between[of=gmax and gmin];
+\\addlegendentry{min--max}
+\\addplot[thick, black] table[x=scale,y=gamma_c_p50,col sep=comma] {$(rel_f)};
+\\addlegendentry{gamma\\_c p50}
+"""
+    bundles[fig_f] = _build_figure(
+        figure_id=fig_f,
+        dataset=dataset,
+        caption="Parameter-sensitivity envelope with shaded min--max band and median curve across scale multipliers.",
+        description="Sensitivity of transcritical threshold statistics to coupled parameter scaling.",
+        source_csv=sensitivity_env_csv,
+        plot_body=plot_f,
+        extra_axis_opts=opts_f,
         provenance=provenance,
     )
 
@@ -221,15 +372,15 @@ end
 
 """Generate figure text artifacts and machine-readable metadata sidecar."""
 function generate_figure_bundle(dataset::String, diagnostics::AbstractDict{String,<:Any}, provenance::AbstractDict{String,<:Any})
-    mkpath("figures")
-    mkpath("reports/generated/figures")
+    mkpath(FIGURES_DIR)
+    mkpath(REPORTS_FIGURES_DIR)
 
     figure_id = "figure01"
     caption = "Phase-space diagnostic summary for $(dataset)."
 
-    md_path = joinpath("figures", "$(figure_id).md")
-    tex_path = joinpath("figures", "$(figure_id).tex")
-    json_path = joinpath("figures", "$(figure_id).json")
+    md_path = joinpath(FIGURES_DIR, "$(figure_id).md")
+    tex_path = joinpath(FIGURES_DIR, "$(figure_id).tex")
+    json_path = joinpath(FIGURES_DIR, "$(figure_id).json")
     ri_mean = diagnostics["ri_mean"]
     tke_mean = diagnostics["tke_mean"]
 
@@ -248,8 +399,8 @@ function generate_figure_bundle(dataset::String, diagnostics::AbstractDict{Strin
         JSON3.pretty(io, meta)
     end
 
-    cp(md_path, joinpath("reports/generated/figures", basename(md_path)); force=true)
-    cp(tex_path, joinpath("reports/generated/figures", basename(tex_path)); force=true)
+    cp(md_path, joinpath(REPORTS_FIGURES_DIR, basename(md_path)); force=true)
+    cp(tex_path, joinpath(REPORTS_FIGURES_DIR, basename(tex_path)); force=true)
 
     return Dict("md" => md_path, "tex" => tex_path, "json" => json_path)
 end

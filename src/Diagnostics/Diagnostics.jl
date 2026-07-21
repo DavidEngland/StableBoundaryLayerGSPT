@@ -58,6 +58,7 @@ function synthetic_bifurcation_analysis(
                     S=s,
                     Gamma=gamma,
                     Delta=delta,
+                    distance_to_transcritical=abs(delta),
                     e_star=e_star,
                     regime=regime,
                     near_transcritical=abs(delta) <= trans_tol,
@@ -82,6 +83,7 @@ function synthetic_bifurcation_analysis(
                     S=s,
                     H=h,
                     dH_dTs=d_h,
+                    fold_distance=hypot(h, d_h),
                     near_fold=(abs(h) <= h_tol) && (abs(d_h) <= dh_tol),
                 ),
             )
@@ -132,6 +134,30 @@ function synthetic_bifurcation_analysis(
     end
     transcritical_envelope = DataFrame(envelope_rows)
 
+    # Parameter-sensitivity envelope for critical transcritical threshold.
+    sensitivity_scale = collect(range(0.7, 1.3; length=max(ngrid, 15)))
+    sensitivity_rows = NamedTuple[]
+    for scale in sensitivity_scale
+        sigma_i = max(1e-6, sigma0 * scale)
+        k_i = max(1e-6, k0 * scale)
+        alpha_i = max(1e-6, alpha0 * scale)
+
+        gamma_curve = (sigma_i / k_i) .* (s_grid .^ 2)
+        push!(
+            sensitivity_rows,
+            (
+                scale=scale,
+                sigma=sigma_i,
+                K=k_i,
+                alpha=alpha_i,
+                gamma_c_min=minimum(gamma_curve),
+                gamma_c_p50=quantile(gamma_curve, 0.50),
+                gamma_c_max=maximum(gamma_curve),
+            ),
+        )
+    end
+    parameter_sensitivity_envelope = DataFrame(sensitivity_rows)
+
     fold_envelope = DataFrame(
         branch=["plus", "minus"],
         Ts_p05=[quantile(ts_plus_samples, 0.05), quantile(ts_minus_samples, 0.05)],
@@ -160,6 +186,7 @@ function synthetic_bifurcation_analysis(
         fold_map=fold_map,
         transcritical_envelope=transcritical_envelope,
         fold_envelope=fold_envelope,
+        parameter_sensitivity_envelope=parameter_sensitivity_envelope,
         summary=summary,
     )
 end
