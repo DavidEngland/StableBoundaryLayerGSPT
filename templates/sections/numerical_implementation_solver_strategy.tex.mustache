@@ -6,7 +6,7 @@ The reduced GSPT-SBL system in Equation~\eqref{eq:mathematical_full_system} is h
 \subsection{Mathematical Analysis of the Off-Diagonal Coupling Singularity}
 \label{subsec:singularity_analysis}
 
-Under the linear tracking framework, the fast TKE coordinate relaxes without internal square-root singularities. However, classical mixing-length theory dictates that the macroscale momentum and thermal transport closures scale with the radical $\sqrt{e+\delta}$. Let $\varphi \coloneqq e + \delta$ represent the non-negative shifted TKE coordinate. When tracking the system Jacobian matrix $J$, differentiating the slow zonal momentum tendency ($dU/dt$) with respect to this fast coordinate yields:
+Under the regularized 4D framework, the fast subsystem is locally Lipschitz at the laminar boundary, but the slow transport closures still scale with the radical $\sqrt{e+\delta}$. Let $\varphi \coloneqq e + \delta$ represent the non-negative shifted TKE coordinate. When tracking the system Jacobian matrix $J$, differentiating the slow zonal momentum tendency ($dU/dt$) with respect to this fast coordinate yields:
 
 \begin{equation}
 J_{\text{coupling}} = \frac{\partial}{\partial \varphi} \left( \frac{dU}{dt} \right) = -C_D \frac{\sqrt{U^2+V^2}}{h_{\mathrm{eff}}} \frac{U}{2\sqrt{\varphi}}.
@@ -26,16 +26,16 @@ This off-diagonal singularity induces severe structural stiffness across the ful
 
 If a numerical trial step drives the fast state below the shifted floor, the diagnostic closures become ill-defined. Naive algebraic clipping (such as $e = \max(-\delta, e)$) drops the smooth vector field to a non-differentiable $C^0$ continuity, which disrupts the tracking routines of stiff implicit solvers and triggers step-rejection loops.
 
-To resolve this, the implementation incorporates a smooth safeguard floor gate near $e = - \delta$, ensuring that the phase space remains forward-invariant without introducing discontinuous projections. We define the state-dependent gate using a smooth activation function:
+To resolve this, the implementation incorporates a smooth safeguard floor gate near $e = - \delta$, ensuring that the phase space remains forward-invariant without introducing discontinuous projections. We define the state-dependent gate using the regularized activation function:
 \begin{equation}
-\Psi(e+\delta; \alpha) = \frac{1}{2} \left[ 1 + \tanh\left( \frac{e + \delta - \alpha}{\alpha} \right) \right],
+\Psi(e+\delta; \alpha) = \frac{\sqrt{e+\delta}}{\sqrt{e+\delta}+\alpha},
 \label{eq:smooth_gate}
 \end{equation}
 where $\alpha > 0$ represents a small numerical safety scale chosen such that $\alpha \sim 10^{-2}\delta$.
 
-Incorporating this gate directly into the linear fast tracking dynamics yields:
+Incorporating this gate directly into the fast dynamics yields:
 \begin{equation}
-\varepsilon\frac{de}{dt} = \Psi(e+\delta;\alpha)\,l_0\,\Delta(\mathbf{y}) - (e+\delta).
+\varepsilon\frac{de}{dt} = l_0\,\Delta(\mathbf{y})\,(e+\delta)\,\Psi(e+\delta;\alpha) + \beta(e+\delta) - \frac{(e+\delta)^{3/2}}{l_0}.
 \label{eq:gated_fast_system}
 \end{equation}
 This formulation ensures that the solver interacts with an infinitely differentiable $C^\infty$ right-hand side across all regime transitions.
@@ -44,7 +44,7 @@ This formulation ensures that the solver interacts with an infinitely differenti
 \begin{enumerate}
     \item \textbf{Asymptotic Consistency:} For active turbulent states where $(e+\delta) \gg \alpha$, the gate approaches unity exponentially fast:
     \begin{equation}
-    \Psi(e+\delta; \alpha) = 1 - \mathcal{O}\left( e^{-2(e+\delta)/\alpha} \right),
+    \Psi(e+\delta; \alpha) = 1 - \mathcal{O}\left( \alpha\,(e+\delta)^{-1/2} \right),
     \end{equation}
     fully recovering the exact physical GSPT dynamics.
     \item \textbf{Singularity Interception:} As the system tracks toward the laminar floor ($e \to -\delta$), the shifted variable $\varphi \to 0$. Because $\alpha > 0$, the gate $\Psi$ rapidly vanishes, clamping the fast equation and preventing the coordinate from ever entering the zero-state neighborhood where the off-diagonal transport derivatives in Eq.~\eqref{eq:coupling_jacobian_element} diverge.
@@ -156,7 +156,7 @@ function gspt_sbl_dynamics!(dx, x, p, t)
 
     # 2.1 Smooth Safeguard Floor Gate
     # Suppresses off-diagonal coupling singularities when phi -> 0
-    psi = 0.5 * (1.0 + tanh((phi - alpha_safe) / alpha_safe))
+    psi = sqrt(phi + 1.0e-15) / (sqrt(phi + 1.0e-15) + alpha_safe)
 
     # 2.2 Physical Auxiliary Functions
     G_Ts = exp(beta * (Ta - Ts) / Ta) - 1.0
@@ -176,8 +176,8 @@ function gspt_sbl_dynamics!(dx, x, p, t)
     G  = lambda * (Ts - Tdeep) / d_soil
 
     # 2.3 Evaluated Tendencies
-    # Fast TKE Equation (Linear tracking with smooth safeguard floor gate)
-    dx[1] = (1.0 / epsilon) * (psi * l0 * Delta - phi)
+    # Fast TKE Equation (activated production + nonlinear dissipation)
+    dx[1] = (1.0 / epsilon) * (l0 * Delta * phi * psi + beta * phi - (phi^(3/2)) / l0)
 
     # Slow Momentum and Thermodynamic Equations
     dx[2] = f_cor * (V - Vg) - gamma * sqrt_phi_reg * U

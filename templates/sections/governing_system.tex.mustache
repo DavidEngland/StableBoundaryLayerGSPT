@@ -7,12 +7,16 @@ We model the nocturnal stable boundary layer as a four-dimensional fast-slow sys
 \end{equation}
 The state variables are turbulent kinetic energy coordinate $e$, horizontal wind components $(U,V)$, and skin temperature $T_s$.
 
+Define the shifted coordinate $\tilde e \coloneqq e+\delta \ge 0$ and the forcing diagnostic
+\begin{equation}
+\Delta(U,V,T_s) \coloneqq \eta\,\gamma\,(U^2+V^2)-K\,G(T_s).
+\end{equation}
 The governing ODEs are
 \begin{align}
-\varepsilon \frac{de}{dt} &= l_0\left[\eta\gamma(U^2+V^2) - K G(T_s)\right]\sqrt{e+\delta} - (e+\delta), \label{eq:gspt_fast}\\
-\frac{dU}{dt} &= f(V-V_g) - \gamma\sqrt{e+\delta}\,U, \label{eq:gspt_slow_u}\\
-\frac{dV}{dt} &= -f(U-U_g) - \gamma\sqrt{e+\delta}\,V, \label{eq:gspt_slow_v}\\
-\frac{dT_s}{dt} &= \frac{1}{C_s}\left[R_{\downarrow} - \sigma T_s^4 - \rho c_p C_H\sqrt{e+\delta}(T_s-T_a) - \frac{K_g}{d_g}(T_s-T_g)\right]. \label{eq:gspt_slow_ts}
+\varepsilon \frac{de}{dt} &= l_0\,\Delta(U,V,T_s)\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right) + \beta\tilde e - \frac{\tilde e^{3/2}}{l_0}, \label{eq:gspt_fast}\\
+\frac{dU}{dt} &= f(V-V_g) - \gamma\sqrt{\tilde e}\,U, \label{eq:gspt_slow_u}\\
+\frac{dV}{dt} &= -f(U-U_g) - \gamma\sqrt{\tilde e}\,V, \label{eq:gspt_slow_v}\\
+\frac{dT_s}{dt} &= \frac{1}{C_s}\left[R_{\downarrow} - \sigma T_s^4 - \rho c_p C_H\sqrt{\tilde e}(T_s-T_a) - \frac{K_g}{d_g}(T_s-T_g)\right]. \label{eq:gspt_slow_ts}
 \end{align}
 
-Here $\varepsilon \ll 1$ separates fast turbulence relaxation from slow momentum and thermodynamic evolution, and $\delta>0$ defines the regularized lower boundary of unresolved turbulent activity.
+Here $\varepsilon \ll 1$ separates fast turbulence relaxation from slow momentum and thermodynamic evolution, $\delta>0$ sets the admissible lower boundary, $\alpha>0$ is the smooth activation scale near $\tilde e=0$, and $\beta$ controls nonlinear turbulence self-amplification in the fast subsystem.

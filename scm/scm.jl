@@ -19,15 +19,11 @@ end
 
 # Enforce preallocated workspace check at startup, not inside RHS loop
 function _get_face_diffusivity_buffers(p, T)
-    # We assume p has a workspace or direct fields.
-    # If they are missing, we fail loudly *before* the solver runs.
     if hasproperty(p, :workspace)
         ws = p.workspace
         if eltype(ws.Km) === T && eltype(ws.Kh) === T
             return ws.Km, ws.Kh
         end
-        # Jacobian autodiff may require Dual-valued temporaries; keep baseline
-        # zero-allocation path for Float64 runtime via the branch above.
         return Vector{T}(undef, length(ws.Km)), Vector{T}(undef, length(ws.Kh))
     elseif hasproperty(p, :K_m_faces) && hasproperty(p, :K_h_faces)
         if eltype(p.K_m_faces) === T && eltype(p.K_h_faces) === T
@@ -67,6 +63,8 @@ end
     scm_gspt_tendencies!(dX, X, p, t)
 
 In-place ODE RHS function for a vertically resolved Single Column Model (SCM).
+Implements Option 2 GSPT Fold Catastrophe with Kolmogorov non-linear dissipation,
+C^infty hyperbolic manifold embedding, and Lipschitz activation gate regularization.
 Optimized for zero-allocation and maximum SIMD vectorization.
 """
 function scm_gspt_tendencies!(dX, X, p, t)
@@ -82,12 +80,18 @@ function scm_gspt_tendencies!(dX, X, p, t)
     theta_a = p.theta_a
     T_deep = p.T_deep
 
-    δ = p.delta
-    K_buoy = p.K_buoy
-    β = p.beta
-    l_0 = p.l_0
-    η = p.eta
-    ξ = p.xi
+    # GSPT Parameters (Option 2 Fold Geometry)
+    δ = p.delta                                # Background mixing offset
+    K_buoy = p.K_buoy                         # Buoyancy destruction coupling
+    l_0 = p.l_0                               # Master mixing length
+    η = p.eta                                 # Shear production efficiency
+    ξ = p.xi                                  # Hyperbolic embedding parameter
+
+    # Distinguish GSPT self-amplification (beta_gspt) from thermal stability factor (beta_stab)
+    β_gspt = hasproperty(p, :beta_gspt) ? convert(Float64, p.beta_gspt) : (hasproperty(p, :beta) ? convert(Float64, p.beta) : 1.0)
+    β_stab = hasproperty(p, :beta_stab) ? convert(Float64, p.beta_stab) : 5.0
+    alpha_gate = hasproperty(p, :alpha_gate) ? convert(Float64, p.alpha_gate) : 1.0e-3 # Activation gate scale
+
     kappa = 0.4
     Pr_t_base = p.pr_t_base
     Pr_t_slope = p.pr_t_slope
@@ -96,7 +100,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
     C_skin = p.C_skin
     R_down = p.R_down
     sigma_SB = 5.67e-8
-    rho_cp = 1200.0        # Atmospheric air density * specific heat
+    rho_cp = 1200.0                            # Atmospheric air density * specific heat
     lambda_s = p.lambda_s
     d_soil = p.d_soil
     K_min_surf = p.k_min_surf
@@ -105,6 +109,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
 
     # Global interior mixing length floor to ensure a smooth manifold everywhere
     ell_min_interior = hasproperty(p, :ell_min_interior) ? convert(Float64, p.ell_min_interior) : 1.0e-2
+    K_min_interior = hasproperty(p, :k_min_interior) ? convert(Float64, p.k_min_interior) : 0.0
 
     Ts_min = p.ts_min
     Ts_max = p.ts_max
@@ -154,20 +159,28 @@ function scm_gspt_tendencies!(dX, X, p, t)
             h_eff = (one(T) - h_weight) * h_local + h_weight * h_nonlocal
         end
 
-        # Apply global smooth mixing length floor to interior to prevent zero-lockup
+        # Global smooth mixing length floor to prevent zero-lockup
         ell_z_raw = ell_neutral * exp(-z_face / h_eff)
         ell_z = sqrt(ell_z_raw^2 + ell_min_interior^2)
 
-        stability_arg = clamp(β * dth_dz * ell_z / theta_a, -40.0, 40.0)
+        stability_arg = clamp(β_stab * dth_dz * ell_z / theta_a, -40.0, 40.0)
         G_local = expm1(stability_arg)
 
-        Δ_local = η * (ell_z^2) * (dU_dz^2 + dV_dz^2) - K_buoy * ell_z * G_local
+        # Net Forcing Δ = η * S^2 - K_buoy * G
+        S2_local = dU_dz^2 + dV_dz^2
+        Δ_local = η * S2_local - K_buoy * G_local
 
-        # RESTORED: True GSPT linear fold geometry embedding
-        Q = l_0 * Δ_local - δ
-        e_star_xi = 0.5 * (Q + sqrt(Q^2 + ξ^2))
+        # Option 2 Fold Catastrophe Equilibrium & C^\infty Hyperbolic Embedding
+        D_local = β_gspt^2 + 4.0 * Δ_local
+        sqrt_D_reg = sqrt(0.5 * (D_local + sqrt(D_local^2 + ξ^2)))
+        H_step = 0.5 * (one(T) + D_local / sqrt(D_local^2 + ξ^2))
+        q_star = H_step * 0.5 * l_0 * (β_gspt + sqrt_D_reg)
 
-        K_m_faces[i] = ell_z * sqrt(e_star_xi + δ)
+        # Regularized Lipschitz Activation Gate Psi(tilde_e; alpha)
+        tilde_e_star = q_star^2
+        psi_gate = sqrt(tilde_e_star) / (sqrt(tilde_e_star) + alpha_gate)
+
+        K_m_faces[i] = K_min_interior + ell_z * sqrt(psi_gate * tilde_e_star + δ)
 
         Pr_t_local = Pr_t_base
         if use_dynamic_pr_t
@@ -196,8 +209,6 @@ function scm_gspt_tendencies!(dX, X, p, t)
     dz_surf = z_centers[1]
     dU_dz_surf = (U[1] - 0.0) / dz_surf
     dV_dz_surf = (V[1] - 0.0) / dz_surf
-
-    # Internal gradient evaluated as downward-positive for coupling consistency
     dth_dz_surf = (theta[1] - T_s) / dz_surf
 
     ell_surf = (kappa * dz_surf) / (one(T) + (kappa * dz_surf) / l_0)
@@ -212,22 +223,29 @@ function scm_gspt_tendencies!(dX, X, p, t)
     ell_surf *= exp(-dz_surf / h_eff_surf)
     ell_eff_surf = use_ell_floor_surf ? sqrt(ell_surf^2 + ell_min_surf^2) : ell_surf
 
-    stability_arg_surf = clamp(β * dth_dz_surf * ell_eff_surf / theta_a, -40.0, 40.0)
+    stability_arg_surf = clamp(β_stab * dth_dz_surf * ell_eff_surf / theta_a, -40.0, 40.0)
     G_surf = expm1(stability_arg_surf)
-    Δ_surf = η * (ell_eff_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * ell_eff_surf * G_surf
 
-    # RESTORED: True GSPT linear fold geometry embedding at surface
-    Q_surf = l_0 * Δ_surf - δ
-    e_star_surf = 0.5 * (Q_surf + sqrt(Q_surf^2 + ξ^2))
+    S2_surf = dU_dz_surf^2 + dV_dz_surf^2
+    Δ_surf = η * S2_surf - K_buoy * G_surf
 
-    K_m_surf = K_min_surf + ell_eff_surf * sqrt(e_star_surf + δ)
+    # Surface Option 2 Fold Geometry & Regularization
+    D_surf = β_gspt^2 + 4.0 * Δ_surf
+    sqrt_D_reg_surf = sqrt(0.5 * (D_surf + sqrt(D_surf^2 + ξ^2)))
+    H_step_surf = 0.5 * (one(T) + D_surf / sqrt(D_surf^2 + ξ^2))
+    q_star_surf = H_step_surf * 0.5 * l_0 * (β_gspt + sqrt_D_reg_surf)
+
+    tilde_e_surf = q_star_surf^2
+    psi_gate_surf = sqrt(tilde_e_surf) / (sqrt(tilde_e_surf) + alpha_gate)
+
+    K_m_surf = K_min_surf + ell_eff_surf * sqrt(psi_gate_surf * tilde_e_surf + δ)
     Pr_t_surf = Pr_t_base
     if use_dynamic_pr_t
         Pr_t_surf += Pr_t_slope * tanh(max(zero(T), G_surf))
     end
     K_h_surf = K_m_surf / max(Pr_t_surf, eps(T))
 
-    # FIXED: Scoped exception checking to eliminate UndefVarErrors
+    # Surface Anomaly Check
     if T_s < Ts_min || T_s > Ts_max
         reason = T_s < Ts_min ?
                  "Severe radiative cooling decoupling spiral (T_s fell below $(Ts_min) K)." :
@@ -271,9 +289,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
         dV[N] = -f * (U[N] - Ug) + (0.0 - K_m_faces[N-1] * (V[N] - V[N-1]) / dz) / dz
         dtheta[N] = (flux_H_topN - K_h_faces[N-1] * (theta[N] - theta[N-1]) / dz) / dz
 
-        # 8. Surface Energy Balance (Standard Meteorological Sign Convention)
-        # R_net: Positive Downward (warms surface)
-        # H_upward & G_downward: Positive Upward/Away from skin (cools surface)
+        # 8. Surface Energy Balance
         R_net = R_down - sigma_SB * (T_s^4)
         H_upward = rho_cp * K_h_surf * (T_s - theta[1]) / dz_surf
         G_downward = lambda_s * (T_s - T_deep) / d_soil

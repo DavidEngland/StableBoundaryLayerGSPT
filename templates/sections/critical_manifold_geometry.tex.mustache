@@ -4,19 +4,43 @@
 In the singular limit $\varepsilon \to 0$, the fast TKE coordinate relaxes instantaneously to its local equilibrium state. This defines the critical manifold $\mathcal{M}_0$ of the system as an invariant algebraic variety embedded within the four-dimensional state space:
 
 \begin{equation}
-\mathcal{M}_0 = \left\{(U,V,T_s,e) \in \mathbb{R}^4 \;\middle|\; (e+\delta)\left[l_0 \left(\eta\,\gamma\,(U^2+V^2) - K\,G(T_s)\right) - (e+\delta)\right] = 0\right\}.
+\mathcal{M}_0 = \left\{(U,V,T_s,e) \in \mathbb{R}^4 \;\middle|\; F_{\mathrm{reg}}(\tilde e,\mathbf{y})=0\right\},
+\end{equation}
+where $\tilde e=e+\delta\ge 0$, $\mathbf{y}=(U,V,T_s)$, and
+\begin{equation}
+F_{\mathrm{reg}}(\tilde e,\mathbf{y})=l_0\Delta(\mathbf{y})\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right)+\beta\tilde e-\frac{\tilde e^{3/2}}{l_0},
+\qquad
+\Delta(\mathbf{y})=\eta\,\gamma\,(U^2+V^2)-K\,G(T_s).
 \end{equation}
 
 In SCM realizations, the damping-scale contribution entering $\gamma$ is evaluated with the state-dependent $h_{\text{eff}}$, coupling column momentum back into the local manifold geometry.
 
-Factoring this expression yields two distinct sheets: a trivial laminar floor sheet where $e = -\delta$, and an active turbulent branch governed by the linear relation:
+Outside the $\mathcal{O}(\alpha)$ boundary layer near $\tilde e=0$, let $q\coloneqq\sqrt{\tilde e}$. The singular manifold relation is approximated by
+\begin{equation}
+F(q,\mathbf{y})=q\left[l_0\Delta(\mathbf{y})+\beta q-\frac{q^2}{l_0}\right]=0.
+\end{equation}
+This yields three branches:
+\begin{align}
+q_{\mathrm{lam}}&=0 \quad (e^*=-\delta),\\
+q_{-}(\Delta)&=\frac{\beta l_0-l_0\sqrt{\beta^2+4\Delta}}{2},\\
+q_{+}(\Delta)&=\frac{\beta l_0+l_0\sqrt{\beta^2+4\Delta}}{2}.
+\end{align}
+The active attracting sheet is associated with $q_{+}$, while $q_{-}$ is the threshold branch.
 
 \begin{equation}
-e^* = l_0\Delta - \delta, \qquad \text{where} \quad \Delta(U,V,T_s) = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
-\label{eq:critical_branch_linear}
+\mathcal{F}(q,\mathbf{y})=0,\qquad \partial_q\mathcal{F}(q,\mathbf{y})=0
+\label{eq:fold_conditions_unified}
+\end{equation}
+defines the fold locus. Eliminating $\Delta$ gives
+\begin{equation}
+q_{\mathrm{fold}}=\frac{\beta l_0}{2},
+\qquad
+e_{\mathrm{fold}}=\frac{\beta^2 l_0^2}{4}-\delta,
+\qquad
+\Delta_{\mathrm{fold}}=-\frac{\beta^2}{4}.
 \end{equation}
 
-Setting $e^* = 0$ reveals that the active branch terminates precisely at the analytical critical transition condition $\Delta = \delta / l_0$. At this boundary interface, the attracting active sheet intersects the physical admissibility threshold, causing the system to undergo a boundary-mediated regime transition onto the regularized laminar floor.
+In addition to fold-mediated collapse, recovery is organized by a boundary transcritical exchange at $\Delta=0$, where stability of the laminar boundary branch changes sign.
 
 \begin{proposition}[Thermal Downward Translation]
 \label{prop:thermal_shift_proof}
@@ -24,8 +48,12 @@ Let the surface stability function satisfy $\partial G / \partial T_s < 0$ every
 \end{proposition}
 
 \paragraph{Proof.}
-Differentiating the equilibrium TKE state $e^* $ on the active sheet with respect to the slow thermodynamic variable $T_s$ yields:
+On the active branch, $e^*=q_{+}^2-\delta$ with $q_{+}=q_{+}(\Delta(T_s,U,V))$. Differentiating with respect to $T_s$ yields:
 \begin{equation}
-\frac{\partial e^*}{\partial T_s} = l_0 \left( -K \frac{\partial G}{\partial T_s} \right).
+\frac{\partial e^*}{\partial T_s}=2q_{+}\frac{\partial q_{+}}{\partial \Delta}\frac{\partial \Delta}{\partial T_s},
+\qquad
+\frac{\partial q_{+}}{\partial \Delta}=\frac{l_0}{\sqrt{\beta^2+4\Delta}}>0,
+\qquad
+\frac{\partial \Delta}{\partial T_s}=-K\frac{\partial G}{\partial T_s}>0.
 \end{equation}
-Since the characteristic length scale $l_0 > 0$, the scaling coefficient $K > 0$, and the stability gradient $\partial G / \partial T_s < 0$, the term $\left(-K \frac{\partial G}{\partial T_s}\right)$ is strictly positive. It follows that $\partial e^* / \partial T_s > 0$ holds uniformly across the active domain. Therefore, a monotonic decrease in surface temperature ($\Delta T_s < 0$) yields a strict reduction in the equilibrium TKE value ($\Delta e^* < 0$), translating the active manifold sheet downward toward the laminar boundary. $\blacksquare$
+Hence $\partial e^*/\partial T_s>0$ throughout the active domain. Therefore, a monotonic decrease in surface temperature ($\Delta T_s<0$) yields $\Delta e^*<0$, translating the active manifold sheet downward toward the laminar boundary. $\blacksquare$

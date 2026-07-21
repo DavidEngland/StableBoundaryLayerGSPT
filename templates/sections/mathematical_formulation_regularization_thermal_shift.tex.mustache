@@ -12,15 +12,19 @@ The core four-dimensional prognostic system for the state vector $\mathbf{x} = (
 \frac{dU}{dt} &= f(V - V_g) - C_D \frac{\sqrt{U^2+V^2}}{h} U \sqrt{e+\delta}, \\
 \frac{dV}{dt} &= -f(U - U_g) - C_D \frac{\sqrt{U^2+V^2}}{h} V \sqrt{e+\delta}, \\
 \frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}}\left(R_{\downarrow} - \sigma_{\text{SB}}T_s^4 - \lambda\frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H\sqrt{U^2+V^2}\,(T_s - T_a)\sqrt{e+\delta}\right), \\
-\varepsilon\frac{de}{dt} &= l_0 \left[\eta\,\gamma\,(U^2+V^2) - K\,G(T_s)\right] - (e+\delta).
+\varepsilon\frac{de}{dt} &= l_0\Delta(U,V,T_s)\left(\frac{e+\delta}{\sqrt{e+\delta}+\alpha}\right)+\beta(e+\delta)-\frac{(e+\delta)^{3/2}}{l_0},
 \end{aligned}
 \label{eq:mathematical_full_system}
+\end{equation}
+with
+\begin{equation}
+\Delta(U,V,T_s)=\eta\,\gamma\,(U^2+V^2)-K\,G(T_s).
 \end{equation}
 
 Here, $f$ is the Coriolis frequency, $h$ is the bulk boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant acceleration scale. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The momentum and thermal transport terms scale with $\sqrt{e+\delta}$ to maintain asymptotic consistency with classical mixing-length theory.
 
 \begin{remark}
-In contrast to traditional quadratic formulations, the fast tracking equation in Eq.~\eqref{eq:mathematical_full_system} balances production and relaxation linearly. In the singular limit $\varepsilon \to 0$, this linear coupling ensures that the active critical manifold tracks a flat, boundary-mediated transition threshold ($e^* = l_0\Delta - \delta$), completely removing non-physical square-root singularities from the underlying Jacobian matrix.
+The activated production factor $\frac{e+\delta}{\sqrt{e+\delta}+\alpha}$ and the Kolmogorov-type dissipation term $-(e+\delta)^{3/2}/l_0$ remove boundary non-Lipschitz behavior while preserving the folded fast-slow geometry. In the singular limit, the reduced branch structure is organized by fold and transcritical sets rather than by a single linear threshold.
 \end{remark}
 
 In the multi-layer SCM closure, the constant scale height $h$ is replaced by an emergent effective scale height $h_{\text{eff}}$ that feeds resolved column momentum back into the local log-law damping coefficients:
@@ -35,17 +39,18 @@ where $w \in [0,1]$ is the non-local blend weight and $\delta_u$ is a small velo
 
 GSPT allows us to formally distinguish between two distinct physical transitions that are frequently conflated in boundary-layer literature:
 \begin{itemize}
-    \item \textbf{The Gated Boundary Crossing:} On the fast timescale, the active turbulent sheet $\mathcal{M}_0^{\text{act}}$ remains normally hyperbolic right up to the physical decoupling threshold. Rather than undergoing an interior fast saddle-node jump, the active branch terminates cleanly where it intersects the physical admissibility boundary at $\Delta = \delta / l_0$. Incorporating the smooth hyperbolic embedding scale $\xi = \SBLParamXi$ regularizes this boundary crossing, transforming a sharp algebraic cutoff into a smooth, differentiable vector field patch.
-    \item \textbf{The Thermodynamic SEB Fold ($\mathcal{C}_{\text{fold}}$):} While the fast TKE subsystem remains structurally stable, an emergent fold catastrophe can materialize within the slow surface thermodynamic equations on the regularized manifold. This occurs where the slow flow tracks onto a region where the tangent space of the surface energy balance becomes parallel to the fast direction, satisfying:
+    \item \textbf{Boundary Transcritical Recovery:} At $\Delta=0$, the laminar boundary branch $\tilde e=0$ exchanges stability with the threshold branch. For $\Delta>0$, the boundary branch becomes repelling and weak turbulence regrows; for $\Delta<0$, it is attracting and supports collapse episodes.
+    \item \textbf{Fold Catastrophe ($\mathcal{C}_{\text{fold}}$):} Fast collapse from the active branch is governed by loss of normal hyperbolicity in the fast subsystem, not by a slow-SEB injectivity condition. Fold points satisfy:
     \begin{equation}
-    \mathcal{C}_{\text{fold}} = \left\{ (U, V, T_s, e) \in \mathcal{M}_0 \ \middle|\ \det \left( \text{D}_{\mathbf{y}} e^*_{\xi} \right) = 0 \right\}.
+    F(q,\mathbf{y})=0, \qquad \partial_q F(q,\mathbf{y})=0,
     \end{equation}
-    In equivalent algebraic form, this corresponds to a complete loss of rank in the slow thermodynamic Jacobian (with thermal response slope controlled by $\beta = \SBLParamBeta$):
+    where $q=\sqrt{e+\delta}$ and $F(q,\mathbf{y})=q\left[l_0\Delta(\mathbf{y})+\beta q-q^2/l_0\right]$ outside the $\mathcal{O}(\alpha)$ boundary layer. Eliminating $\Delta$ yields the fold invariants:
     \begin{equation}
-    \frac{\partial}{\partial T_s}\left(R_{\downarrow} - \sigma_{\mathrm{SB}}T_s^4 - \rho c_p C_H\sqrt{U^2+V^2}\,(T_s-T_a)\sqrt{e^*_{\xi}(T_s,U,V)+\delta} - \lambda\frac{T_s-T_{\mathrm{deep}}}{d_{\mathrm{soil}}}\right)=0.
-    \label{eq:seb_fold_condition}
+    q_{\mathrm{fold}}=\frac{\beta l_0}{2},\qquad
+    e_{\mathrm{fold}}=\frac{\beta^2 l_0^2}{4}-\delta,\qquad
+    \Delta_{\mathrm{fold}}=-\frac{\beta^2}{4}.
     \end{equation}
-    When the slow cooling trajectory encounters this thermodynamic limit, the surface system can no longer maintain a localized balance between radiative loss and turbulent heat replenishment. This forces the state variable to transition rapidly along the regularized manifold toward the insulated laminar floor—providing a clear geometric explanation for sudden nocturnal temperature drops.
+    Crossing this locus triggers fast departure from the attracting active sheet and jump toward the laminar branch.
 \end{itemize}
 
 \subsection{Tri-Height Observability Diagnostics}

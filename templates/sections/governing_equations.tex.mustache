@@ -17,11 +17,15 @@ where $U$ and $V$ represent the horizontal components of the wind velocity vecto
 To explicitly capture the rapid stabilization and structural collapse of the stable boundary layer (SBL), the localized turbulent field is driven by a singular perturbation equation for the turbulent kinetic energy $e$. Incorporating the non-dimensional timescale ratio $0 < \varepsilon \ll 1$, the continuous system is coupled via:
 
 \begin{equation}
-\varepsilon \frac{\partial e}{\partial t} = K_m \left[ \left(\frac{\partial U}{\partial z}\right)^2 + \left(\frac{\partial V}{\partial z}\right)^2 \right] - K_h \left( \frac{g}{\theta_0} \frac{\partial \theta}{\partial z} \right) - \frac{e + \delta}{l_0/\sqrt{e+\delta}},
+\varepsilon \frac{\partial e}{\partial t} = l_0\,\Delta_{\mathrm{col}}\left(\frac{e+\delta}{\sqrt{e+\delta}+\alpha}\right) + \beta(e+\delta) - \frac{(e+\delta)^{3/2}}{l_0},
 \label{eq:gov_tke_continuous}
 \end{equation}
+where the resolved-column forcing diagnostic is
+\begin{equation}
+\Delta_{\mathrm{col}} = \eta\left[\left(\frac{\partial U}{\partial z}\right)^2 + \left(\frac{\partial V}{\partial z}\right)^2\right] - K\left(\frac{g}{\theta_0}\frac{\partial \theta}{\partial z}\right).
+\end{equation}
 
-This PDE form is the continuous analogue of the reduced fast-slow model. Here, the mechanical shear production is balanced by the buoyancy destruction and a localized viscous dissipation limit. The background parameter $\delta = \SBLParamDelta\,\mathrm{m}^2\mathrm{s}^{-2}$ establishes the physical floor below which turbulence cannot structurally decouple.
+This PDE form is the continuous analogue of the reduced fast-slow model. Mechanical production and buoyancy destruction enter through $\Delta_{\mathrm{col}}$, while the activated gate and nonlinear dissipation preserve well-posedness near the laminar boundary. The background parameter $\delta = \SBLParamDelta\,\mathrm{m}^2\mathrm{s}^{-2}$ establishes the physical floor below which turbulence cannot structurally decouple.
 
 \subsection{Boundary Interfaces and Finite Volume Discretization}
 \label{subsec:gov_boundary}
