@@ -259,12 +259,12 @@ scm-verify:
 compile-scm-reports:
 	@echo "Compiling dynamic SCM report portfolio..."
 	@rm -f compile_reports.aux compile_reports.log compile_reports.out compile_reports.toc
-	@reports="$$(find results -path 'results/_archived*' -prune -o -type f -name '*_report_wrapper.pdf' -print | sort)"; \
+	@reports="$$(find results -path 'results/_archived*' -prune -o -type f -name '*_report.tex' ! -name 'scm_case_report.tex' -print | sort)"; \
 	if [ -z "$$reports" ]; then \
-		echo "No compiled SCM report wrapper PDFs found under results/."; \
+		echo "No SCM report TeX files found under results/."; \
 		exit 1; \
 	fi; \
-	graphpaths=$$(for pdf in $$reports; do tex="$${pdf%_wrapper.pdf}.tex"; dir="$$(dirname "$$tex")"; printf '{%s/}{%s/plots/}\n' "$$dir" "$$dir"; done | awk '!seen[$$0]++'); \
+	graphpaths=$$(for tex in $$reports; do dir="$$(dirname "$$tex")"; printf '{%s/}{%s/plots/}\n' "$$dir" "$$dir"; done | awk '!seen[$$0]++'); \
 	{ \
 		printf '%s\n' '\documentclass{article}'; \
 		printf '%s\n' '\usepackage[T1]{fontenc}'; \
@@ -288,11 +288,10 @@ compile-scm-reports:
 		printf '%s\n' '\maketitle'; \
 		printf '%s\n' ''; \
 		printf '%s\n' '\section{Overview}'; \
-		printf '%s\n' 'This document compiles every current SCM case report under results/ that has a compiled wrapper PDF.'; \
+		printf '%s\n' 'This document compiles every current SCM case report TeX file under results/.'; \
 		printf '%s\n' ''; \
 		n=1; \
-		for pdf in $$reports; do \
-			tex="$${pdf%_wrapper.pdf}.tex"; \
+		for tex in $$reports; do \
 			base="$$(basename "$${tex%.tex}")"; \
 			title="$$(printf '%s' "$$base" | sed 's/_/ /g')"; \
 			printf '%s\n' '\newpage'; \
