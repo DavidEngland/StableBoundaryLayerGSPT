@@ -42,6 +42,31 @@ e_{\mathrm{fold}}=\frac{\beta^2 l_0^2}{4}-\delta,
 
 In addition to fold-mediated collapse, recovery is organized by a boundary transcritical exchange at $\Delta=0$, where stability of the laminar boundary branch changes sign.
 
+\subsection{Resolution of the Fold Illusion: Boundary Crossing Versus Emergent Hysteresis}
+\label{subsec:fold_illusion_resolution}
+
+A common classification ambiguity in stable boundary-layer reductions is to interpret turbulent collapse as an interior saddle-node of the isolated atmospheric fast subsystem. In the present 4D GSPT-SBL formulation, the geometric picture is more precise: the isolated fast TKE subsystem undergoes a \textbf{transversal boundary crossing} at $e=0$, while an S-shaped fold catastrophe appears only after coupling with the nonlinear surface thermodynamic feedback.
+
+\paragraph{1. Isolated Fast Subsystem: Transversal Boundary Crossing.}
+For fixed slow state $\mathbf{y}$, simultaneous conditions
+\begin{equation}
+\mathcal{F}(e;\mathbf{y})=0,
+\qquad
+\frac{\partial \mathcal{F}}{\partial e}(e;\mathbf{y})=0
+\end{equation}
+admit no smooth interior turning point with $e>0$ in the admissible branch used for the reduced atmospheric subsystem. Instead, the active branch terminates at the physical boundary $e=0$ with nonzero slope, and the transition is organized by forcing crossing the regularized threshold $\Delta=\delta/l_0$.
+
+\paragraph{2. Coupled Atmosphere-SEB Dynamics: Emergent Thermodynamic Fold.}
+When the atmospheric manifold is coupled to the nonlinear Surface Energy Budget (SEB), a genuine hysteretic fold set $\mathcal{C}_{\mathrm{fold}}$ can emerge through thermal feedback. At collapse onset, the reduced slow thermodynamic map loses rank along $T_s$,
+\begin{equation}
+\frac{\partial \mathcal{H}}{\partial T_s}=0,
+\label{eq:seb_rank_loss}
+\end{equation}
+while the fast subsystem can remain locally normally hyperbolic away from the isolated boundary crossing locus.
+
+\paragraph{3. Physical and Modeling Implications.}
+This separation removes the false equivalence between a regularized boundary intersection ($e_\xi^*$ crossing at $e=0$) and a thermodynamic fold catastrophe. The distinction is essential for interpreting intermittency, collapse-recovery asymmetry, and relaxation oscillations without introducing ad hoc switching rules.
+
 \begin{proposition}[Thermal Downward Translation]
 \label{prop:thermal_shift_proof}
 Let the surface stability function satisfy $\partial G / \partial T_s < 0$ everywhere in the physical domain. Continuous radiative cooling of the surface skin temperature ($T_s \downarrow$) induces a uniform, monotonic downward geometric translation of the active critical manifold along the fast coordinate axis.

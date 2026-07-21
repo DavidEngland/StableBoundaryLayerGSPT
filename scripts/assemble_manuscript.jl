@@ -1017,87 +1017,98 @@ function latest_solution_csv(dataset::String)
     return latest_path
 end
 
-dataset, generated_date_human, write_parameter_macros_only, check_parameter_drift, lint_prose_literals, lint_prose_strict, lint_prose_allowlist_path = parse_args(ARGS)
+function assemble_manuscript(args::Vector{String}=ARGS)
+    dataset, generated_date_human, write_parameter_macros_only, check_parameter_drift, lint_prose_literals, lint_prose_strict, lint_prose_allowlist_path = parse_args(args)
 
-if lint_prose_literals
-    count = lint_prose_literals!(dataset; strict=lint_prose_strict, allowlist_path=lint_prose_allowlist_path)
-    println("[lint-prose] completed with $(count) finding(s).")
-    exit(0)
+    if lint_prose_literals
+        count = lint_prose_literals!(dataset; strict=lint_prose_strict, allowlist_path=lint_prose_allowlist_path)
+        println("[lint-prose] completed with $(count) finding(s).")
+        return nothing
+    end
+
+    parameter_context, parameter_macro_path, active_params = write_parameter_macro_bundle(dataset)
+    if check_parameter_drift
+        verify_parameter_macro_bundle!(parameter_macro_path, dataset, active_params)
+    end
+    if write_parameter_macros_only
+        println("Generated parameter macro bundle:")
+        println(parameter_macro_path)
+        return nothing
+    end
+
+    mkpath("reports/generated")
+
+    tex_out = "reports/generated/paper.tex"
+    md_out = "reports/generated/paper.md"
+
+    tex_template_path = "templates/paper.tex.mustache"
+    md_template_path = "templates/paper.md.mustache"
+
+    tex_template = read_text(tex_template_path; fallback="\\documentclass{article}\\begin{document}Template missing.\\end{document}")
+    md_template = read_text(md_template_path; fallback="# Template missing")
+
+    theory_md = read_text("reports/generated/theory/01_state_space.md"; fallback="Theory section not generated yet.")
+    archive_md = read_text("reports/generated/theory/02_archive_synthesis.md"; fallback="Archive synthesis not generated yet.")
+    diag_md = read_text("reports/generated/diagnostics/03_bifurcation_sweep.md"; fallback="Diagnostics section not generated yet.")
+
+    fig_dir = first_existing_dir(["reports/generated/figures", "figures"])
+    figure_tex_includes = build_tex_figure_includes(fig_dir; tex_output_dir=dirname(tex_out))
+    figure_md_includes = build_md_figure_includes(fig_dir)
+
+    timestamp = string(Dates.now())
+
+    section_context = Dict(
+        "dataset" => dataset,
+        "generated_timestamp" => timestamp,
+        "generated_date_human" => generated_date_human,
+        "cases99_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("CASES99"))),
+        "floss_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("FLOSS"))),
+        "sheba_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("SHEBA"))),
+    )
+    merge!(section_context, read_scm_summary_context())
+    merge!(section_context, parameter_context)
+    template_sections_tex = build_tex_template_sections("templates/sections", section_context)
+    abstract_tex = build_optional_tex_template(
+        "templates/sections/abstract.tex.mustache",
+        section_context;
+        fallback="",
+    )
+
+    tex_context = Dict(
+        "dataset" => dataset,
+        "generated_timestamp" => timestamp,
+        "generated_date_human" => generated_date_human,
+        "abstract_tex" => abstract_tex,
+        "template_sections_tex" => template_sections_tex,
+        "figure_tex_includes" => figure_tex_includes,
+        "active_parameter_macros_path" => parameter_context["active_parameter_macros_path"],
+    )
+
+    md_context = Dict(
+        "dataset" => dataset,
+        "generated_timestamp" => timestamp,
+        "theory_section" => theory_md,
+        "archive_synthesis_section" => archive_md,
+        "diagnostics_section" => diag_md,
+        "figure_md_includes" => figure_md_includes,
+    )
+
+    rendered_tex = render_template(tex_template, tex_context)
+    rendered_md = render_template(md_template, md_context)
+
+    write(tex_out, rendered_tex)
+    write(md_out, rendered_md)
+
+    println("Generated manuscript files with section annotations:")
+    println(tex_out)
+    println(md_out)
+    return nothing
 end
 
-parameter_context, parameter_macro_path, active_params = write_parameter_macro_bundle(dataset)
-if check_parameter_drift
-    verify_parameter_macro_bundle!(parameter_macro_path, dataset, active_params)
-end
-if write_parameter_macros_only
-    println("Generated parameter macro bundle:")
-    println(parameter_macro_path)
-    exit(0)
+function main(args::Vector{String}=ARGS)
+    assemble_manuscript(args)
 end
 
-mkpath("reports/generated")
-
-tex_out = "reports/generated/paper.tex"
-md_out = "reports/generated/paper.md"
-
-tex_template_path = "templates/paper.tex.mustache"
-md_template_path = "templates/paper.md.mustache"
-
-tex_template = read_text(tex_template_path; fallback="\\documentclass{article}\\begin{document}Template missing.\\end{document}")
-md_template = read_text(md_template_path; fallback="# Template missing")
-
-theory_md = read_text("reports/generated/theory/01_state_space.md"; fallback="Theory section not generated yet.")
-archive_md = read_text("reports/generated/theory/02_archive_synthesis.md"; fallback="Archive synthesis not generated yet.")
-diag_md = read_text("reports/generated/diagnostics/03_bifurcation_sweep.md"; fallback="Diagnostics section not generated yet.")
-
-fig_dir = first_existing_dir(["reports/generated/figures", "figures"])
-figure_tex_includes = build_tex_figure_includes(fig_dir; tex_output_dir=dirname(tex_out))
-figure_md_includes = build_md_figure_includes(fig_dir)
-
-timestamp = string(Dates.now())
-
-section_context = Dict(
-    "dataset" => dataset,
-    "generated_timestamp" => timestamp,
-    "generated_date_human" => generated_date_human,
-    "cases99_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("CASES99"))),
-    "floss_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("FLOSS"))),
-    "sheba_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("SHEBA"))),
-)
-merge!(section_context, read_scm_summary_context())
-merge!(section_context, parameter_context)
-template_sections_tex = build_tex_template_sections("templates/sections", section_context)
-abstract_tex = build_optional_tex_template(
-    "templates/sections/abstract.tex.mustache",
-    section_context;
-    fallback="",
-)
-
-tex_context = Dict(
-    "dataset" => dataset,
-    "generated_timestamp" => timestamp,
-    "generated_date_human" => generated_date_human,
-    "abstract_tex" => abstract_tex,
-    "template_sections_tex" => template_sections_tex,
-    "figure_tex_includes" => figure_tex_includes,
-    "active_parameter_macros_path" => parameter_context["active_parameter_macros_path"],
-)
-
-md_context = Dict(
-    "dataset" => dataset,
-    "generated_timestamp" => timestamp,
-    "theory_section" => theory_md,
-    "archive_synthesis_section" => archive_md,
-    "diagnostics_section" => diag_md,
-    "figure_md_includes" => figure_md_includes,
-)
-
-rendered_tex = render_template(tex_template, tex_context)
-rendered_md = render_template(md_template, md_context)
-
-write(tex_out, rendered_tex)
-write(md_out, rendered_md)
-
-println("Generated manuscript files with section annotations:")
-println(tex_out)
-println(md_out)
+if abspath(PROGRAM_FILE) == @__FILE__
+    main(ARGS)
+end

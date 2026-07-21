@@ -1,4 +1,4 @@
-.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all generate-parameter-macros generate-parameter-macros-all check-parameter-drift check-parameter-drift-all lint-prose lint-prose-strict assemble-manuscript visual-assets paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports sweep-two-layer-envelope test clean
+.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all generate-parameter-macros generate-parameter-macros-all check-parameter-drift check-parameter-drift-all lint-prose lint-prose-strict assemble-manuscript visual-assets paper-all archive-paper paper-stamped stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports sweep-two-layer-envelope test clean
 
 DATASET ?= CASES99
 
@@ -30,6 +30,8 @@ BIFURCATION_LOG_DIR ?= results/_logs
 PARAMETER_SUMMARIES := results/CASES99/latest/summary.json results/FLOSS/latest/summary.json results/SHEBA/latest/summary.json
 PARAMETER_MACRO_BUNDLE := reports/generated/parameters/parameters_all.tex
 PROSE_LINT_ALLOWLIST := config/prose_lint_allowlist.txt
+STAMP := $(shell date +%d%b%Y-%H%M)
+ARCHIVE_DIR := reports/generated/archive
 
 bootstrap:
 	julia --project=. -e 'using Pkg; Pkg.instantiate()'
@@ -148,6 +150,16 @@ paper-all:
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET)
 	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
 	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
+
+archive-paper: reports/generated/paper.pdf
+	@mkdir -p $(ARCHIVE_DIR)
+	@cp reports/generated/paper.pdf reports/generated/paper-$(STAMP).pdf
+	@cp reports/generated/paper.pdf $(ARCHIVE_DIR)/paper-$(STAMP).pdf
+	@echo "[archive-paper] Saved timestamped build:"
+	@echo "  -> reports/generated/paper-$(STAMP).pdf"
+	@echo "  -> $(ARCHIVE_DIR)/paper-$(STAMP).pdf"
+
+paper-stamped: paper-all archive-paper
 
 stablebl-build:
 	bash scripts/stablebl build --dataset CASES99
