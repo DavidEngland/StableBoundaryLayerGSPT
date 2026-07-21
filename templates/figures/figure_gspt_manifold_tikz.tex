@@ -1,0 +1,43 @@
+\documentclass[tikz,border=3pt]{standalone}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.1, >=Stealth]
+    % Axes
+    \draw[->, thick] (-2.5, 0) -- (4.5, 0) node[right] {Net Forcing $\Delta$};
+    \draw[->, thick] (0, -0.5) -- (0, 3.5) node[above] {Turbulence Scale $q = \sqrt{e+\delta}$};
+
+    % Fold point coordinates
+    \coordinate (Fold) at (-1.5, 1.2);
+    \coordinate (Transcritical) at (0, 0);
+
+    % Upper active sheet (q_plus)
+    \draw[very thick, blue!80!black, domain=-1.5:4.0, samples=100]
+        plot ({\x}, {1.2 + 0.8*sqrt(\x + 1.5)});
+    \node[blue!80!black, right, align=left] at (3.15, 2.8)
+        {$\mathcal{M}_0^{\mathrm{act}}$\\Active attracting sheet};
+
+    % Middle unstable separatrix (q_minus)
+    \draw[thick, dashed, red!80!black, domain=-1.5:0.0, samples=50]
+        plot ({\x}, {1.2 - 0.8*sqrt(\x + 1.5)});
+    \node[red!80!black, below left] at (-0.45, 0.6) {$q_{-}$ (Separatrix)};
+
+    % Laminar residual sheet (q_lam = 0)
+    \draw[very thick, green!50!black] (-2.5, 0) -- (4.0, 0);
+    \node[green!50!black, below right, align=left] at (1.5, -0.1)
+        {$\mathcal{M}_0^{\mathrm{lam}}$\\Laminar sheet: $e=-\delta$};
+
+    % Critical points
+    \filldraw[red] (Fold) circle (2.5pt)
+        node[above left, align=left] {Fold catastrophe\\$\Delta_{\mathrm{fold}}=-\beta^2/4$};
+    \filldraw[orange!90!black] (Transcritical) circle (2.5pt)
+        node[above right=3pt, align=left] {Transcritical point\\$\Delta=0$};
+
+    % Fast trajectory arrows
+    \draw[->, ultra thick, violet] (1.0, 0.1) -- (1.0, 1.8)
+        node[midway, right, align=left] {Fast re-ignition\\$1/\varepsilon$};
+    \draw[->, ultra thick, violet] (-2.0, 1.0) -- (-2.0, 0.1)
+        node[midway, left, align=left] {Fast collapse\\$1/\varepsilon$};
+\end{tikzpicture}
+\end{document}

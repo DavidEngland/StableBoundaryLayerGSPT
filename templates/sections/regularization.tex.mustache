@@ -38,4 +38,9 @@ Define a non-negative shifted coordinate $\varphi = e + \delta \ge 0$. Substitut
 \begin{equation}
 \varepsilon\frac{d\varphi}{dt}=l_0\Delta(\mathbf{y})\,\varphi\,\Psi(\varphi;\alpha)+\beta\varphi-\frac{\varphi^{3/2}}{l_0}.
 \end{equation}
+The nonlinear dissipation term is $C^1$ at the boundary because
+\begin{equation}
+\frac{d}{d\varphi}\left(\varphi^{3/2}\right)=\frac{3}{2}\sqrt{\varphi}\xrightarrow{\varphi\to 0^+}0,
+\end{equation}
+so the full right-hand side remains locally Lipschitz at $\varphi=0$.
 Evaluating this vector field on the boundary $\varphi=0$ gives an identically zero right-hand side, because every term is proportional to $\varphi$ (or a higher power). The boundary is therefore an invariant orbit. By uniqueness for locally Lipschitz vector fields, no forward trajectory from the interior ($\varphi>0$) can cross into $\varphi<0$, guaranteeing $e(t)\ge -\delta$ for all $t>0$. $\blacksquare$

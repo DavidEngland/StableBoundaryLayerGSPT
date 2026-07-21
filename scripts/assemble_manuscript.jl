@@ -122,17 +122,20 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
 
     wrapper_name = "section_theory.tex.mustache"
     front_matter_templates = Set(["abstract.tex.mustache"])
-    content_templates = filter(name -> (name != wrapper_name) && !(name in front_matter_templates), all_tex_templates)
+    # Keep the canonical comparison section and skip the legacy duplicate template.
+    excluded_templates = Set(["numerical_verification_physical_interpretation.tex.mustache"])
+    content_templates = filter(name -> (name != wrapper_name) && !(name in front_matter_templates) && !(name in excluded_templates), all_tex_templates)
 
     preferred_order = [
         "governing_system.tex.mustache",
         "governing_equations.tex.mustache",
         "critical_manifold_geometry.tex.mustache",
         "regularization.tex.mustache",
+        "visual_phase_space_ascii.tex.mustache",
         "mathematical_formulation_regularization_thermal_shift.tex.mustache",
         "comparative_metrics.tex.mustache",
+        "executive_campaign_matrix.tex.mustache",
         "numerical_implementation_solver_strategy.tex.mustache",
-        "numerical_verification_physical_interpretation.tex.mustache",
         "closures.tex.mustache",
         "parameters_table.tex.mustache",
         "parameters_geometry.tex.mustache",
@@ -618,6 +621,10 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
             title="Comparative analysis of the state-derived vertical eddy diffusivities (\$K_m, K_h\$) versus the \$C^\\infty\$ regularized hyperbolic embedded tracks (\$K_{m,\\star}, K_{h,\\star}\$) defined in Eq.~\\eqref{eq:embedded_diffusivities}. The comparison illustrates how the smooth embedding smooths out the sharp gradient kinks at the collapse threshold while ensuring a bounded closure Jacobian \$J_K\$.",
             label="fig:regularization_comparison",
         ),
+        "figure_gspt_manifold_tikz" => (
+            title="Geometric Singular Perturbation Theory phase-space schematic showing the active sheet, unstable separatrix, and laminar sheet with fold-collapse and transcritical re-ignition pathways.",
+            label="fig:gspt_manifold_tikz",
+        ),
     )
 
     function figure_caption_and_label(stem::String)
@@ -658,14 +665,16 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
 
     tex_files = sort(filter(name -> startswith(name, "figure_bifurcation_") && endswith(name, ".tex"), readdir(fig_dir)))
     handled_stems = Set{String}()
+    candidate_paths = Dict{String,String}()
 
     blocks = String[]
     for file in tex_files
         stem = replace(file, ".tex" => "")
         push!(handled_stems, stem)
-        title, label = figure_caption_and_label(stem)
         pdf_path = joinpath(fig_dir, "$(stem).pdf")
-        push!(blocks, make_figure_block(pdf_path, title, label))
+        if isfile(pdf_path)
+            candidate_paths[stem] = pdf_path
+        end
     end
 
     image_files = sort(filter(name -> (
@@ -677,9 +686,35 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
         if stem in handled_stems
             continue
         end
-        title, label = figure_caption_and_label(stem)
         img_path = joinpath(fig_dir, file)
-        push!(blocks, make_figure_block(img_path, title, label))
+        candidate_paths[stem] = img_path
+    end
+
+    preferred_stems = [
+        "figure_gspt_manifold_tikz",
+        "figure_bifurcation_transcritical_map",
+        "figure_bifurcation_transcritical_envelope",
+        "figure_bifurcation_fold_map",
+        "figure_bifurcation_fold_envelope",
+        "4d_sbl_diagnostics",
+        "diagnostic_regularization_comparison",
+    ]
+
+    ordered_stems = String[]
+    for stem in preferred_stems
+        if haskey(candidate_paths, stem)
+            push!(ordered_stems, stem)
+        end
+    end
+    for stem in sort(collect(keys(candidate_paths)))
+        if !(stem in ordered_stems)
+            push!(ordered_stems, stem)
+        end
+    end
+
+    for stem in ordered_stems
+        title, label = figure_caption_and_label(stem)
+        push!(blocks, make_figure_block(candidate_paths[stem], title, label))
     end
 
     if isempty(blocks)

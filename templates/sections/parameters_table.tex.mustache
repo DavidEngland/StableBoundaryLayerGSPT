@@ -4,27 +4,28 @@
 \label{tab:system_parameters}
 \small
 \begin{tabular}{llll}
-\hline
-\textbf{Symbol} & \textbf{Physical Parameter} & \textbf{Default Value} & \textbf{Physical Rationale / Scaling Origin} \\ \hline
+	oprule
+	extbf{Symbol} & \textbf{Physical Parameter} & \textbf{Default Value} & \textbf{Physical Rationale / Scaling Origin} \\
+\midrule
 \multicolumn{4}{l}{\textit{GSPT \& System Constants}} \\
 $\varepsilon$ & Singular perturbation timescale & $\SBLParamEpsilon$ & Ratio of fast TKE relaxation ($\sim 10^2$ s) to slow synoptic evolution ($\sim 10^4$ s) \\
 $\delta$ & Background residual TKE floor & $\SBLParamDelta \ \mathrm{m^2 \ s^{-2}}$ & Represents molecular/non-turbulent residual transport limit \\
 $\xi$ & Hyperbolic embedding scale & $\SBLParamXi$ & Numerical smoothing scale; $\xi \ll \delta$ preserves GSPT manifold structure \\
 $\alpha$ & Fast-gate regularization scale & configured & Activation-scale parameter in $\Psi(\tilde e;\alpha)=\sqrt{\tilde e}/(\sqrt{\tilde e}+\alpha)$ for boundary well-posedness \\
 $\alpha_{\mathrm{air}}$ & Air-emissivity weighting factor & $\SBLParamAlphaAir$ & Surface-air radiative partition coefficient used by the surface energy balance closure \\
-\hline
+\midrule
 \multicolumn{4}{l}{\textit{Boundary Layer Geometry \& Turbulence Properties}} \\
 $h_0$ & Reference bulk scale height & $\SBLParamH \ \mathrm{m}$ & Baseline scale height for non-local effective layer coupling \\
 $l_0$ & Master mixing length scale & $\SBLParamLZero \ \mathrm{m}$ & Asymptotic Blackadar limit capped by CASES99 stable buoyancy scales \\
 $\eta$ & Shear production efficiency & $\SBLParamShearProductionEfficiency$ & Effective production coefficient in the turbulent kinetic energy tendency closure \\
 $K_{\mathrm{buoy}}$ & Kinematic buoyancy scale & $\SBLParamK \ \mathrm{m \ s^{-2}}$ & Integrated parameter representing $g/\theta_0$ thermal forcing scale \\
 $\beta$ & Turbulence self-amplification parameter & $\SBLParamBeta$ & Nonlinear fast-subsystem coefficient controlling fold location and hysteresis width \\
-\hline
+\midrule
 \multicolumn{4}{l}{\textit{Site-Specific Surface Roughness Configurations}} \\
 $z_{0m}^{\text{CASES}}$ & Momentum roughness (Grassland) & $\SBLCASESSBLParamZZeroM \ \mathrm{m}$ & Representative aerodynamic roughness for CASES99 prairie \\
 $z_{0h}^{\text{CASES}}$ & Thermal roughness (Grassland) & $\SBLCASESSBLParamZZeroH \ \mathrm{m}$ & High surface-to-air coupling limit \\
 $z_{0m}^{\text{FLOSS}}$ & Momentum roughness (Snowpack) & $\SBLFLOSSSBLParamZZeroM \ \mathrm{m}$ & Representative snowpack roughness used by FLOSS baseline forcing \\
 $z_{0h}^{\text{FLOSS}}$ & Thermal roughness (Snowpack) & $\SBLFLOSSSBLParamZZeroH \ \mathrm{m}$ & Low surface coupling; prone to rapid radiative decoupling \\
-\hline
+\bottomrule
 \end{tabular}
 \end{table}

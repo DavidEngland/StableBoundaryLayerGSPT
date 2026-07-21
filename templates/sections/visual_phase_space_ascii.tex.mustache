@@ -1,0 +1,43 @@
+\subsection{Visual Diagnostics: Fast-Slow Geometry and Tri-Height Evolution}
+\label{subsec:visual_phase_space_ascii}
+
+\paragraph{Phase-Space Topology (ASCII Schematic).}
+The schematic below summarizes the dynamical pathways between the active sheet, unstable separatrix, and laminar floor in the reduced fast-slow space:
+\begin{verbatim}
+                         TURBULENCE SCALE (q = sqrt(e + delta))
+                                      ^
+                                      |
+  (1) EVENING RUN-UP                  |       /  q_plus (Active Sheet: M0_act)
+      High shear maintains            |      /
+      q_plus branch balance.          |     /   <- SBL trajectory in active regime
+                                      |    /
+                                      |   *  FOLD CATASTROPHE
+                                      |  /   Delta drops below Delta_fold = -beta^2/4.
+  (2) SUDDEN COLLAPSE                 | /    Normal hyperbolicity lost.
+      Trajectory drops on             |/
+      fast timescale 1/epsilon.       * <--- q_minus (Unstable separatrix)
+  ------------------------------------+-----------------------------------------> NET FORCING (Delta)
+                                     /|
+  (3) RE-IGNITION RECOVERY          / |  o========= q_lam = 0 (Laminar sheet)
+      Shear rebuilds; at Delta=0,   /  |  (quiescent floor: e = -delta)
+      q_lam turns repelling.       /   |
+                                 v     |
+                              TRANSCRITICAL IGNITION (Delta = 0)
+\end{verbatim}
+
+\paragraph{Nocturnal Tri-Height Evolution (ASCII Schematic).}
+This diagnostic view tracks inversion depth, TKE floor, and surface decoupling height through a 12-hour nocturnal cycle:
+\begin{verbatim}
+Height z (m)
+500 |--------------------------------------------------------------------------| Free atmosphere
+400 |                                                                          |
+300 | . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . | LLJ core region
+200 | . . . . . . . . *                        h_dtheta   * . . . . . . . . . . |
+100 | - - - - - - - * - - - - - - - - - - - - - - - - - - - * - - - - - - - - | h_e (TKE floor)
+ 50 | . . . . . # . . . . . . . . . . . . . . . . . . . . . . # . . . . . . . | h_D (diffusivity cutoff)
+  0 |========== # =============================================== # ============| Surface
+    +-----|---------|---------|---------|---------|---------|---------|--------+
+   t=0h   2h        4h        6h        8h       10h       12h
+\end{verbatim}
+
+The characteristic pattern is a rapid early drop in surface-coupled diffusivity ($h_D$) during strong cooling, while elevated jet and inversion structures can persist aloft on the slow manifold.

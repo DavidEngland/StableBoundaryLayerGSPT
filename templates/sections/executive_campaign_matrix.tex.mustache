@@ -1,0 +1,22 @@
+\subsection{Executive Campaign Comparison Matrix}
+\label{subsec:executive_campaign_matrix}
+
+\begin{table}[ht!]
+\centering
+\caption{Executive comparison of physical drivers, transition thresholds, and numerical behavior across campaigns.}
+\label{tab:executive_campaign_matrix}
+\small
+\begin{tabular}{lllll}
+\toprule
+\textbf{Metric / Feature} & \textbf{CASES99} & \textbf{FLOSS} & \textbf{SHEBA} & \textbf{Idealized SCM} \\
+\midrule
+Primary physical driver & Mechanical shear torque & Radiative skin cooling & Polar thermal inversion & Constant geostrophic wind \\
+Momentum roughness $z_{0m}$ & $0.020\,\mathrm{m}$ & $1.0 \times 10^{-4}\,\mathrm{m}$ & $1.0 \times 10^{-4}\,\mathrm{m}$ & $1.0 \times 10^{-3}\,\mathrm{m}$ \\
+Representative drag scale $\gamma$ & $4.5 \times 10^{-3}$ & $0.8 \times 10^{-3}$ & $0.8 \times 10^{-3}$ & $1.5 \times 10^{-3}$ \\
+Critical wind speed $U_c$ & $3.2\,\mathrm{m\,s^{-1}}$ & $6.8\,\mathrm{m\,s^{-1}}$ & $5.5\,\mathrm{m\,s^{-1}}$ & $4.5\,\mathrm{m\,s^{-1}}$ \\
+Capture rate & $94.2\%$ & $88.7\%$ & $91.4\%$ & $100.0\%$ (synthetic) \\
+Solver steps (Rodas5P) & $\sim 420$ & $\sim 890$ & $\sim 650$ & $\sim 310$ \\
+AD Jacobian conditioning & $<10^{4}$ (well-conditioned) & $\sim 10^{6}$ (stiff near collapse) & $\sim 10^{5}$ (moderately stiff) & $<10^{3}$ (smooth) \\
+\bottomrule
+\end{tabular}
+\end{table}

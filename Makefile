@@ -1,4 +1,4 @@
-.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all generate-parameter-macros generate-parameter-macros-all check-parameter-drift check-parameter-drift-all lint-prose lint-prose-strict assemble-manuscript paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports sweep-two-layer-envelope test clean
+.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all generate-parameter-macros generate-parameter-macros-all check-parameter-drift check-parameter-drift-all lint-prose lint-prose-strict assemble-manuscript visual-assets paper-all stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports sweep-two-layer-envelope test clean
 
 DATASET ?= CASES99
 
@@ -134,12 +134,17 @@ lint-prose-strict: scripts/assemble_manuscript.jl $(PARAMETER_SUMMARIES) $(PROSE
 assemble-manuscript: generate-parameter-macros
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET)
 
+visual-assets:
+	@mkdir -p reports/generated/figures
+	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated/figures templates/figures/figure_gspt_manifold_tikz.tex
+
 paper-all:
 	$(MAKE) clean
 	$(MAKE) run-solver-all
 	$(MAKE) generate-parameter-macros
 	julia --project=. scripts/sweep_bifurcation.jl --dataset $(DATASET)
 	julia --project=. scripts/plot_4d_diagnostics.jl --solution results/$(DATASET)/latest/solution.csv --out reports/generated/figures/4d_sbl_diagnostics.png
+	$(MAKE) visual-assets
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET)
 	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
 	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex

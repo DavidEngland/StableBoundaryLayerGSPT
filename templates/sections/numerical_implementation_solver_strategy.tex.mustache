@@ -126,6 +126,8 @@ const delta     = {{param_delta_code}}        # Background TKE floor (m^2/s^2)
 const K_buoy    = {{param_k_code}}            # Buoyant destruction scale (m/s^2)
 const beta      = {{param_beta_code}}         # Stability sensitivity parameter
 const h_bl      = {{param_h_code}}            # Boundary layer bulk scale height (m)
+const h_min     = 20.0      # Lower bound for emergent h_eff (m)
+const h_max     = 400.0     # Upper bound for emergent h_eff (m)
 const l0        = {{param_l0_code}}           # Master turbulent mixing length (m)
 const gamma     = 1.4e-3       # Effective momentum drag scaling (s^-1)
 const CH        = 1.2e-3       # Thermal exchange coefficient
@@ -154,15 +156,19 @@ function gspt_sbl_dynamics!(dx, x, p, t)
     # Shifted TKE coordinate
     phi = e + delta
 
+    # Emergent effective boundary-layer height with runtime clamp
+    h_eff = clamp(h_bl * (sqrt(U^2 + V^2 + 1.0e-6) / max(Ug, 1.0e-6)), h_min, h_max)
+    gamma_eff = gamma * (h_bl / h_eff)
+
     # 2.1 Smooth Safeguard Floor Gate
-    # Suppresses off-diagonal coupling singularities when phi -> 0
+    # +1.0e-15 prevents NaN dual-number derivatives from the 1/(2*sqrt(phi)) singular limit at phi = 0.
     psi = sqrt(phi + 1.0e-15) / (sqrt(phi + 1.0e-15) + alpha_safe)
 
     # 2.2 Physical Auxiliary Functions
     G_Ts = exp(beta * (Ta - Ts) / Ta) - 1.0
 
     # Net mechanical production minus buoyancy balance
-    shear_prod = eta * gamma * (U^2 + V^2)
+    shear_prod = eta * gamma_eff * (U^2 + V^2)
     buoy_dest  = K_buoy * G_Ts
     Delta      = shear_prod - buoy_dest
 
@@ -180,8 +186,8 @@ function gspt_sbl_dynamics!(dx, x, p, t)
     dx[1] = (1.0 / epsilon) * (l0 * Delta * phi * psi + beta * phi - (phi^(3/2)) / l0)
 
     # Slow Momentum and Thermodynamic Equations
-    dx[2] = f_cor * (V - Vg) - gamma * sqrt_phi_reg * U
-    dx[3] = -f_cor * (U - Ug) - gamma * sqrt_phi_reg * V
+    dx[2] = f_cor * (V - Vg) - gamma_eff * sqrt_phi_reg * U
+    dx[3] = -f_cor * (U - Ug) - gamma_eff * sqrt_phi_reg * V
     dx[4] = (1.0 / C_skin) * (Rn - H - G)
 
     return nothing

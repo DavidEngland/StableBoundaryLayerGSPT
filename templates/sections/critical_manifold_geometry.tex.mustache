@@ -48,12 +48,22 @@ Let the surface stability function satisfy $\partial G / \partial T_s < 0$ every
 \end{proposition}
 
 \paragraph{Proof.}
+Using the SCM stability function
+\begin{equation}
+G(T_s)=\exp\!\left(\frac{\beta(T_a-T_s)}{T_a}\right)-1,
+\end{equation}
+we obtain
+\begin{equation}
+\frac{\partial G}{\partial T_s}=-\frac{\beta}{T_a}\exp\!\left(\frac{\beta(T_a-T_s)}{T_a}\right)<0,
+\qquad
+\frac{\partial \Delta}{\partial T_s}=-K\frac{\partial G}{\partial T_s}>0.
+\end{equation}
 On the active branch, $e^*=q_{+}^2-\delta$ with $q_{+}=q_{+}(\Delta(T_s,U,V))$. Differentiating with respect to $T_s$ yields:
 \begin{equation}
 \frac{\partial e^*}{\partial T_s}=2q_{+}\frac{\partial q_{+}}{\partial \Delta}\frac{\partial \Delta}{\partial T_s},
 \qquad
 \frac{\partial q_{+}}{\partial \Delta}=\frac{l_0}{\sqrt{\beta^2+4\Delta}}>0,
 \qquad
-\frac{\partial \Delta}{\partial T_s}=-K\frac{\partial G}{\partial T_s}>0.
+\frac{\partial \Delta}{\partial T_s}>0.
 \end{equation}
 Hence $\partial e^*/\partial T_s>0$ throughout the active domain. Therefore, a monotonic decrease in surface temperature ($\Delta T_s<0$) yields $\Delta e^*<0$, translating the active manifold sheet downward toward the laminar boundary. $\blacksquare$
