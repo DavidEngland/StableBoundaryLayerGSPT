@@ -1,6 +1,9 @@
 module Dynamics
 
+include(joinpath(@__DIR__, "..", "Config", "CaseDefaults.jl"))
+
 using OrdinaryDiffEq: ODEProblem, solve, Rodas5P, Rosenbrock23
+using .CaseDefaults: get_case_ts_min
 
 export integrate_system
 export default_4d_parameters
@@ -15,8 +18,16 @@ export diagnostic_diffusivity_floors
 
 const _DEFAULT_SMOOTH_EPS = 1.0e-8
 
+function _require_kelvin_temperature(value::Real, label::AbstractString; floor::Float64=100.0)
+    temp = Float64(value)
+    isfinite(temp) || error("$(label) must be finite Kelvin, got $(value)")
+    temp >= floor || error("$(label)=$(temp) K looks like a missing Kelvin offset or sign error")
+    return temp
+end
+
 """Return baseline parameters for the 4D GSPT-SBL system."""
-function default_4d_parameters()
+function default_4d_parameters(; case_name::Union{Symbol,AbstractString}=:midlat)
+    ts_min_default = get_case_ts_min(case_name)
     return Dict{String,Float64}(
         # Environmental controls and geostrophic forcing.
         "U_g" => 10.0,
@@ -55,6 +66,12 @@ function default_4d_parameters()
         "C_skin" => 2.0e4,
         # Smooth positivity helper for e + delta.
         "smooth_eps" => _DEFAULT_SMOOTH_EPS,
+        # Saturation cap for bounded stability response.
+        "g_stability_max" => 1.0,
+        # Physical safeguards for surface temperature and smooth floor handling.
+        "ts_min" => ts_min_default,
+        "ts_max" => 350.0,
+        "ts_floor_transition" => 1.0e-3,
         # C-infinity embedding width for reduced-branch diagnostics.
         "xi" => 1.0e-5,
         # Width for smoothly transitioning to the e floor limiter.
@@ -107,9 +124,34 @@ function closure_coefficients(
     return gamma, C_H
 end
 
-"""Smooth C-infinity stratification closure G(Ts)."""
+"""Bounded C-infinity stratification closure G(Ts)."""
 function stratification_function(Ts::Real, Ta::Real, beta::Real)
-    return exp(beta * (Ta - Ts) / Ta) - 1.0
+    arg = beta * (Ta - Ts) / Ta
+    return tanh(arg)
+end
+
+function _bounded_stability_response(Ts::Real, Ta::Real, beta::Real, g_stability_max::Real)
+    g_cap = max(Float64(g_stability_max), 1.0e-12)
+    arg = beta * (Ta - Ts) / Ta
+    return g_cap * tanh(arg)
+end
+
+function _smooth_max(a::Real, b::Real, eps_smooth::Real)
+    T = promote_type(typeof(a), typeof(b), typeof(eps_smooth))
+    aT = convert(T, a)
+    bT = convert(T, b)
+    eps_local = max(convert(T, eps_smooth), eps(T))
+    d = aT - bT
+    return convert(T, 0.5) * (aT + bT + sqrt(d * d + eps_local * eps_local))
+end
+
+function _smooth_min(a::Real, b::Real, eps_smooth::Real)
+    T = promote_type(typeof(a), typeof(b), typeof(eps_smooth))
+    aT = convert(T, a)
+    bT = convert(T, b)
+    eps_local = max(convert(T, eps_smooth), eps(T))
+    d = aT - bT
+    return convert(T, 0.5) * (aT + bT - sqrt(d * d + eps_local * eps_local))
 end
 
 function _production_minus_buoyancy(
@@ -122,10 +164,11 @@ function _production_minus_buoyancy(
     K = Float64(p["K"])
     Ta = Float64(p["T_a"])
     beta = Float64(p["beta"])
+    g_stability_max = Float64(get(p, "g_stability_max", 1.0))
     shear_eff = Float64(get(p, "shear_production_efficiency", 1.0))
 
     gamma = isnothing(gamma_override) ? closure_coefficients(p)[1] : Float64(gamma_override)
-    G = stratification_function(Ts, Ta, beta)
+    G = _bounded_stability_response(Ts, Ta, beta, g_stability_max)
     return shear_eff * gamma * (U * U + V * V) - K * G
 end
 
@@ -198,7 +241,6 @@ function _rhs_4d!(du, u, p, t)
     Ta = Float64(p["T_a"])
     theta_top = Float64(get(p, "theta_top", Ta))
     alpha_air = clamp(Float64(get(p, "alpha_air", 0.85)), 0.0, 1.0)
-    theta_air = muladd(alpha_air, Ts, (1.0 - alpha_air) * theta_top)
     Tdeep = Float64(p["T_deep"])
     Rdown = Float64(p["R_down"])
     sigma_sb = Float64(p["sigma_sb"])
@@ -206,15 +248,21 @@ function _rhs_4d!(du, u, p, t)
     d_soil = Float64(p["d_soil"])
     rho_cp = Float64(p["rho_cp"])
     C_skin = Float64(p["C_skin"])
+    Ts_min = Float64(get(p, "ts_min", 220.0))
+    Ts_max = Float64(get(p, "ts_max", 350.0))
+    ts_floor_transition = Float64(get(p, "ts_floor_transition", 1.0e-3))
     eps_pos = Float64(get(p, "smooth_eps", _DEFAULT_SMOOTH_EPS))
     e_floor_transition = Float64(get(p, "e_floor_transition", 1.0e-5))
     de_floor_smooth_eps = Float64(get(p, "de_floor_smooth_eps", 1.0e-10))
+
+    Ts_floor = _smooth_max(Ts, Ts_min, ts_floor_transition)
+    Ts_eff = _smooth_min(Ts_floor, Ts_max, ts_floor_transition)
 
     gamma, C_H = closure_coefficients(p; U=U, V=V)
     e_plus = _regularized_positive(e + delta, eps_pos)
     sqrt_e = sqrt(e_plus)
 
-    F = fast_vector_field_F(e, U, V, Ts, p; gamma_override=gamma)
+    F = fast_vector_field_F(e, U, V, Ts_eff, p; gamma_override=gamma)
 
     de_dt_raw = F / epsilon
     e_floor = -delta + eps_pos
@@ -225,9 +273,10 @@ function _rhs_4d!(du, u, p, t)
     du[1] = de_dt
     du[2] = f_coriolis * (V - Vg) - gamma * sqrt_e * U
     du[3] = -f_coriolis * (U - Ug) - gamma * sqrt_e * V
-    Rn = Rdown - sigma_sb * Ts^4
-    Gflux = lambda_soil * (Ts - Tdeep) / d_soil
-    H = rho_cp * C_H * sqrt_e * (Ts - theta_air)
+    theta_air_eff = muladd(alpha_air, Ts_eff, (1.0 - alpha_air) * theta_top)
+    Rn = Rdown - sigma_sb * Ts_eff^4
+    Gflux = lambda_soil * (Ts_eff - Tdeep) / d_soil
+    H = rho_cp * C_H * sqrt_e * (Ts_eff - theta_air_eff)
     du[4] = (Rn - H - Gflux) / C_skin
 
     return nothing
@@ -236,15 +285,23 @@ end
 """Solve the 4D GSPT-SBL ODE with stiff integration."""
 function solve_4d_sbl(
     ;
-    parameters::AbstractDict{String,<:Real}=default_4d_parameters(),
+    parameters::Union{Nothing,AbstractDict{String,<:Real}}=nothing,
     u0::AbstractVector{<:Real}=[1.0, 5.0, 0.0, 285.15],
     tspan::Tuple{<:Real,<:Real}=(0.0, 14.0 * 3600.0),
     solver::Symbol=:rodas5p,
     saveat::Real=30.0,
     abstol::Real=1.0e-8,
     reltol::Real=1.0e-6,
+    case_name::Union{Symbol,AbstractString}=:midlat,
 )
-    params = Dict{String,Float64}(k => Float64(v) for (k, v) in parameters)
+    params_source = isnothing(parameters) ? default_4d_parameters(case_name=case_name) : parameters
+    params = Dict{String,Float64}(k => Float64(v) for (k, v) in params_source)
+
+    _require_kelvin_temperature(get(params, "T_a", 0.0), "T_a")
+    _require_kelvin_temperature(get(params, "T_deep", 0.0), "T_deep")
+    _require_kelvin_temperature(get(params, "theta_top", get(params, "T_a", 0.0)), "theta_top")
+    _require_kelvin_temperature(u0[4], "Ts0")
+
     prob = ODEProblem(_rhs_4d!, collect(Float64, u0), (Float64(tspan[1]), Float64(tspan[2])), params)
 
     alg = if solver == :rosenbrock23

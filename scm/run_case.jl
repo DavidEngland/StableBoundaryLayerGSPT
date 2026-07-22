@@ -6,7 +6,9 @@ import CSV
 import DataFrames
 import JSON3
 
+include(joinpath(@__DIR__, "..", "src", "Config", "CaseDefaults.jl"))
 include(joinpath(@__DIR__, "scm_run.jl"))
+using .CaseDefaults: get_case_ts_min
 
 mutable struct SCMWorkspace{T}
     Km::Vector{T}
@@ -90,7 +92,7 @@ function _usage()
     println("  --k-exchange-min <m2/s>            Smooth lower bound for surface thermal exchange")
     println("  --ell-min-surf <meters>            Surface mixing-length floor")
     println("  --use-ell-floor-surf <true|false>  Enable surface mixing-length floor")
-    println("  --ts-min <K>                       Lower anomaly-guard surface temperature")
+    println("  --ts-min <K>                       Lower anomaly-guard surface temperature (default: case-aware)")
     println("  --ts-max <K>                       Upper anomaly-guard surface temperature")
     println("  --debug-print <true|false>         Emit periodic SEB diagnostics")
     println("  --save-jld2 <true|false>           Save payload.jld2 (default: true)")
@@ -138,7 +140,7 @@ function parse_args(args::Vector{String})
         "k_exchange_min" => 1.0e-4,
         "ell_min_surf" => 0.10,
         "use_ell_floor_surf" => false,
-        "ts_min" => 180.0,
+        "ts_min" => nothing,
         "ts_max" => 350.0,
         "debug_print" => false,
         "save_jld2" => true,
@@ -313,7 +315,7 @@ function _base_case_params(N::Int, dz::Float64)
         "k_exchange_min" => 1.0e-4,
         "ell_min_surf" => 0.10,
         "use_ell_floor_surf" => false,
-        "ts_min" => 180.0,
+        "ts_min" => get_case_ts_min(:midlat),
         "ts_max" => 350.0,
         "theta_top_bc" => :neumann,
         "theta_top" => 265.0,
@@ -372,7 +374,7 @@ function build_case(case_name::String, N::Int, dz::Float64; theta_lapse_rate_ove
         d["nonlocal_h_max"] = 400.0
         d["z0m"] = 1.0e-4
         d["z0h"] = 1.0e-5
-        d["ts_min"] = 220.0
+        d["ts_min"] = get_case_ts_min(:sheba)
         d["theta_top_bc"] = :dirichlet
         d["theta_top"] = 257.0
         d["theta_lapse_rate"] = 0.004
@@ -511,6 +513,7 @@ function _apply_runtime_overrides!(p::SCMParameters, cfg)
     h_min = isnothing(cfg["nonlocal_h_min"]) ? p.nonlocal_h_min : Float64(cfg["nonlocal_h_min"])
     h_max = isnothing(cfg["nonlocal_h_max"]) ? p.nonlocal_h_max : Float64(cfg["nonlocal_h_max"])
     use_nonlocal_h_val = Bool(cfg["use_nonlocal_h"]) ? 1.0 : 0.0
+    ts_min_val = isnothing(cfg["ts_min"]) ? p.ts_min : Float64(cfg["ts_min"])
 
     return SCMParameters(
         p.N,
@@ -549,7 +552,7 @@ function _apply_runtime_overrides!(p::SCMParameters, cfg)
         Float64(cfg["k_exchange_min"]),
         Float64(cfg["ell_min_surf"]),
         Bool(cfg["use_ell_floor_surf"]),
-        Float64(cfg["ts_min"]),
+        ts_min_val,
         Float64(cfg["ts_max"]),
         p.theta_top_bc,
         p.theta_top,

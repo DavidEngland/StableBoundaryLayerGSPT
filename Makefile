@@ -149,6 +149,8 @@ paper-all:
 	$(MAKE) visual-assets
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET)
 	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
+	-bibtex reports/generated/paper
+	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
 	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
 
 archive-paper: reports/generated/paper.pdf
