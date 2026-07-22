@@ -25,7 +25,7 @@ The governing ODEs are
 \varepsilon \frac{de}{dt} &= l_0\,\Delta(U,V,T_s)\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right) + \beta\tilde e - \frac{\tilde e^{3/2}}{l_0}, \label{eq:gspt_fast}\\
 \frac{dU}{dt} &= f(V-V_g) - \gamma\sqrt{\tilde e}\,U, \label{eq:gspt_slow_u}\\
 \frac{dV}{dt} &= -f(U-U_g) - \gamma\sqrt{\tilde e}\,V, \label{eq:gspt_slow_v}\\
-\frac{dT_s}{dt} &= \frac{1}{C_s}\left[R_{\downarrow} - \sigma T_s^4 - \rho c_p C_H\sqrt{\tilde e}(T_s-T_a) - \frac{K_g}{d_g}(T_s-T_g)\right]. \label{eq:gspt_slow_ts}
+\frac{dT_s}{dt} &= \frac{1}{C_s}\left[R_{\downarrow} - \sigma T_s^4 - \rho c_p C_H\sqrt{U^2+V^2+\delta_u}\,(T_s-T_a) - \frac{K_g}{d_g}(T_s-T_g)\right]. \label{eq:gspt_slow_ts}
 \end{align}
 
 Here $\varepsilon \ll 1$ separates fast turbulence relaxation from slow momentum and thermodynamic evolution, $\delta>0$ sets the admissible lower boundary, $\alpha>0$ is the smooth activation scale near $\tilde e=0$, and $\beta$ controls nonlinear turbulence self-amplification in the fast subsystem.

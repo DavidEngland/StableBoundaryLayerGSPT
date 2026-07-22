@@ -104,34 +104,21 @@ function parse_args(args::Vector{String})
     return cfg
 end
 
-function _getkey(x, key::Symbol)
-    if hasproperty(x, key)
-        return getproperty(x, key)
-    elseif x isa AbstractDict
-        if haskey(x, key)
-            return x[key]
-        end
-        skey = String(key)
-        if haskey(x, skey)
-            return x[skey]
-        end
-    end
-    error("Missing key/property: $(key)")
-end
-
 function _maybe_getkey(x, key::Symbol)
     if hasproperty(x, key)
         return getproperty(x, key)
     elseif x isa AbstractDict
-        if haskey(x, key)
-            return x[key]
-        end
+        haskey(x, key) && return x[key]
         skey = String(key)
-        if haskey(x, skey)
-            return x[skey]
-        end
+        haskey(x, skey) && return x[skey]
     end
     return nothing
+end
+
+function _getkey(x, key::Symbol)
+    val = _maybe_getkey(x, key)
+    val === nothing && error("Missing key/property: $(key)")
+    return val
 end
 
 function _nearest_index(values::AbstractVector{<:Real}, target::Real)
@@ -144,6 +131,30 @@ function _flatten_field(rows, key::Symbol)
         append!(out, vec(_getkey(r, key)))
     end
     return out
+end
+
+function _sanitize_finite(arr; fallback::Float64=0.0)
+    out = Float64.(arr)
+    @inbounds for i in eachindex(out)
+        if !isfinite(out[i])
+            out[i] = fallback
+        end
+    end
+    return out
+end
+
+function _safe_clims(arr; pad::Float64=1.0e-12)
+    flat = vec(Float64.(arr))
+    finite_vals = filter(isfinite, flat)
+    if isempty(finite_vals)
+        return (0.0, 1.0)
+    end
+    lo = minimum(finite_vals)
+    hi = maximum(finite_vals)
+    if hi <= lo
+        return (lo - pad, hi + pad)
+    end
+    return (lo, hi)
 end
 
 function _savefig(Plots, fig, outdir::String, stem::String, ext::String)
@@ -217,6 +228,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     h_energy_floor_raw = _maybe_getkey(ts[1], :h_energy_floor)
     h_max_energy_gradient_raw = _maybe_getkey(ts[1], :h_max_energy_gradient)
     triheight_available = !isnothing(h_decoupling_raw) && !isnothing(h_energy_floor_raw) && !isnothing(h_max_energy_gradient_raw)
+
     h_decoupling = triheight_available ? [Float64(_getkey(r, :h_decoupling)) for r in ts] : Float64[]
     h_energy_floor = triheight_available ? [Float64(_getkey(r, :h_energy_floor)) for r in ts] : Float64[]
     h_max_energy_gradient = triheight_available ? [Float64(_getkey(r, :h_max_energy_gradient)) for r in ts] : Float64[]
@@ -224,14 +236,11 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     zc = collect(Float64, _getkey(hov, :z_centers))
     zf = collect(Float64, _getkey(hov, :z_faces))
     hov_t = collect(Float64, _getkey(hov, :t)) ./ 3600.0
-    hov_wind = Array{Float64}(undef, size(_getkey(hov, :wind))...)
-    hov_wind .= _getkey(hov, :wind)
-    hov_theta = Array{Float64}(undef, size(_getkey(hov, :theta))...)
-    hov_theta .= _getkey(hov, :theta)
-    hov_km = Array{Float64}(undef, size(_getkey(hov, :Km))...)
-    hov_km .= _getkey(hov, :Km)
-    hov_exi = Array{Float64}(undef, size(_getkey(hov, :e_xi))...)
-    hov_exi .= _getkey(hov, :e_xi)
+
+    hov_wind = _sanitize_finite(_getkey(hov, :wind))
+    hov_theta = _sanitize_finite(_getkey(hov, :theta))
+    hov_km = _sanitize_finite(_getkey(hov, :Km))
+    hov_exi = _sanitize_finite(_getkey(hov, :e_xi))
     zf_mid = zf[2:(end-1)]
 
     # =========================================================================
@@ -250,6 +259,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         title="Surface Thermodynamic Evolution",
         grid=true,
         gridalpha=0.3,
+        right_margin=12Plots.mm,
     )
     p1ar = Plots.twinx(p1a)
     Plots.plot!(
@@ -280,7 +290,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         gridalpha=0.3,
     )
 
-    p1 = Plots.plot(p1a, p1b; layout=(2, 1), size=(1100, 750), margin=5Plots.mm)
+    p1 = Plots.plot(p1a, p1b; layout=(2, 1), size=(1100, 750), margin=6Plots.mm)
     _savefig(Plots, p1, outdir, "fig01_timeseries_ts_h_ustar", fmt)
 
     # Figure 2: Hovmoller wind speed
@@ -294,6 +304,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         colorbar_title="|V| (m s^-1)",
         legend=:topright,
         dpi=dpi,
+        right_margin=6Plots.mm,
     )
     if triheight_available
         _overlay_triheight_tracks!(Plots, p2, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=true)
@@ -311,13 +322,14 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         colorbar_title="theta (K)",
         legend=:topright,
         dpi=dpi,
+        right_margin=6Plots.mm,
     )
     if triheight_available
         _overlay_triheight_tracks!(Plots, p3, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=false)
     end
     _savefig(Plots, p3, outdir, "fig03_hovmoller_theta", fmt)
 
-    # Figure 3b: Time-height closure diagnostics (K_m and e_xi) with tri-height tracks
+    # Figure 3b: Time-height closure diagnostics (K_m and e_xi)
     p3b_a = Plots.heatmap(
         hov_t,
         zf_mid,
@@ -326,6 +338,8 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         ylabel="z_face (m)",
         title="Figure 3b: Time-Height K_m",
         colorbar_title="K_m (m^2 s^-1)",
+        c=:viridis,
+        clims=_safe_clims(hov_km),
         legend=:topright,
         dpi=dpi,
     )
@@ -337,23 +351,24 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         ylabel="z_face (m)",
         title="Time-Height e_xi",
         colorbar_title="e_xi",
+        c=:inferno,
+        clims=_safe_clims(hov_exi),
         legend=:topright,
         dpi=dpi,
     )
     if triheight_available
         _overlay_triheight_tracks!(Plots, p3b_a, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=true)
         _overlay_triheight_tracks!(Plots, p3b_b, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=false)
-    else
-        println("Tri-height tracks not found in payload; skipping overlays.")
     end
-    p3b = Plots.plot(p3b_a, p3b_b; layout=(1, 2), size=(1500, 480))
+    p3b = Plots.plot(p3b_a, p3b_b; layout=(1, 2), size=(1500, 480), margin=5Plots.mm)
     _savefig(Plots, p3b, outdir, "fig03b_hovmoller_km_exi", fmt)
 
     # =========================================================================
-    # Figure 4: Vertical profiles [Consolidated Legend Only on Panel A]
+    # Figure 4: Vertical profiles
     # =========================================================================
     target_hours = unique([min(3.0, t_end_h), min(6.0, t_end_h), min(9.0, t_end_h)])
     t_idx = [_nearest_index(t_hours, th) for th in target_hours]
+    line_colors = [:royalblue, :darkorange, :seagreen, :crimson]
 
     p4a = Plots.plot(xlabel="U (m s^-1)", ylabel="z (m)", title="U(z)", dpi=dpi, legend=:topleft)
     p4b = Plots.plot(xlabel="theta (K)", ylabel="z (m)", title="theta(z)", dpi=dpi, legend=:none)
@@ -365,26 +380,33 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         dpi=dpi,
         xscale=:asinh,
         xguidefontsize=9,
-        legend=:topright, # Preserve separate legend here for the Ri_crit threshold
+        legend=:topright,
     )
 
-    for idx in t_idx
+    for (i, idx) in enumerate(t_idx)
         row = ts[idx]
         tt = t_hours[idx]
         lbl = @sprintf("t=%.1f h", tt)
-        Plots.plot!(p4a, _getkey(row, :U), zc; label=lbl, linewidth=2)
-        Plots.plot!(p4b, _getkey(row, :theta), zc; label="", linewidth=2)
-        Plots.plot!(p4c, _getkey(row, :Km_faces), zf[2:(end-1)]; label="", linewidth=2)
-        Plots.plot!(p4d, _getkey(row, :Ri_faces), zf[2:(end-1)]; label=lbl, linewidth=2)
+        col = line_colors[mod1(i, length(line_colors))]
+
+        u_prof = _sanitize_finite(_getkey(row, :U))
+        th_prof = _sanitize_finite(_getkey(row, :theta))
+        km_prof = _sanitize_finite(_getkey(row, :Km_faces))
+        ri_prof = _sanitize_finite(_getkey(row, :Ri_faces))
+
+        Plots.plot!(p4a, u_prof, zc; label=lbl, linewidth=2, color=col)
+        Plots.plot!(p4b, th_prof, zc; label="", linewidth=2, color=col)
+        Plots.plot!(p4c, km_prof, zf[2:(end-1)]; label="", linewidth=2, color=col)
+        Plots.plot!(p4d, ri_prof, zf[2:(end-1)]; label=lbl, linewidth=2, color=col)
     end
 
     Plots.vline!(p4d, [0.25]; color=:black, linestyle=:dash, linewidth=2, label="Ri_crit = 0.25")
 
-    p4 = Plots.plot(p4a, p4b, p4c, p4d; layout=(1, 4), size=(1760, 420))
+    p4 = Plots.plot(p4a, p4b, p4c, p4d; layout=(1, 4), size=(1760, 420), margin=6Plots.mm)
     _savefig(Plots, p4, outdir, "fig04_profiles_u_theta_km", fmt)
 
     # =========================================================================
-    # Figure 5: Surface energy budget [Merged Dual-Axis Legend]
+    # Figure 5: Surface energy budget
     # =========================================================================
     p5 = Plots.plot(
         t_hours,
@@ -396,12 +418,13 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         title="Figure 5: Surface Energy Budget",
         legend=:topright,
         dpi=dpi,
+        right_margin=12Plots.mm,
     )
     Plots.plot!(p5, t_hours, H; label="H", linewidth=2)
     Plots.plot!(p5, t_hours, G; label="G", linewidth=2)
     Plots.plot!(p5, t_hours, storage; label="Storage", linewidth=2, linestyle=:dash)
 
-    # Register right-axis labels as empty series to bring them into the unified legend box
+    # Proxy legends for right-axis curves
     Plots.plot!(p5, [], []; label="T_s (right axis)", linewidth=2, color=:black)
     Plots.plot!(p5, [], []; label="T_rad (right axis)", linewidth=2, color=:gray35, linestyle=:dot)
 
@@ -411,7 +434,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     _savefig(Plots, p5, outdir, "fig05_surface_energy_budget", fmt)
 
     # =========================================================================
-    # Figure 6: Closure response vs Ri_g, colored by height band
+    # Figure 6: Closure response vs Ri_g
     # =========================================================================
     z_face_mid = zf[2:(end-1)]
     z_top = maximum(zf)
@@ -420,15 +443,9 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     ri_min_display = max(-0.5, minimum(_flatten_field(ts, :Ri_faces)))
     ri_max_display = 1.0
 
-    ri_surface_band = Float64[]
-    q_surface_band = Float64[]
-    exi_surface_band = Float64[]
-    ri_mid_band = Float64[]
-    q_mid_band = Float64[]
-    exi_mid_band = Float64[]
-    ri_upper_band = Float64[]
-    q_upper_band = Float64[]
-    exi_upper_band = Float64[]
+    ri_surface_band, q_surface_band, exi_surface_band = Float64[], Float64[], Float64[]
+    ri_mid_band, q_mid_band, exi_mid_band = Float64[], Float64[], Float64[]
+    ri_upper_band, q_upper_band, exi_upper_band = Float64[], Float64[], Float64[]
 
     for row in ts
         ri_vec = _getkey(row, :Ri_faces)
@@ -470,25 +487,8 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         xlims=(ri_min_display, ri_max_display),
         dpi=dpi,
     )
-    Plots.scatter!(
-        p6a,
-        ri_mid_band,
-        q_mid_band;
-        markersize=2,
-        alpha=0.5,
-        color=:darkorange,
-        label="mid-BL / jet band (0.2-0.6 z_top)",
-    )
-    Plots.scatter!(
-        p6a,
-        ri_upper_band,
-        q_upper_band;
-        markersize=2,
-        alpha=0.5,
-        color=:seagreen,
-        label="upper band (z > 0.6 z_top)",
-    )
-
+    Plots.scatter!(p6a, ri_mid_band, q_mid_band; markersize=2, alpha=0.5, color=:darkorange, label="mid-BL (0.2-0.6 z_top)")
+    Plots.scatter!(p6a, ri_upper_band, q_upper_band; markersize=2, alpha=0.5, color=:seagreen, label="upper (z > 0.6 z_top)")
     Plots.hline!(p6a, [0.0]; color=:black, linestyle=:dash, linewidth=2, label="Q = 0")
 
     p6b = Plots.scatter(
@@ -505,29 +505,15 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         xlims=(ri_min_display, ri_max_display),
         dpi=dpi,
     )
-    Plots.scatter!(
-        p6b,
-        ri_mid_band,
-        exi_mid_band;
-        markersize=2,
-        alpha=0.5,
-        color=:darkorange,
-        label="mid-BL / jet band (0.2-0.6 z_top)",
-    )
-    Plots.scatter!(
-        p6b,
-        ri_upper_band,
-        exi_upper_band;
-        markersize=2,
-        alpha=0.5,
-        color=:seagreen,
-        label="upper band (z > 0.6 z_top)",
-    )
+    Plots.scatter!(p6b, ri_mid_band, exi_mid_band; markersize=2, alpha=0.5, color=:darkorange, label="mid-BL (0.2-0.6 z_top)")
+    Plots.scatter!(p6b, ri_upper_band, exi_upper_band; markersize=2, alpha=0.5, color=:seagreen, label="upper (z > 0.6 z_top)")
 
-    p6 = Plots.plot(p6a, p6b; layout=(1, 2), size=(1500, 480))
+    p6 = Plots.plot(p6a, p6b; layout=(1, 2), size=(1500, 480), margin=5Plots.mm)
     _savefig(Plots, p6, outdir, "fig06_phase_delta_exi", fmt)
 
+    # =========================================================================
     # Figure 7: Diffusivity response vs Ri
+    # =========================================================================
     ri_all = _flatten_field(ts, :Ri_faces)
     km_all = _flatten_field(ts, :Km_faces)
     kh_all = _flatten_field(ts, :Kh_faces)
@@ -540,45 +526,42 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         for i in eachindex(ri_all)
     ]
 
-    ri_zoom = ri_all[keep]
-    km_zoom = km_all[keep]
-    kh_zoom = kh_all[keep]
-
     p7a = Plots.scatter(
-        ri_zoom,
-        km_zoom;
+        ri_all[keep],
+        km_all[keep];
         markersize=2,
         alpha=0.5,
         xlabel="Ri_g",
         ylabel="K_m",
         title="K_m vs Ri_g (Ri_g <= 2)",
         xlims=(ri_min_display, ri_max_display),
-        bottom_margin=8Plots.mm,
-        left_margin=6Plots.mm,
         label="",
         legend=:none,
         dpi=dpi,
     )
     p7b = Plots.scatter(
-        ri_zoom,
-        kh_zoom;
+        ri_all[keep],
+        kh_all[keep];
         markersize=2,
         alpha=0.5,
         xlabel="Ri_g",
         ylabel="K_h",
         title="K_h vs Ri_g (Ri_g <= 2)",
         xlims=(ri_min_display, ri_max_display),
-        bottom_margin=8Plots.mm,
-        left_margin=6Plots.mm,
         label="",
         legend=:none,
         dpi=dpi,
     )
-    p7 = Plots.plot(p7a, p7b; layout=(1, 2), size=(1280, 460))
+    p7 = Plots.plot(p7a, p7b; layout=(1, 2), size=(1280, 460), margin=6Plots.mm)
     _savefig(Plots, p7, outdir, "fig07_diffusivity_vs_ri", fmt)
 
+    # =========================================================================
     # Figure 8: Quadratic fold-distance diagnostic vs time
-    fold_distance = [(Float64(_getkey(p, :l_0)) * Float64(val))^2 - Float64(_getkey(p, :delta)) for val in delta_surface]
+    # =========================================================================
+    l_0 = Float64(_getkey(p, :l_0))
+    delta_p = Float64(_getkey(p, :delta))
+    fold_distance = [(l_0 * Float64(val))^2 - delta_p for val in delta_surface]
+
     p8 = Plots.plot(
         t_hours,
         fold_distance;
@@ -596,15 +579,11 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     manifest_path = joinpath(outdir, "figure_manifest.txt")
     open(manifest_path, "w") do io
         println(io, "Generated figures from payload: $(payload_path)")
-        println(io, "- fig01_timeseries_ts_h_ustar.$(fmt)")
-        println(io, "- fig02_hovmoller_wind.$(fmt)")
-        println(io, "- fig03_hovmoller_theta.$(fmt)")
-        println(io, "- fig03b_hovmoller_km_exi.$(fmt)")
-        println(io, "- fig04_profiles_u_theta_km.$(fmt)")
-        println(io, "- fig05_surface_energy_budget.$(fmt)")
-        println(io, "- fig06_phase_delta_exi.$(fmt)")
-        println(io, "- fig07_diffusivity_vs_ri.$(fmt)")
-        println(io, "- fig08_fold_proximity.$(fmt)")
+        for fig in ("fig01_timeseries_ts_h_ustar", "fig02_hovmoller_wind", "fig03_hovmoller_theta",
+            "fig03b_hovmoller_km_exi", "fig04_profiles_u_theta_km", "fig05_surface_energy_budget",
+            "fig06_phase_delta_exi", "fig07_diffusivity_vs_ri", "fig08_fold_proximity")
+            println(io, "- $(fig).$(fmt)")
+        end
     end
 
     println("saved: $(manifest_path)")

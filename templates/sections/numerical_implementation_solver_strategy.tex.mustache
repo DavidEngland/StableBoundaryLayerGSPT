@@ -106,6 +106,8 @@ The implementation pipeline is straightforward. The full state vector is assembl
 
 To ensure reproducibility, a self-contained Julia reference implementation of the complete gated 4D system is provided below, leveraging the SciML \texttt{DifferentialEquations.jl} stack with automatic differentiation:
 
+\begingroup
+\footnotesize
 \begin{verbatim}
 using DifferentialEquations
 using LinearAlgebra
@@ -157,15 +159,18 @@ function gspt_sbl_dynamics!(dx, x, p, t)
     phi = e + delta
 
     # Emergent effective boundary-layer height with runtime clamp
-    h_eff = clamp(h_bl * (sqrt(U^2 + V^2 + 1.0e-6) / max(Ug, 1.0e-6)), h_min, h_max)
+    vel_ratio = sqrt(U^2 + V^2 + 1.0e-6) / max(Ug, 1.0e-6)
+    h_eff = clamp(h_bl * vel_ratio, h_min, h_max)
     gamma_eff = gamma * (h_bl / h_eff)
 
     # 2.1 Smooth Safeguard Floor Gate
-    # +1.0e-15 prevents NaN dual-number derivatives from the 1/(2*sqrt(phi)) singular limit at phi = 0.
+    # +1.0e-15 prevents NaN dual-number derivatives
+    # from the 1/(2*sqrt(phi)) singular limit at phi = 0.
     psi = sqrt(phi + 1.0e-15) / (sqrt(phi + 1.0e-15) + alpha_safe)
 
     # 2.2 Physical Auxiliary Functions
-    # Bounded tanh stability response prevents runaway buoyancy growth under deep inversions.
+    # Bounded tanh stability response prevents
+    # runaway buoyancy growth under deep inversions.
     G_Ts = tanh(beta * (Ta - Ts) / Ta)
 
     # Net mechanical production minus buoyancy balance
@@ -183,7 +188,8 @@ function gspt_sbl_dynamics!(dx, x, p, t)
     G  = lambda * (Ts - Tdeep) / d_soil
 
     # 2.3 Evaluated Tendencies
-    # Fast TKE Equation (activated production + nonlinear dissipation)
+    # Fast TKE Equation:
+    # activated production + nonlinear dissipation
     dx[1] = (1.0 / epsilon) * (l0 * Delta * phi * psi + beta * phi - (phi^(3/2)) / l0)
 
     # Slow Momentum and Thermodynamic Equations
@@ -204,5 +210,7 @@ tspan = (0.0, 43200.0) # Full 12-hour production window
 prob = ODEProblem(gspt_sbl_dynamics!, x0, tspan)
 
 # Solve using Rodas5P (5th order A-L-stable Rosenbrock method with AD)
-sol = solve(prob, Rodas5P(autodiff=true), reltol=1.0e-6, abstol=1.0e-8)
+sol = solve(prob, Rodas5P(autodiff=true),
+            reltol=1.0e-6, abstol=1.0e-8)
 \end{verbatim}
+\endgroup

@@ -1,7 +1,4 @@
-Precompiling packages...
-   3769.7 ms  ✓ StableBoundaryLayerGSPT
-  1 dependency successfully precompiled in 5 seconds. 420 already precompiled.
 Bifurcation sweep complete
-run_dir=results/CASES99/bifurcation_20260721_122708
-summary=results/CASES99/bifurcation_20260721_122708/bifurcation_summary.json
+run_dir=results/CASES99/bifurcation_20260722_131242
+summary=results/CASES99/bifurcation_20260722_131242/bifurcation_summary.json
 report_fragment=reports/generated/diagnostics/03_bifurcation_sweep.md

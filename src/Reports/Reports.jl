@@ -4,67 +4,91 @@ using Dates
 
 export generate_report_fragments
 
-function render_source_section(source_path::String; dataset::String)
+"""
+    render_source_section(source_path::AbstractString; dataset::AbstractString)
+
+Read a template Markdown section from `source_path` and replace placeholders with runtime metadata.
+"""
+function render_source_section(source_path::AbstractString; dataset::AbstractString)
     if !isfile(source_path)
-        return "Source section missing: $(source_path)\n"
+        @warn "Source section template missing: $(source_path)"
+        return "_Source section missing: $(source_path)_\n"
     end
     raw = read(source_path, String)
     return replace(raw, "{{dataset}}" => dataset)
 end
 
-"""Generate manuscript fragments from computed diagnostics only."""
-function generate_report_fragments(dataset::String, diagnostics::AbstractDict{String,<:Any})
-    ri_mean = diagnostics["ri_mean"]
-    tke_mean = diagnostics["tke_mean"]
+"""
+    generate_report_fragments(dataset::AbstractString, diagnostics::AbstractDict{<:AbstractString,<:Any}; output_dir::AbstractString=joinpath("reports", "generated"))
 
-    targets = [
-        "reports/generated/theory",
-        "reports/generated/mathematics",
-        "reports/generated/physics",
-        "reports/generated/diagnostics",
-        "reports/generated/tables",
-    ]
-    for t in targets
-        mkpath(t)
+Generate manuscript Markdown fragments from computed diagnostics and section templates.
+"""
+function generate_report_fragments(
+    dataset::AbstractString,
+    diagnostics::AbstractDict{<:AbstractString,<:Any};
+    output_dir::AbstractString=joinpath("reports", "generated")
+)
+    # Safely retrieve diagnostic metrics with defaults
+    ri_mean = get(diagnostics, "ri_mean", "N/A")
+    tke_mean = get(diagnostics, "tke_mean", "N/A")
+
+    # Ensure all output directories exist
+    subdirs = ["theory", "mathematics", "physics", "diagnostics", "tables"]
+    for subdir in subdirs
+        mkpath(joinpath(output_dir, subdir))
     end
 
-    theory_source = render_source_section("templates/sections/theory_fast_slow_model.md"; dataset=dataset)
-    mathematics_source = render_source_section("templates/sections/mathematics_transition_mechanisms.md"; dataset=dataset)
-    physics_source = render_source_section("templates/sections/physics_nocturnal_cycle.md"; dataset=dataset)
-    archive_source = render_source_section("templates/sections/archive_synthesis.md"; dataset=dataset)
+    timestamp = Dates.now()
+    header(title) = "# $(title)\n\nGenerated: $(timestamp)\n\nDataset: $(dataset)\n\n"
 
-    write(
-        "reports/generated/theory/01_state_space.md",
-        "# Theory\n\nGenerated: $(Dates.now())\n\nDataset: $(dataset)\n\n$(theory_source)\n",
-    )
-    write(
-        "reports/generated/mathematics/01_fast_slow_system.md",
-        "# Mathematics\n\nGenerated: $(Dates.now())\n\nDataset: $(dataset)\n\n$(mathematics_source)\n",
-    )
-    write(
-        "reports/generated/physics/01_surface_energy_budget.md",
-        "# Physics\n\nGenerated: $(Dates.now())\n\nDataset: $(dataset)\n\n$(physics_source)\n",
-    )
-    write(
-        "reports/generated/theory/02_archive_synthesis.md",
-        "# Archive Synthesis\n\nGenerated: $(Dates.now())\n\nDataset: $(dataset)\n\n$(archive_source)\n",
-    )
-    write(
-        "reports/generated/diagnostics/01_core_metrics.md",
-        "# Core Metrics\n\nri_mean=$(ri_mean)\n\ntke_mean=$(tke_mean)\n",
-    )
-    write(
-        "reports/generated/diagnostics/02_validation.md",
-        "# Validation Gate\n\nAll required checks passed before visualization/report assembly.\n",
-    )
+    # Tuple mapping: (dict_key, relative_out_path, section_title, template_path)
+    fragment_specs = [
+        (
+            "theory",
+            joinpath("theory", "01_state_space.md"),
+            "Theory",
+            joinpath("templates", "sections", "theory_fast_slow_model.md"),
+        ),
+        (
+            "mathematics",
+            joinpath("mathematics", "01_fast_slow_system.md"),
+            "Mathematics",
+            joinpath("templates", "sections", "mathematics_transition_mechanisms.md"),
+        ),
+        (
+            "physics",
+            joinpath("physics", "01_surface_energy_budget.md"),
+            "Physics",
+            joinpath("templates", "sections", "physics_nocturnal_cycle.md"),
+        ),
+        (
+            "archive_synthesis",
+            joinpath("theory", "02_archive_synthesis.md"),
+            "Archive Synthesis",
+            joinpath("templates", "sections", "archive_synthesis.md"),
+        ),
+    ]
 
-    return Dict(
-        "theory" => "reports/generated/theory/01_state_space.md",
-        "archive_synthesis" => "reports/generated/theory/02_archive_synthesis.md",
-        "mathematics" => "reports/generated/mathematics/01_fast_slow_system.md",
-        "physics" => "reports/generated/physics/01_surface_energy_budget.md",
-        "diagnostics" => "reports/generated/diagnostics/01_core_metrics.md",
-    )
+    result_paths = Dict{String,String}()
+
+    # Generate template-driven fragments
+    for (key, rel_path, title, tpl_path) in fragment_specs
+        full_out_path = joinpath(output_dir, rel_path)
+        content = render_source_section(tpl_path; dataset=dataset)
+        write(full_out_path, header(title) * content * "\n")
+        result_paths[key] = full_out_path
+    end
+
+    # Generate diagnostics metrics fragment
+    diag_file = joinpath(output_dir, "diagnostics", "01_core_metrics.md")
+    write(diag_file, "# Core Metrics\n\nri_mean=$(ri_mean)\n\ntke_mean=$(tke_mean)\n")
+    result_paths["diagnostics"] = diag_file
+
+    # Generate validation status fragment
+    valid_file = joinpath(output_dir, "diagnostics", "02_validation.md")
+    write(valid_file, "# Validation Gate\n\nAll required checks passed before visualization/report assembly.\n")
+
+    return result_paths
 end
 
 end

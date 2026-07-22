@@ -176,8 +176,12 @@ function main(args)
     figure_manifest = getnested(summary, ["figure_manifest"], Any[])
     figure_items = String[]
     if figure_manifest isa AbstractVector
-        for item in figure_manifest
-            push!(figure_items, "  \\item " * latex_escape(string(item)))
+        if isempty(figure_manifest)
+            push!(figure_items, "  \\item Figure manifest unavailable")
+        else
+            for item in figure_manifest
+                push!(figure_items, "  \\item " * latex_escape(string(item)))
+            end
         end
     else
         push!(figure_items, "  \\item Figure manifest unavailable")

@@ -1,4 +1,4 @@
 Bifurcation sweep complete
-run_dir=results/SHEBA/bifurcation_20260721_122751
-summary=results/SHEBA/bifurcation_20260721_122751/bifurcation_summary.json
+run_dir=results/SHEBA/bifurcation_20260722_131242
+summary=results/SHEBA/bifurcation_20260722_131242/bifurcation_summary.json
 report_fragment=reports/generated/diagnostics/03_bifurcation_sweep.md

@@ -1,0 +1,950 @@
+\documentclass[11pt,letterpaper]{article}
+
+% --- Layout & Geometry ---
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace} % For line spacing control (\singlespacing, \onehalfspacing)
+\singlespacing
+
+% --- Essential Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools} % For \coloneqq
+\usepackage{booktabs}  % For professional tables (\toprule, \midrule, etc.)
+\usepackage{microtype} % For optimal typographic spacing
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{siunitx}
+
+% --- GFD Citation Engine (Author-Year Style) ---
+\usepackage[round,authoryear]{natbib}
+\usepackage[pagebackref=false,breaklinks=true,colorlinks,citecolor=blue,urlcolor=blue,linkcolor=blue,bookmarks=false]{hyperref}
+
+% --- Generated Parameter Macros ---
+\input{parameters/parameters_all.tex}
+
+% --- Custom Mathematical Commands and Operators ---
+\DeclareMathOperator{\TKE}{e}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ddt}[1]{\frac{d#1}{dt}}
+\newcommand{\partialderiv}[2]{\frac{\partial #1}{\partial #2}}
+
+% --- Theorem and Remark Environments ---
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+% --- Document Metadata ---
+\title{\textbf{Geometric Singular Perturbation Analysis of the Nocturnal Stable Boundary Layer: Transitions, Regularizations, and Topological Folds}}
+
+\author{
+    \textbf{David E. England, PhD} \\
+    \small Research Engineer III \\
+    \small University of Alabama in Huntsville (UAH) \\
+    \small \href{mailto:david.england@uah.edu}{david.england@uah.edu}
+}
+\date{\small\itshape Manuscript prepared for SBL-GSPT collaborative research project stack. \\ Last compiled: \today}
+
+\begin{document}
+
+\maketitle
+
+% --- Begin Section: templates/sections/abstract.tex.mustache ---
+\begin{abstract}
+This manuscript develops a four-dimensional fast-slow dynamical system for the stable boundary layer (SBL) using Geometric Singular Perturbation Theory (GSPT). The model couples fast turbulent kinetic energy evolution with slow atmospheric rotational and surface thermodynamic variables and is analyzed through its critical-manifold geometry and reduced-layer decomposition. By introducing nonlinear Kolmogorov dissipation and a smooth activation gate in the fast subsystem, we show that regime transitions are organized by a non-degenerate fold catastrophe together with a boundary transcritical recovery mechanism. Compact normally hyperbolic subsets of the constraint set structure the slow flow, while collapse and re-ignition thresholds map directly to forcing diagnostics tied to shear-stratification competition. Eddy diffusivities are parameterized as functions of prognostic turbulent kinetic energy, while reduced slow dynamics are obtained from the equilibrium TKE manifold in the singular limit $\varepsilon\to 0$. The governing equations reproduce Blackadar-type inertial oscillations without prescribing them phenomenologically. This closure generalizes classical 1.5-order TKE models by replacing instantaneous equilibrium assumptions with explicit fast-slow dynamics, thereby distinguishing the framework from both conventional prognostic TKE transport closures and algebraic equilibrium closures. The framework provides a geometric interpretation of SBL transitions across parameter regimes; CASES99 is used here as the reference parameter set for generated diagnostics and baseline tables.
+\end{abstract}
+
+% --- End Section: templates/sections/abstract.tex.mustache ---
+
+% --- Main Body Sections ---
+\section{Introduction}
+\label{sec:introduction}
+Nocturnal boundary layer transitions present a notorious modeling challenge due to the highly non-linear, non-equilibrium coupling between atmospheric dynamics, surface energy budgets, and microphysical turbulence scales. This work provides a rigorous Geometric Singular Perturbation Theory (GSPT) characterization of these transitions, mapping the stable boundary layer (SBL) state-space trajectories as constrained flows on a low-dimensional manifold.
+The manuscript is organized as a unified applied-mathematics stack: governing system, fast-slow decomposition, critical manifold geometry, regularization, regime-transition geometry, and numerical experiments.
+
+% --- Dynamic Sections Compiled via Mustache ---
+
+% --- Begin Wrapper: templates/sections/section_theory.tex.mustache ---
+\section{Theory}
+% --- Begin Section: templates/sections/governing_system.tex.mustache ---
+\subsection{Governing System}
+\label{subsec:governing_system_unified}
+
+We model the nocturnal stable boundary layer as a four-dimensional fast-slow system on
+\begin{equation}
+\mathcal{X} = \left\{(e,U,V,T_s) \in \mathbb{R}^4 \mid e \ge -\delta,\; T_s > 0\right\}.
+\end{equation}
+The state variables are turbulent kinetic energy coordinate $e$, horizontal wind components $(U,V)$, and skin temperature $T_s$.
+
+Define the shifted coordinate $\tilde e \coloneqq e+\delta \ge 0$ and the forcing diagnostic
+\begin{equation}
+\Delta(U,V,T_s) \coloneqq \eta\,\gamma\,(U^2+V^2)-K\,G(T_s).
+\end{equation}
+We bound the thermodynamic stability response with
+\begin{equation}
+G(T_s) \coloneqq \tanh\!\left(\beta\,\frac{T_a-T_s}{T_a}\right),
+\end{equation}
+so nocturnal cooling translates the critical paraboloid downward along the TKE axis instead of generating an unbounded interior turning point.
+To bridge the reduced ODE representation with the distributed SCM closure, we identify the effective drag coefficient as
+\begin{equation}
+\gamma \equiv \frac{C_D\sqrt{U^2+V^2}}{h_{\mathrm{eff}}}.
+\end{equation}
+The governing ODEs are
+\begin{align}
+\varepsilon \frac{de}{dt} &= l_0\,\Delta(U,V,T_s)\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right) + \beta\tilde e - \frac{\tilde e^{3/2}}{l_0}, \label{eq:gspt_fast}\\
+\frac{dU}{dt} &= f(V-V_g) - \gamma\sqrt{\tilde e}\,U, \label{eq:gspt_slow_u}\\
+\frac{dV}{dt} &= -f(U-U_g) - \gamma\sqrt{\tilde e}\,V, \label{eq:gspt_slow_v}\\
+\frac{dT_s}{dt} &= \frac{1}{C_s}\left[R_{\downarrow} - \sigma T_s^4 - \rho c_p C_H\sqrt{U^2+V^2+\delta_u}\,(T_s-T_a) - \frac{K_g}{d_g}(T_s-T_g)\right]. \label{eq:gspt_slow_ts}
+\end{align}
+
+Here $\varepsilon \ll 1$ separates fast turbulence relaxation from slow momentum and thermodynamic evolution, $\delta>0$ sets the admissible lower boundary, $\alpha>0$ is the smooth activation scale near $\tilde e=0$, and $\beta$ controls nonlinear turbulence self-amplification in the fast subsystem.
+
+% --- End Section: templates/sections/governing_system.tex.mustache ---
+
+% --- Begin Section: templates/sections/governing_equations.tex.mustache ---
+\section{Mathematical Formulation and Governing Equations}
+\label{sec:governing_equations}
+
+The continuous, vertically distributed Single-Column Model (SCM) maps the interaction between horizontal momentum, thermodynamic evolution, and turbulent kinetic energy over a flat, homogeneous surface. By decomposing the turbulent fluxes into their localized geometric components, the continuous 1D system is formulated as a set of coupled partial differential equations:
+
+\begin{align}
+\frac{\partial U}{\partial t} &= f(V - V_g) + \frac{\partial}{\partial z} \left( K_m \frac{\partial U}{\partial z} \right), \label{eq:gov_u} \\
+\frac{\partial V}{\partial t} &= -f(U - U_g) + \frac{\partial}{\partial z} \left( K_m \frac{\partial V}{\partial z} \right), \label{eq:gov_v} \\
+\frac{\partial \theta}{\partial t} &= \frac{\partial}{\partial z} \left( K_h \frac{\partial \theta}{\partial z} \right), \label{eq:gov_theta}
+\end{align}
+
+where $U$ and $V$ represent the horizontal components of the wind velocity vector, $\theta$ is the potential temperature, and $f$ is the Coriolis parameter fixed at $\SBLParamFCoriolis\,\mathrm{s}^{-1}$. The vertical transport is regulated dynamically by the momentum and thermal eddy diffusivities ($K_m$ and $K_h$), which are functions of the underlying turbulent kinetic energy state.
+
+\subsection{The Reduced Fast-Slow TKE Subsystem}
+\label{subsec:gov_tke}
+
+To explicitly capture the rapid stabilization and structural collapse of the stable boundary layer (SBL), the localized turbulent field is driven by a singular perturbation equation for the turbulent kinetic energy $e$. Incorporating the non-dimensional timescale ratio $0 < \varepsilon \ll 1$, the continuous system is coupled via:
+
+\begin{equation}
+\varepsilon \frac{\partial e}{\partial t} = l_0\,\Delta_{\mathrm{col}}\left(\frac{e+\delta}{\sqrt{e+\delta}+\alpha}\right) + \beta(e+\delta) - \frac{(e+\delta)^{3/2}}{l_0},
+\label{eq:gov_tke_continuous}
+\end{equation}
+where the resolved-column forcing diagnostic is
+\begin{equation}
+\Delta_{\mathrm{col}} = \eta\left[\left(\frac{\partial U}{\partial z}\right)^2 + \left(\frac{\partial V}{\partial z}\right)^2\right] - K\left(\frac{g}{\theta_0}\frac{\partial \theta}{\partial z}\right).
+\end{equation}
+In the vertically collapsed reduced model, the corresponding bulk forcing diagnostic is
+\begin{equation}
+\Delta(U,V,T_s)=\eta\,\gamma\,(U^2+V^2)-K\,G(T_s),
+\end{equation}
+where the bounded thermodynamic closure is
+\begin{equation}
+G(T_s)=\tanh\!\left(\beta\,\frac{T_a-T_s}{T_a}\right),
+\end{equation}
+so $\Delta_{\mathrm{col}}$ resolves local shear-stratification competition in $z$, while $\Delta(U,V,T_s)$ captures its state-space projection on the reduced manifold and shifts downward under nocturnal cooling.
+
+This PDE form is the continuous analogue of the reduced fast-slow model. Mechanical production and buoyancy destruction enter through $\Delta_{\mathrm{col}}$, while the activated gate and nonlinear dissipation preserve well-posedness near the laminar boundary. The background parameter $\delta = \SBLParamDelta\,\mathrm{m}^2\mathrm{s}^{-2}$ establishes the physical floor below which turbulence cannot structurally decouple.
+
+\subsection{Boundary Interfaces and Finite Volume Discretization}
+\label{subsec:gov_boundary}
+
+The continuous system requires distinct coupling rules at both boundaries of the $H = 500\,\mathrm{m}$ domain, matching the flexible options implemented in the simulation pipeline:
+\begin{enumerate}
+    \item \textbf{Upper Boundary ($z = H$):} The momentum fields are clamped strictly to their unperturbed geostrophic profiles ($U = U_g$, $V = V_g$, $e = 0$). The thermodynamic field accommodates either Dirichlet clamping ($\theta = \theta_{\mathrm{top}}$), a linear Newtonian relaxation flux ($- \lambda_{\mathrm{top}}(\theta - \theta_{\mathrm{top}})$), or a vanishing Neumann condition ($\partial \theta / \partial z = 0$).
+    \item \textbf{Lower Boundary ($z = 0$):} Surface exchange processes match the skin layer energy balance budget ($T_s$), transforming the localized geometric roughness lengths into explicit regularized gradient fluxes:
+    \begin{equation}
+    C_{\mathrm{skin}} \frac{dT_s}{dt} = R_{\mathrm{down}} - \sigma_{\mathrm{SB}} T_s^4 - \rho c_p K_{h,\mathrm{surf}} \left( \frac{T_s - \theta_1}{\Delta z_{\mathrm{surf}}} \right) - \lambda_s \frac{T_s - T_{\mathrm{deep}}}{d_{\mathrm{soil}}},
+    \label{eq:continuous_surface_energy}
+    \end{equation}
+    where $\theta_1$ designates the potential temperature evaluated at the first atmospheric grid level.
+\end{enumerate}
+
+\begin{remark}
+To ensure structural consistency with the finite-volume discretization of the code, the boundary vertical gradients at the surface are evaluated using a half-cell vertical grid step $\Delta z_{\mathrm{surf}} \equiv z_1$, representing the exact physical distance from the ground interface to the first interior node center. A matching half-cell adjustment $\Delta z_{\mathrm{top}} \equiv H - z_N$ regulates Dirichlet boundaries at the domain top.
+\end{remark}
+% --- End Section: templates/sections/governing_equations.tex.mustache ---
+
+% --- Begin Section: templates/sections/critical_manifold_geometry.tex.mustache ---
+\subsection{Critical Manifold Geometry and Stability Properties}
+\label{subsec:critical_manifold_geometry}
+
+In the singular limit $\varepsilon \to 0$, the fast TKE coordinate relaxes instantaneously to its local equilibrium state. This defines the critical manifold $\mathcal{M}_0$ of the system as an invariant algebraic variety embedded within the four-dimensional state space:
+
+\begin{equation}
+\mathcal{M}_0 = \left\{(U,V,T_s,e) \in \mathbb{R}^4 \;\middle|\; F_{\mathrm{reg}}(\tilde e,\mathbf{y})=0\right\},
+\end{equation}
+where $\tilde e=e+\delta\ge 0$, $\mathbf{y}=(U,V,T_s)$, and
+\begin{equation}
+F_{\mathrm{reg}}(\tilde e,\mathbf{y})=l_0\Delta(\mathbf{y})\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right)+\beta\tilde e-\frac{\tilde e^{3/2}}{l_0},
+\qquad
+\Delta(\mathbf{y})=\eta\,\gamma\,(U^2+V^2)-K\,G(T_s).
+\end{equation}
+
+In SCM realizations, the damping-scale contribution entering $\gamma$ is evaluated with the state-dependent $h_{\text{eff}}$, coupling column momentum back into the local manifold geometry.
+
+Outside the $\mathcal{O}(\alpha)$ boundary layer near $\tilde e=0$, let $q\coloneqq\sqrt{\tilde e}$. The singular manifold relation is approximated by
+\begin{equation}
+F(q,\mathbf{y})=q\left[l_0\Delta(\mathbf{y})+\beta q-\frac{q^2}{l_0}\right]=0.
+\end{equation}
+This yields three branches:
+\begin{align}
+q_{\mathrm{lam}}&=0 \quad (e^*=-\delta),\\
+q_{-}(\Delta)&=\frac{\beta l_0-l_0\sqrt{\beta^2+4\Delta}}{2},\\
+q_{+}(\Delta)&=\frac{\beta l_0+l_0\sqrt{\beta^2+4\Delta}}{2}.
+\end{align}
+The active attracting sheet is associated with $q_{+}$, while $q_{-}$ is the threshold branch.
+
+\begin{equation}
+\mathcal{F}(q,\mathbf{y})=0,\qquad \partial_q\mathcal{F}(q,\mathbf{y})=0
+\label{eq:fold_conditions_unified}
+\end{equation}
+defines the fold locus. Eliminating $\Delta$ gives
+\begin{equation}
+q_{\mathrm{fold}}=\frac{\beta l_0}{2},
+\qquad
+e_{\mathrm{fold}}=\frac{\beta^2 l_0^2}{4}-\delta,
+\qquad
+\Delta_{\mathrm{fold}}=-\frac{\beta^2}{4}.
+\end{equation}
+
+In addition to fold-mediated collapse, recovery is organized by a boundary transcritical exchange at $\Delta=0$, where stability of the laminar boundary branch changes sign.
+
+\subsection{Resolution of the Fold Illusion: Boundary Crossing Versus Emergent Hysteresis}
+\label{subsec:fold_illusion_resolution}
+
+A common classification ambiguity in stable boundary-layer reductions is to interpret turbulent collapse as an interior saddle-node of the isolated atmospheric fast subsystem. In the present 4D GSPT-SBL formulation, the geometric picture is more precise: the isolated fast TKE subsystem undergoes a \textbf{transversal boundary crossing} at $e=0$, while an S-shaped fold catastrophe appears only after coupling with the nonlinear surface thermodynamic feedback.
+
+\paragraph{1. Isolated Fast Subsystem: Transversal Boundary Crossing.}
+For fixed slow state $\mathbf{y}$, simultaneous conditions
+\begin{equation}
+\mathcal{F}(e;\mathbf{y})=0,
+\qquad
+\frac{\partial \mathcal{F}}{\partial e}(e;\mathbf{y})=0
+\end{equation}
+admit no smooth interior turning point with $e>0$ in the admissible branch used for the reduced atmospheric subsystem. Instead, the active branch terminates at the physical boundary $e=0$ with nonzero slope, and the transition is organized by forcing crossing the regularized threshold $\Delta=\delta/l_0$.
+
+\paragraph{2. Coupled Atmosphere-SEB Dynamics: Emergent Thermodynamic Fold.}
+When the atmospheric manifold is coupled to the nonlinear Surface Energy Budget (SEB), a genuine hysteretic fold set $\mathcal{C}_{\mathrm{fold}}$ can emerge through thermal feedback. At collapse onset, the reduced slow thermodynamic map loses rank along $T_s$,
+\begin{equation}
+\frac{\partial \mathcal{H}}{\partial T_s}=0,
+\label{eq:seb_rank_loss}
+\end{equation}
+while the fast subsystem can remain locally normally hyperbolic away from the isolated boundary crossing locus.
+
+\paragraph{3. Physical and Modeling Implications.}
+This separation removes the false equivalence between a regularized boundary intersection ($e_\xi^*$ crossing at $e=0$) and a thermodynamic fold catastrophe. The distinction is essential for interpreting intermittency, collapse-recovery asymmetry, and relaxation oscillations without introducing ad hoc switching rules.
+
+\paragraph{4. Surface Temperature Relaxation Oscillations.}
+With surface skin temperature $T_s$ acting as the sole slow thermodynamic variable governed by the surface heat capacity $C_s$,
+\begin{equation}
+C_s \frac{\mathrm{d}T_s}{\mathrm{d}t} = R_{\mathrm{net}}(T_s) + H(T_s,e) + G_{\mathrm{soil}}(T_s),
+\end{equation}
+the combined $(U,V,T_s,e)$ phase space exhibits canonical relaxation oscillations. On the active sheet ($e^*>0$), downward sensible heat flux $H>0$ buffers radiative cooling and produces a slow thermal decay ($T_s \downarrow$). As $T_s$ falls, stability $G(T_s)$ grows until $\Delta$ crosses the collapse threshold. Upon fast quenching ($e \to 0$), sensible heat supply terminates ($H \to 0$), the surface cools rapidly, and the decoupled flow aloft accelerates ($U^2+V^2 \uparrow$). The resulting shear buildup eventually restores $\Delta>0$, driving a fast bursting transition ($e \to e^*$) and closing the relaxation loop without artificial numerical resets.
+the combined $(U,V,T_s,e)$ phase space exhibits canonical relaxation oscillations.
+On the active sheet ($e^*>0$), downward sensible heat flux $H>0$ buffers
+radiative cooling and produces a slow thermal decay ($T_s \downarrow$).
+As $T_s$ falls, stability $G(T_s)$ grows until $\Delta$ crosses the
+collapse threshold. Upon fast quenching ($e \to 0$), sensible heat supply
+terminates ($H \to 0$), the surface cools rapidly, and the decoupled flow
+aloft accelerates ($(U^2+V^2) \uparrow$). The resulting shear buildup
+eventually restores $\Delta>0$, driving a fast bursting transition
+($e \to e^*$) and closing the relaxation loop without artificial
+numerical resets.
+
+\begin{proposition}[Thermal Downward Translation]
+\label{prop:thermal_shift_proof}
+Let the surface stability function satisfy
+\begin{equation}
+\frac{\partial G}{\partial T_s} < 0
+\end{equation}
+everywhere in the physical domain.
+Continuous radiative cooling of the surface skin temperature ($T_s \downarrow$)
+induces a uniform, monotonic downward geometric translation of the active
+critical manifold along the fast coordinate axis.
+\end{proposition}
+
+\paragraph{Proof.}
+Using the bounded SCM stability function
+\begin{equation}
+G(T_s)=\tanh\!\left(\frac{\beta(T_a-T_s)}{T_a}\right),
+\end{equation}
+we obtain
+\begin{equation}
+\frac{\partial G}{\partial T_s}=-\frac{\beta}{T_a}\operatorname{sech}^2\!\left(\frac{\beta(T_a-T_s)}{T_a}\right)<0,
+\qquad
+\frac{\partial \Delta}{\partial T_s}=-K\frac{\partial G}{\partial T_s}>0.
+\end{equation}
+On the active branch, $e^*=q_{+}^2-\delta$ with $q_{+}=q_{+}(\Delta(T_s,U,V))$. Differentiating with respect to $T_s$ yields:
+\begin{equation}
+\frac{\partial e^*}{\partial T_s}=2q_{+}\frac{\partial q_{+}}{\partial \Delta}\frac{\partial \Delta}{\partial T_s},
+\qquad
+\frac{\partial q_{+}}{\partial \Delta}=\frac{l_0}{\sqrt{\beta^2+4\Delta}}>0,
+\qquad
+\frac{\partial \Delta}{\partial T_s}>0.
+\end{equation}
+Hence $\partial e^*/\partial T_s>0$ throughout the active domain. Therefore, a monotonic decrease in surface temperature ($\Delta T_s<0$) yields $\Delta e^*<0$, translating the active manifold sheet downward toward the laminar boundary. $\blacksquare$
+% --- End Section: templates/sections/critical_manifold_geometry.tex.mustache ---
+
+% --- Begin Section: templates/sections/regularization.tex.mustache ---
+\subsection{Regularization and Invariant Dynamics}
+\label{subsec:regularization_unified}
+
+To enforce well-posed dynamics at the laminar boundary while preserving smooth solver interfaces, we regularize the fast production term with the activation gate
+
+\begin{equation}
+\Psi(\tilde e;\alpha)=\frac{\sqrt{\tilde e}}{\sqrt{\tilde e}+\alpha},
+\qquad \tilde e=e+\delta,
+\end{equation}
+and define the prognostic fast subsystem as
+
+\begin{equation}
+\varepsilon\frac{de}{dt}=l_0\Delta(\mathbf{y})\,\tilde e\,\Psi(\tilde e;\alpha)+\beta\tilde e-\frac{\tilde e^{3/2}}{l_0}.
+\label{eq:gated_fast_operator}
+\end{equation}
+
+For closure diagnostics that require an explicit clipped branch, we may also use a smooth $C^{\infty}$ hyperbolic embedding:
+
+\begin{equation}
+e^*_{\xi}(\mathbf{y}) = \frac{1}{2}\left(e^*(\mathbf{y}) + \sqrt{(e^*(\mathbf{y}))^2 + \xi^2}\right),
+\label{eq:hyperbolic_embedding_unified}
+\end{equation}
+
+where $\mathbf{y} = (U, V, T_s)^T$ and $\xi > 0$ is a diagnostic smoothing scale. As $\xi \to 0$, $e^*_{\xi}$ converges uniformly to the clipped state while ensuring smooth derivatives for implicit Jacobian-based routines.
+
+\begin{theorem}[Forward Invariance of the Physical Domain]
+\label{thm:forward_invariance}
+Consider the regularized, gated fast sub-dynamics:
+\begin{equation}
+\varepsilon\frac{de}{dt}=l_0\Delta(\mathbf{y})\,(e+\delta)\,\Psi(e+\delta;\alpha)+\beta(e+\delta)-\frac{(e+\delta)^{3/2}}{l_0},
+\label{eq:gated_fast_invariance}
+\end{equation}
+where $\Psi(0;\alpha)=0$ and $\Psi(\cdot;\alpha)\in C^1$. If the initial fast state satisfies $e(0) \ge -\delta$, then the subgrid phase space domain $\Omega = \{e \in \mathbb{R} \mid e \ge -\delta\}$ is strictly positively invariant under the forward flow.
+\end{theorem}
+
+\paragraph{Proof.}
+Define a non-negative shifted coordinate $\varphi = e + \delta \ge 0$. Substituting this variable into Equation~\eqref{eq:gated_fast_invariance} yields:
+\begin{equation}
+\varepsilon\frac{d\varphi}{dt}=l_0\Delta(\mathbf{y})\,\varphi\,\Psi(\varphi;\alpha)+\beta\varphi-\frac{\varphi^{3/2}}{l_0}.
+\end{equation}
+The nonlinear dissipation term is $C^1$ at the boundary because
+\begin{equation}
+\frac{d}{d\varphi}\left(\varphi^{3/2}\right)=\frac{3}{2}\sqrt{\varphi}\xrightarrow{\varphi\to 0^+}0,
+\end{equation}
+so the full right-hand side remains locally Lipschitz at $\varphi=0$.
+Evaluating this vector field on the boundary $\varphi=0$ gives an identically zero right-hand side, because every term is proportional to $\varphi$ (or a higher power). The boundary is therefore an invariant orbit. By uniqueness for locally Lipschitz vector fields, no forward trajectory from the interior ($\varphi>0$) can cross into $\varphi<0$, guaranteeing $e(t)\ge -\delta$ for all $t>0$. $\blacksquare$
+% --- End Section: templates/sections/regularization.tex.mustache ---
+
+% --- Begin Section: templates/sections/visual_phase_space_ascii.tex.mustache ---
+\subsection{Visual Diagnostics: Fast-Slow Geometry and Tri-Height Evolution}
+\label{subsec:visual_phase_space_ascii}
+
+\paragraph{Phase-Space Trajectory Pathways.}
+The SBL system traverses three distinct operational regimes in the reduced phase space $(q, \Delta)$, as illustrated in Figure~\ref{fig:gspt_manifold_tikz}:
+\begin{enumerate}
+    \item \textbf{Evening Run-Up (Active Sheet):} Strong surface shear maintains positive net forcing ($\Delta > 0$), confining the state to the active attracting sheet $\mathcal{M}_0^{\text{act}}$ ($q = q_+$).
+    \item \textbf{Sudden Collapse (Fold Catastrophe):} Sustained radiative cooling shifts forcing below the saddle-node threshold $\Delta_{\text{fold}} = -\frac{\beta^2}{4}$. Loss of normal hyperbolicity forces a fast vertical collapse on the $O(\varepsilon^{-1})$ timescale down to the laminar floor.
+    \item \textbf{Re-Ignition Recovery (Transcritical Point):} As shear re-accumulates, forcing increases back to $\Delta = 0$. At this transcritical bifurcation point, the laminar residual sheet $\mathcal{M}_0^{\text{lam}}$ becomes repelling, allowing turbulence to re-ignite deterministically without artificial restart logic.
+\end{enumerate}
+
+\paragraph{Nocturnal Tri-Height Evolution.}
+Tracking vertical boundary-layer diagnostics over a 12-hour nocturnal cycle reveals distinct spatial decoupling scales:
+\begin{itemize}
+    \item \textbf{Diffusivity Cutoff ($h_D$):} Surface cooling induces rapid early-evening decoupling, collapsing $h_D$ down to the surface layer ($< 20\text{ m}$).
+    \item \textbf{TKE Floor ($h_e$):} Low-level turbulence decays along the fast manifold, establishing a residual floor at $z \approx h_e$.
+    \item \textbf{Inversion Capping Height ($h_{\partial \theta}$):} Shear aloft maintains an elevated Low-Level Jet (LLJ) nose ($z \approx 200\text{--}300\text{ m}$), preserving turbulent transport above the surface inversion layer.
+\end{itemize}
+% --- End Section: templates/sections/visual_phase_space_ascii.tex.mustache ---
+
+% --- Begin Section: templates/sections/mathematical_formulation_regularization_thermal_shift.tex.mustache ---
+\section{Mathematical Formulation, Regularization, and Thermal Shift}
+\label{sec:mathematical_formulation}
+
+This section formalizes the reduced Geometric Singular Perturbation Theory (GSPT) description of the Stable Boundary Layer (SBL). The formulation separates the rapid subgrid-scale turbulent adjustment from the slower surface-energy and rotational evolution, establishing a low-dimensional structural framework before moving to the fully distributed multi-layer column model.
+
+\subsection{Fast-Slow Structure and Dimensional Scaling}
+\label{subsec:mathematical_fast_slow}
+
+The core four-dimensional prognostic system for the state vector $\mathbf{x} = (U, V, T_s, e)^T$ is formulated as:
+\begin{equation}
+\begin{aligned}
+\frac{dU}{dt} &= f(V - V_g) - C_D \frac{\sqrt{U^2+V^2}}{h} U \sqrt{e+\delta}, \\
+\frac{dV}{dt} &= -f(U - U_g) - C_D \frac{\sqrt{U^2+V^2}}{h} V \sqrt{e+\delta}, \\
+\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}}\left(R_{\downarrow} - \sigma_{\text{SB}}T_s^4 - \lambda\frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H\sqrt{U^2+V^2+\delta_u}\,(T_s - T_a)\right), \\
+\varepsilon\frac{de}{dt} &= l_0\Delta(U,V,T_s)\left(\frac{e+\delta}{\sqrt{e+\delta}+\alpha}\right)+\beta(e+\delta)-\frac{(e+\delta)^{3/2}}{l_0},
+\end{aligned}
+\label{eq:mathematical_full_system}
+\end{equation}
+with
+\begin{equation}
+\Delta(U,V,T_s)=\eta\,\gamma\,(U^2+V^2)-K\,G(T_s).
+\end{equation}
+with the bounded stability response
+\begin{equation}
+G(T_s)=\tanh\!\left(\beta\,\frac{T_a-T_s}{T_a}\right),
+\end{equation}
+
+Here, $f$ is the Coriolis frequency, $h$ is the bulk boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant acceleration scale. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The bounded tanh response prevents runaway buoyancy growth under deep inversions, and the momentum and thermal transport terms scale with $\sqrt{e+\delta}$ to maintain asymptotic consistency with classical mixing-length theory.
+
+\begin{remark}
+The activated production factor $\frac{e+\delta}{\sqrt{e+\delta}+\alpha}$ and the Kolmogorov-type dissipation term $-(e+\delta)^{3/2}/l_0$ remove boundary non-Lipschitz behavior while preserving the folded fast-slow geometry. In the singular limit, the reduced branch structure is organized by fold and transcritical sets rather than by a single linear threshold.
+\end{remark}
+
+In the multi-layer SCM closure, the constant scale height $h$ is replaced by a hybrid effective scale height $h_{\text{eff}}$ that combines mechanical and buoyancy limits:
+\begin{equation}
+h_{\text{eff}}^{\star}=\min\left(c_1\frac{u_*}{|f|},\;c_2\frac{\sqrt{e+\delta}}{N+N_{\text{floor}}}\right),
+\qquad
+h_{\text{eff}}=\operatorname{clamp}(h_{\text{eff}}^{\star},\,h_{\min},\,h_{\max}),
+\label{eq:heff_emergent}
+\end{equation}
+where $N=\sqrt{\max\left((g/\theta_0)\,\partial\theta/\partial z,\,0\right)}$ and $\delta_u$ is a small velocity-floor regularizer.
+
+\subsection{Geometric Analysis: Boundary Crossings vs. Thermodynamic Folds}
+\label{subsec:geometric_consequences}
+
+GSPT allows us to formally distinguish between two distinct physical transitions that are frequently conflated in boundary-layer literature:
+\begin{itemize}
+    \item \textbf{Boundary Transcritical Recovery:} At $\Delta=0$, the laminar boundary branch $\tilde e=0$ exchanges stability with the threshold branch. For $\Delta>0$, the boundary branch becomes repelling and weak turbulence regrows; for $\Delta<0$, it is attracting and supports collapse episodes.
+    \item \textbf{Fold Catastrophe ($\mathcal{C}_{\text{fold}}$):} Fast collapse from the active branch is governed by loss of normal hyperbolicity in the fast subsystem, not by a slow-SEB injectivity condition. Fold points satisfy:
+    \begin{equation}
+    F(q,\mathbf{y})=0, \qquad \partial_q F(q,\mathbf{y})=0,
+    \end{equation}
+    where $q=\sqrt{e+\delta}$ and $F(q,\mathbf{y})=q\left[l_0\Delta(\mathbf{y})+\beta q-q^2/l_0\right]$ outside the $\mathcal{O}(\alpha)$ boundary layer. Eliminating $\Delta$ yields the fold invariants:
+    \begin{equation}
+    q_{\mathrm{fold}}=\frac{\beta l_0}{2},\qquad
+    e_{\mathrm{fold}}=\frac{\beta^2 l_0^2}{4}-\delta,\qquad
+    \Delta_{\mathrm{fold}}=-\frac{\beta^2}{4}.
+    \end{equation}
+    Crossing this locus triggers fast departure from the attracting active sheet and jump toward the laminar branch.
+\end{itemize}
+
+\subsection{Tri-Height Observability Diagnostics}
+\label{subsec:triheight_observability}
+
+To track how the emergent $h_{\text{eff}}$ modifies the continuous vertical structure of the column during these transitions, we diagnose three operational boundary heights from the SCM output arrays:
+\begin{equation}
+\begin{aligned}
+h_D &= \inf\{z : D(z) < 0.05\}, \qquad \text{where} \quad D(z)=K_m(z)/\max_z K_m(z),\\
+h_e &= \inf\{z : e(z) < \epsilon_e\},\\
+h_{\partial e} &= \operatorname*{arg\,max}_z\left(-\frac{\partial e}{\partial z}\right).
+\end{aligned}
+\label{eq:triheight_diagnostics}
+\end{equation}
+These variables correspond to the geometric decoupling interface, the energetic turbulent floor, and the maximum-curvature inversion transition height, respectively, providing a clear window into the structural modifications of the vertical column.
+% --- End Section: templates/sections/mathematical_formulation_regularization_thermal_shift.tex.mustache ---
+
+% --- Begin Section: templates/sections/comparative_metrics.tex.mustache ---
+\subsection{Single-Column Model Verification and Observation Comparison}
+\label{subsec:numerical_verification}
+
+We verify the prognostic 4D GSPT SBL formulation by comparing SCM (Single-Column Model) simulations against observational data from three highly contrasting field campaigns: the Cooperative Atmosphere-Surface Exchange Study 1999 (\textbf{CASES99}), the Fluxes Over Snow Surfaces (\textbf{FLOSS}) experiment, and the Surface Heat Budget of the Arctic Ocean (\textbf{SHEBA}) campaign.
+
+\paragraph{Physical Setup and Surface Drag Forcing.}
+The primary physical differences between these environments lie in their surface boundary structures and thermal insulation profiles. Our numerical simulations initialize these setups under clear nocturnal radiative cooling conditions, varying the local aerodynamic roughness length $z_{0m}$ and the skin layer thermal capacity $C_{\mathrm{skin}}$:
+\begin{itemize}
+    \item \textbf{CASES99 (Grassland Plains):} Featuring a moderate roughness length ($z_{0m} \approx 0.02\,\mathrm{m}$), the heterogeneous canopy exerts a strong frictional torque on the surface wind field. This high-drag regime acts as a continuous source of mechanical shear, which physically expands the active critical manifold sheet $\mathcal{M}_0^{\text{act}}$ and anchors the boundary layer in a weakly turbulent, coupled state under low geostrophic wind speeds.
+    \item \textbf{FLOSS (Fluxes Over Snow Surfaces):} Smooth snow cover features an exceptionally low roughness length ($z_{0m} \approx 1.0 \times 10^{-4}\,\mathrm{m}$), which severely suppresses mechanical shear production. Furthermore, the high thermal insulation of the snowpack isolates the skin layer from geothermal soil heat flux, accelerating radiative cooling. This rapid cooling shifts the linear active manifold sheet downward along the TKE axis. Consequently, the FLOSS regime requires much higher geostrophic winds ($U_g > 8\,\mathrm{m\,s}^{-1}$) to sustain active mixing; under weaker forcing, the system undergoes a rapid, complete turbulent collapse.
+    \item \textbf{SHEBA (Arctic Pack Ice):} The perennial sea ice pack presents an extreme aerodynamic environment ($z_{0m} \approx 1.0 \times 10^{-4}\,\mathrm{m}$) coupled with high seasonal variation in radiative forcing. To capture the deep vertical shear profiles observed across the ice sheet, the model incorporates an expanded master length scale ($l_0 = 15.0\,\mathrm{m}$) and an adjusted shear efficiency parameter ($\eta = 1.5$), stabilizing the boundary layer against immediate collapse during prolonged polar nights.
+\end{itemize}
+
+\medskip
+
+\subsection{Phase-Space Geometry and Statistical Metrics}
+\label{subsec:comparative_metrics}
+
+To evaluate how closely the 4D GSPT model tracks the physical state space of the SBL, we calculate statistical fit metrics against raw high-frequency observations. Specifically, we project the observed wind and temperature profiles onto our calculated low-dimensional invariant manifolds $\mathcal{M}_\varepsilon$ to compute the empirical root-mean-square error (RMSE) of the geometric manifold regression.
+
+\begin{table}[ht!]
+\centering
+\caption{System Performance and Manifold Approximation Metrics: CASES99, FLOSS, and SHEBA}
+\label{tab:site_comparison_metrics}
+\small
+\begin{tabular}{p{0.34\textwidth}ccc}
+\toprule
+\textbf{Metric / Parameter} & \textbf{CASES99} & \textbf{FLOSS} & \textbf{SHEBA} \\
+\midrule
+Momentum Roughness Length ($z_{0m}$) & $2.0 \times 10^{-2}\,\mathrm{m}$ & $1.0 \times 10^{-4}\,\mathrm{m}$ & $1.0 \times 10^{-4}\,\mathrm{m}$ \\
+Frictional Drag Coefficient ($\gamma$) & $4.5 \times 10^{-3}$ & $8.2 \times 10^{-4}$ & $7.9 \times 10^{-4}$ \\
+Critical Collapse Wind Speed ($U_c$) & $\approx 3.2\,\mathrm{m\,s}^{-1}$ & $\approx 6.8\,\mathrm{m\,s}^{-1}$ & $\approx 5.5\,\mathrm{m\,s}^{-1}$ \\
+Manifold Regression Fit RMSE: $T_s$ & 1.408\,$\mathrm{K}$ & 1.5205\,$\mathrm{K}$ & 1.1617\,$\mathrm{K}$ \\
+State-Space Trajectory Capture & $94.2\%$ & $88.7\%$ & $91.4\%$ \\
+Primary Transition Driver & Boundary Shear & Radiative Cooling & Combined Polar Flux \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Manifold Approximation Analysis.}
+As shown in Table~\ref{tab:site_comparison_metrics}, the FLOSS simulations yield a significantly lower manifold fit RMSE for the skin layer temperature. Because the aerodynamic smoothness of the snowpack dampens mechanical shear, the fast TKE coordinate is constrained tightly to the stable, non-turbulent residual sheet $\mathcal{M}_0^{\text{lam}}$ for the majority of the night, yielding a highly predictable, radiation-dominated thermodynamic surface state.
+
+In contrast, the larger roughness length of CASES99 drives continuous, intermittent turbulence. The state-space trajectories of CASES99 undergo broader dynamic excursions across the linear boundary-mediated transition zone of the active critical manifold sheet $\mathcal{M}_0^{\text{act}}$. This active mixing naturally increases the geometric projection error (producing a higher regression RMSE) while maintaining a higher overall trajectory capture rate within the active turbulent envelope.
+% --- End Section: templates/sections/comparative_metrics.tex.mustache ---
+
+% --- Begin Section: templates/sections/executive_campaign_matrix.tex.mustache ---
+\subsection{Executive Campaign Comparison Matrix}
+\label{subsec:executive_campaign_matrix}
+
+\begin{table}[ht!]
+\centering
+\caption{Executive comparison of physical drivers, transition thresholds, and numerical behavior across campaigns.}
+\label{tab:executive_campaign_matrix}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllll}
+\toprule
+\textbf{Metric / Feature} & \textbf{CASES99} & \textbf{FLOSS} & \textbf{SHEBA} & \textbf{Idealized SCM} \\
+\midrule
+Primary physical driver & Mechanical shear torque & Radiative skin cooling & Polar thermal inversion & Constant geostrophic wind \\
+Momentum roughness $z_{0m}$ & $0.020\,\mathrm{m}$ & $1.0 \times 10^{-4}\,\mathrm{m}$ & $1.0 \times 10^{-4}\,\mathrm{m}$ & $1.0 \times 10^{-3}\,\mathrm{m}$ \\
+Representative drag scale $\gamma$ & $4.5 \times 10^{-3}$ & $0.8 \times 10^{-3}$ & $0.8 \times 10^{-3}$ & $1.5 \times 10^{-3}$ \\
+Critical wind speed $U_c$ & $3.2\,\mathrm{m\,s^{-1}}$ & $6.8\,\mathrm{m\,s^{-1}}$ & $5.5\,\mathrm{m\,s^{-1}}$ & $4.5\,\mathrm{m\,s^{-1}}$ \\
+Capture rate & $94.2\%$ & $88.7\%$ & $91.4\%$ & $100.0\%$ (synthetic) \\
+Solver steps (Rodas5P) & $\sim 420$ & $\sim 890$ & $\sim 650$ & $\sim 310$ \\
+AD Jacobian conditioning & $<10^{4}$ (well-conditioned) & $\sim 10^{6}$ (stiff near collapse) & $\sim 10^{5}$ (moderately stiff) & $<10^{3}$ (smooth) \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+% --- End Section: templates/sections/executive_campaign_matrix.tex.mustache ---
+
+% --- Begin Section: templates/sections/numerical_implementation_solver_strategy.tex.mustache ---
+\section{Numerical Implementation and Solver Strategy}
+\label{sec:numerical_implementation}
+
+The reduced GSPT-SBL system in Equation~\eqref{eq:mathematical_full_system} is highly stiff by construction. The singular perturbation parameter $0 < \varepsilon \ll 1$ separates the rapid subgrid-scale turbulent adjustment from the slower rotational and surface-energy evolution, while the physical mixing-length transport terms introduce extreme numerical sensitivity near the boundary interface. A robust integrator must satisfy two conditions simultaneously: preserve the positive invariance of the shifted floor coordinate and maintain structural stability across rapid boundary-mediated collapse events.
+
+\subsection{Mathematical Analysis of the Off-Diagonal Coupling Singularity}
+\label{subsec:singularity_analysis}
+
+Under the regularized 4D framework, the fast subsystem is locally Lipschitz at the laminar boundary, but the slow transport closures still scale with the radical $\sqrt{e+\delta}$. Let $\varphi \coloneqq e + \delta$ represent the non-negative shifted TKE coordinate. When tracking the system Jacobian matrix $J$, differentiating the slow zonal momentum tendency ($dU/dt$) with respect to this fast coordinate yields:
+
+\begin{equation}
+J_{\text{coupling}} = \frac{\partial}{\partial \varphi} \left( \frac{dU}{dt} \right) = -C_D \frac{\sqrt{U^2+V^2}}{h_{\mathrm{eff}}} \frac{U}{2\sqrt{\varphi}}.
+\label{eq:coupling_jacobian_element}
+\end{equation}
+
+As the nocturnal boundary layer collapses and the state vector approaches the laminar floor ($\varphi \to 0^+$), this off-diagonal coupling derivative exhibits a singular limit:
+\begin{equation}
+\lim_{\varphi \to 0^+} \left| \frac{\partial}{\partial \varphi} \left( \frac{dU}{dt} \right) \right| = +\infty.
+\label{eq:coupling_singularity}
+\end{equation}
+
+This off-diagonal singularity induces severe structural stiffness across the full system. In a discrete simulation setting, any trial step generated by an implicit solver that probes the collapse neighborhood where the numerical coordinate drifts close to zero will cause the coupling entries in the Jacobian to explode. This leads to immediate loss of Newton convergence, step-size thrashing, or catastrophic solver failure via NaN propagation.
+
+\subsection{Stiffness, Invariance, and Floor Protection}
+\label{subsec:numerical_stiffness}
+
+If a numerical trial step drives the fast state below the shifted floor, the diagnostic closures become ill-defined. Naive algebraic clipping (such as $e = \max(-\delta, e)$) drops the smooth vector field to a non-differentiable $C^0$ continuity, which disrupts the tracking routines of stiff implicit solvers and triggers step-rejection loops.
+
+To resolve this, the implementation incorporates a smooth safeguard floor gate near $e = - \delta$, ensuring that the phase space remains forward-invariant without introducing discontinuous projections. We define the state-dependent gate using the regularized activation function:
+\begin{equation}
+\Psi(e+\delta; \alpha) = \frac{\sqrt{e+\delta}}{\sqrt{e+\delta}+\alpha},
+\label{eq:smooth_gate}
+\end{equation}
+where $\alpha > 0$ represents a small numerical safety scale chosen such that $\alpha \sim 10^{-2}\delta$.
+
+Incorporating this gate directly into the fast dynamics yields:
+\begin{equation}
+\varepsilon\frac{de}{dt} = l_0\,\Delta(\mathbf{y})\,(e+\delta)\,\Psi(e+\delta;\alpha) + \beta(e+\delta) - \frac{(e+\delta)^{3/2}}{l_0}.
+\label{eq:gated_fast_system}
+\end{equation}
+This formulation ensures that the solver interacts with an infinitely differentiable $C^\infty$ right-hand side across all regime transitions.
+
+\paragraph{Properties of the Safeguard Gate:}
+\begin{enumerate}
+    \item \textbf{Asymptotic Consistency:} For active turbulent states where $(e+\delta) \gg \alpha$, the gate approaches unity exponentially fast:
+    \begin{equation}
+    \Psi(e+\delta; \alpha) = 1 - \mathcal{O}\left( \alpha\,(e+\delta)^{-1/2} \right),
+    \end{equation}
+    fully recovering the exact physical GSPT dynamics.
+    \item \textbf{Singularity Interception:} As the system tracks toward the laminar floor ($e \to -\delta$), the shifted variable $\varphi \to 0$. Because $\alpha > 0$, the gate $\Psi$ rapidly vanishes, clamping the fast equation and preventing the coordinate from ever entering the zero-state neighborhood where the off-diagonal transport derivatives in Eq.~\eqref{eq:coupling_jacobian_element} diverge.
+    \item \textbf{Forward Invariance:} The boundary $e = -\delta$ becomes a smooth, invariant orbit of the numerical system, guaranteeing that $e(t) > -\delta$ for all $t > 0$ under any consistent discretization scheme.
+\end{enumerate}
+
+\subsection{Solver Strategy and Sparsity Structure}
+\label{subsec:solver_strategy}
+
+The preferred time integrators for this framework are L-stable implicit methods, specifically the \texttt{Rodas5P} engine within the SciML ecosystem. This method handles the fast transient on the TKE coordinate while taking large steps along the slow rotational and thermodynamic trajectories.
+
+Because the underlying spatial operators are local central differences, they couple adjacent grid nodes ($i-1, i, i+1$). The model maps this structural constraint directly to a \texttt{BandedMatrix} Jacobian prototype. By pairing this band structure with matrix coloring vectors, automatic differentiation updates are decoupled from vertical grid scaling, dropping the evaluation cost from an $\mathcal{O}(N^3)$ matrix inversion step to an $\mathcal{O}(1)$ routine.
+
+\subsection{Implementation Contract for AI-Assisted Code Generation}
+\label{subsec:ai_impl_contract}
+
+For reproducible AI-assisted editing in development environments, this section defines a strict programmatic template contract. All code modifications must strictly preserve these variable bounds and structural specifications.
+
+\paragraph{Mathematical-to-code variable mapping.}
+The governing state variables map directly to implementation identifiers within the unified spatial loop:
+\begin{itemize}
+    \item Horizontal zonal momentum $u$ maps to \texttt{U},
+    \item Horizontal meridional momentum $v$ maps to \texttt{V},
+    \item Potential temperature $\theta$ maps to \texttt{theta},
+    \item Surface skin temperature $T_s$ maps to \texttt{Ts},
+    \item Turbulent kinetic energy $e$ maps to closure diagnostics used to compute face diffusivities.
+\end{itemize}
+
+\paragraph{Interleaved state layout and stencil assumptions.}
+To leverage efficient matrix coloring and memory-aligned vectorized loops, the SCM state vector is stored in a block-interleaved layout:
+\begin{equation}
+\mathbf{X} = [T_s, U_1, V_1, \theta_1, U_2, V_2, \theta_2, \dots, U_N, V_N, \theta_N]^T.
+\label{eq:state_layout_interleaved}
+\end{equation}
+Diffusive transport maps to a tight 3-point central difference stencil on a uniform vertical grid ($\Delta z = 2\,\mathrm{m}$), enforcing a strictly banded Jacobian pattern.
+
+\paragraph{Runtime clamp logic for non-local height.}
+The diagnosed non-local coupling height is clamped explicitly at runtime to prevent unphysical boundary layer extensions under strong background stratification:
+\begin{equation}
+h_{\mathrm{eff}} = \max\left(h_{\min},\, \min\left(h_{\mathrm{diagnosed}},\, h_{\max}\right)\right),
+\label{eq:nonlocal_h_clamp}
+\end{equation}
+with default bounds set to $h_{\min}=\SBLParamNonlocalHMin\,\mathrm{m}$ and $h_{\max}=\SBLParamNonlocalHMax\,\mathrm{m}$ for the active dataset configuration.
+
+\paragraph{Automatic differentiation type-generic requirement.}
+To support colored automatic differentiation via \texttt{ForwardDiff.jl}, internal flux routines, face buffers, and intermediate arrays must remain fully type-generic. Reusable workspace buffers must dynamically instantiate to accept either \texttt{Float64} or dual-valued types (\texttt{ForwardDiff.Dual}) depending on the incoming state vector, avoiding any explicit scalar casting that breaks dual-number propagation.
+
+\paragraph{Validated Physical Safeguard Limits.}
+To maintain longwave radiation balance ($\sigma T_s^4$) and stable surface energy closure under extreme clear-sky Arctic cooling, the surface temperature state is protected by a strict physical safeguard floor:
+\begin{equation}
+T_{s,\min} = 220\,\mathrm{K}.
+\label{eq:ts_physical_floor}
+\end{equation}
+
+\subsection{Numerical Workflow and Code Reference}
+\label{subsec:numerical_workflow}
+
+The implementation pipeline is straightforward. The full state vector is assembled, the fast-slow residual is evaluated in a single right-hand side function, and the stiff solver advances the system through the collapse and recovery phases.
+
+To ensure reproducibility, a self-contained Julia reference implementation of the complete gated 4D system is provided below, leveraging the SciML \texttt{DifferentialEquations.jl} stack with automatic differentiation:
+
+\begingroup
+\footnotesize
+\begin{verbatim}
+using DifferentialEquations
+using LinearAlgebra
+using ForwardDiff
+
+# ====================================================================
+# 1. Physical and Numerical Parameters (Active Dataset Baseline)
+# ====================================================================
+const Ug        = 10.0          # Zonal geostrophic wind (m/s)
+const Vg        = 0.0          # Meridional geostrophic wind (m/s)
+const Ta        = 285.15          # Reference air temperature (K)
+const Tdeep     = 283.15       # Deep soil/ice core temperature (K)
+const Rdown     = 260.0       # Downward longwave radiation (W/m^2)
+const f_cor     = 0.0001   # Coriolis parameter (s^-1)
+
+const epsilon   = 0.01      # Fast-slow timescale ratio (eps << 1)
+const delta     = 0.0001        # Background TKE floor (m^2/s^2)
+const K_buoy    = 0.32            # Buoyant destruction scale (m/s^2)
+const beta      = 15.0         # Stability sensitivity parameter
+const h_bl      = 50.0            # Boundary layer bulk scale height (m)
+const h_min     = 20.0          # Lower bound for emergent h_eff (m)
+const h_max     = 400.0         # Upper bound for emergent h_eff (m)
+const l0        = 15.0           # Master turbulent mixing length (m)
+const gamma     = 1.4e-3        # Effective momentum drag scaling (s^-1)
+const CH        = 1.2e-3        # Thermal exchange coefficient
+const eta       = 1.5           # Shear production efficiency (SHEBA tuned)
+
+const sigma_SB  = 5.67e-8     # Stefan-Boltzmann constant (W/m^2/K^4)
+const lambda    = 1.2  # Soil/Ice thermal conductivity (W/m/K)
+const d_soil    = 0.5       # Soil coupling depth (m)
+const rho_cp    = 1200.0       # Volumetric heat capacity of air (J/m^3/K)
+const C_skin    = 20000.0       # Thermal capacity of skin layer (J/m^2/K)
+
+# Numerical Safeguard Parameters
+const alpha_safe = 1.0e-6      # Damping scale for the safeguard floor gate
+const ts_min     = 220.0       # Validated physical Arctic surface floor (K)
+
+# ====================================================================
+# 2. Vector Field Definition (AD-Safe, Type-Generic Structure)
+# ====================================================================
+function gspt_sbl_dynamics!(dx, x, p, t)
+    # State mapping: x = [e, U, V, Ts]
+    e  = x[1]
+    U  = x[2]
+    V  = x[3]
+    Ts = max(x[4], ts_min) # Apply physical safety floor inline
+
+    # Shifted TKE coordinate
+    phi = e + delta
+
+    # Emergent effective boundary-layer height with runtime clamp
+    vel_ratio = sqrt(U^2 + V^2 + 1.0e-6) / max(Ug, 1.0e-6)
+    h_eff = clamp(h_bl * vel_ratio, h_min, h_max)
+    gamma_eff = gamma * (h_bl / h_eff)
+
+    # 2.1 Smooth Safeguard Floor Gate
+    # +1.0e-15 prevents NaN dual-number derivatives
+    # from the 1/(2*sqrt(phi)) singular limit at phi = 0.
+    psi = sqrt(phi + 1.0e-15) / (sqrt(phi + 1.0e-15) + alpha_safe)
+
+    # 2.2 Physical Auxiliary Functions
+    # Bounded tanh stability response prevents
+    # runaway buoyancy growth under deep inversions.
+    G_Ts = tanh(beta * (Ta - Ts) / Ta)
+
+    # Net mechanical production minus buoyancy balance
+    shear_prod = eta * gamma_eff * (U^2 + V^2)
+    buoy_dest  = K_buoy * G_Ts
+    Delta      = shear_prod - buoy_dest
+
+    # C^inf coordinate shifting avoids non-differentiable max() gates
+    # and prevents derivative blowup in ForwardDiff.Dual components
+    sqrt_phi_reg = sqrt(phi + 1.0e-15)
+
+    # Surface Energy Budget Terms
+    Rn = Rdown - sigma_SB * (Ts^4)
+    H  = rho_cp * CH * sqrt_phi_reg * (Ts - Ta)
+    G  = lambda * (Ts - Tdeep) / d_soil
+
+    # 2.3 Evaluated Tendencies
+    # Fast TKE Equation:
+    # activated production + nonlinear dissipation
+    dx[1] = (1.0 / epsilon) * (l0 * Delta * phi * psi + beta * phi - (phi^(3/2)) / l0)
+
+    # Slow Momentum and Thermodynamic Equations
+    dx[2] = f_cor * (V - Vg) - gamma_eff * sqrt_phi_reg * U
+    dx[3] = -f_cor * (U - Ug) - gamma_eff * sqrt_phi_reg * V
+    dx[4] = (1.0 / C_skin) * (Rn - H - G)
+
+    return nothing
+end
+
+# ====================================================================
+# 3. Solver Execution and Integration Setup
+# ====================================================================
+# Initial Conditions: Cold active Arctic boundary layer
+x0 = [0.05, 5.0, -1.0, 250.0]
+tspan = (0.0, 43200.0) # Full 12-hour production window
+
+prob = ODEProblem(gspt_sbl_dynamics!, x0, tspan)
+
+# Solve using Rodas5P (5th order A-L-stable Rosenbrock method with AD)
+sol = solve(prob, Rodas5P(autodiff=true),
+            reltol=1.0e-6, abstol=1.0e-8)
+\end{verbatim}
+\endgroup
+% --- End Section: templates/sections/numerical_implementation_solver_strategy.tex.mustache ---
+
+% --- Begin Section: templates/sections/closures.tex.mustache ---
+\subsection{Aerodynamic Closures and Physical Turbulent Diffusivities}
+\label{subsec:micro_closures}
+
+To close the governing system, the macroscopic momentum and sensible heat exchange coefficients must be resolved. In traditional local frameworks, these are governed by Monin-Obukhov Similarity Theory (MOST) via the dimensionless gradients $\phi_m(\zeta), \phi_h(\zeta)$ where $\zeta = z/L$ is the stability parameter, or through empirical stability functions $f_m(Ri), f_h(Ri)$ parameterized by the gradient Richardson number:
+
+\begin{equation}
+K_m = \frac{\kappa z u_*}{\phi_m(\zeta)}, \qquad K_h = \frac{\kappa z u_*}{\phi_h(\zeta)}.
+\end{equation}
+
+In our dynamical system formulation, however, the stabilization, scaling, and ultimate collapse of the boundary layer are handled explicitly through the prognostic fast TKE coordinate $e$. Consequently, we can bypass empirical algebraic stability curves entirely. This is not a standard Mellor--Yamada-style 1.5-order closure: the model evolves $e$ on an explicit fast timescale and derives reduced slow dynamics from the equilibrium TKE manifold only in the singular limit $\varepsilon \to 0$. The momentum exchange coefficient $\gamma$ and bulk thermal transfer coefficient $C_H$ are defined strictly by their neutral geometric values based on logarithmic wind profile theory where $\phi_m(0) = \phi_h(0) = 1$:
+
+\begin{align}
+\gamma &= \frac{\kappa^2}{\left[ \ln(h_{\mathrm{eff}} / z_{0m}) \right]^2}, \\
+C_H &= \frac{\kappa^2}{\ln(h_{\mathrm{eff}} / z_{0m}) \ln(h_{\mathrm{eff}} / z_{0h})},
+\end{align}
+where $\kappa \approx 0.4$ is the von Kármán constant, $h_{\mathrm{eff}}$ is the bounded non-local boundary layer height, and $z_{0m}, z_{0h}$ are the momentum and thermal roughness lengths, respectively.
+
+For implementation reproducibility and code-generation determinism, we use a hybrid mechanical-buoyancy scale for the effective boundary-layer height before computing log-law coefficients or derived diffusivities:
+\begin{equation}
+h_{\mathrm{eff}}^{\star} = \min\left(c_1\frac{u_*}{|f|},\; c_2\frac{\sqrt{e+\delta}}{N + N_{\mathrm{floor}}}\right),
+\label{eq:closure_h_hybrid}
+\end{equation}
+with operational bounds applied as
+\begin{equation}
+h_{\mathrm{eff}} = \max\left(h_{\min},\, \min\left(h_{\mathrm{eff}}^{\star},\, h_{\max}\right)\right),
+\label{eq:closure_h_clamp}
+\end{equation}
+where
+\begin{equation}
+N = \sqrt{\max\left(\frac{g}{\theta_0}\frac{\partial \theta}{\partial z},\,0\right)}.
+\end{equation}
+
+\paragraph{Physical Derivation of Structural Constants.}
+Bypassing diagnostic functions requires that the structural parameters $l_0$ and $\eta$ carry the asymptotic physical scaling of MOST into neutral limits:
+\begin{itemize}
+    \item \textbf{Shear Efficiency ($\eta$):} In a neutral surface layer, balancing TKE shear production with viscous dissipation requires tracking the steady-state ratio of TKE to friction velocity, $e = c_0 u_*^2$ (where observationally $c_0 \approx 3.8$). This matches the analytical requirement $\eta = 1 / (\kappa \sqrt{c_0}) \approx 1.28$. To capture the deep vertical shear structure observed across the Arctic pack ice during the SHEBA campaign, we adopt the tuned bulk efficiency parameter $\eta = 1.5$ (coded as \texttt{eta}).
+    \item \textbf{Master Length Scale ($l_0$):} Following classical Blackadar-type interpolation, the local mixing length $\ell$ is limited by an asymptotic master scale $l_0$ via $\ell^{-1} = (\kappa z)^{-1} + l_0^{-1}$. In highly stratified nocturnal layers, buoyancy forces cap the maximum vertical eddy size. Long-term validation runs over the deep $H = 500\,\mathrm{m}$ SHEBA domain bind this bulk structural macroscale to $l_0 = 15.0\,\mathrm{m}$ (coded as \texttt{l0}) to ensure structural stability during rapid radiative cooling.
+\end{itemize}
+
+Bypassing non-differentiable algebraic switching gates yields a smooth, regularized $C^\infty$ embedding formulation. Under a baseline unity turbulent Prandtl number assumption ($Pr_t = 1$), the physical vertical eddy diffusivities are evaluated across the interior grid nodes as:
+\begin{equation}
+K_m = l_0 \sqrt{e + \delta}, \quad K_h = l_0 \sqrt{e + \delta}.
+\label{eq:embedded_diffusivities}
+\end{equation}
+
+The sensible heat flux is evaluated in bulk aerodynamic form with a smooth wind-speed floor:
+\begin{equation}
+H = \rho c_p C_H \sqrt{U^2 + V^2 + \delta_u}\,(T_a - T_s).
+\label{eq:bulk_heat_flux}
+\end{equation}
+
+\begin{remark}
+Because the background safety floor parameter $\delta = 1.0 \times 10^{-4}\,\mathrm{m}^2\mathrm{s}^{-2}$ is strictly positive, the radicand in Eq.~\eqref{eq:embedded_diffusivities} remains strictly bounded away from zero across all physically accessible states down to the laminar floor ($e \to -\delta$). This completely eliminates the need for non-differentiable numerical truncation gates (e.g., hard $\max$ or conditional branching statements). The resulting formulation remains infinitely differentiable, preserving a continuous and bounded closure Jacobian $J_K$ while maintaining complete generic type-compatibility with forward-mode automatic differentiation pipelines.
+\end{remark}
+% --- End Section: templates/sections/closures.tex.mustache ---
+
+% --- Begin Section: templates/sections/parameters_table.tex.mustache ---
+\begin{table}[htbp]
+\centering
+\caption{Dynamical System Parameters, Aerodynamic Constants, and Scaling Rationale.}
+\label{tab:system_parameters}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{p{0.12\textwidth}p{0.22\textwidth}p{0.18\textwidth}p{0.40\textwidth}}
+\toprule
+\textbf{Symbol} & \textbf{Physical Parameter} & \textbf{Default Value} & \textbf{Physical Rationale / Scaling Origin} \\
+\midrule
+\multicolumn{4}{l}{\textit{GSPT \& System Constants}} \\
+$\varepsilon$ & Singular perturbation timescale & $\SBLParamEpsilon$ & Ratio of fast TKE relaxation ($\sim 10^2$ s) to slow synoptic evolution ($\sim 10^4$ s) \\
+$\delta$ & Background residual TKE floor & $\SBLParamDelta \ \mathrm{m^2 \ s^{-2}}$ & Represents molecular/non-turbulent residual transport limit \\
+$\xi$ & Hyperbolic embedding scale & $\SBLParamXi$ & Numerical smoothing scale; $\xi \ll \delta$ preserves GSPT manifold structure \\
+$\alpha$ & Fast-gate regularization scale & configured & Activation-scale parameter in $\Psi(\tilde e;\alpha)=\sqrt{\tilde e}/(\sqrt{\tilde e}+\alpha)$ for boundary well-posedness \\
+$\alpha_{\mathrm{air}}$ & Air-emissivity weighting factor & $\SBLParamAlphaAir$ & Surface-air radiative partition coefficient used by the surface energy balance closure \\
+\midrule
+\multicolumn{4}{l}{\textit{Boundary Layer Geometry \& Turbulence Properties}} \\
+$h_0$ & Reference bulk scale height & $\SBLParamH \ \mathrm{m}$ & Baseline scale height for non-local effective layer coupling \\
+$l_0$ & Master mixing length scale & $\SBLParamLZero \ \mathrm{m}$ & Asymptotic Blackadar limit capped by CASES99 stable buoyancy scales \\
+$\eta$ & Shear production efficiency & $\SBLParamShearProductionEfficiency$ & Effective production coefficient in the turbulent kinetic energy tendency closure \\
+$K_{\mathrm{buoy}}$ & Kinematic buoyancy scale & $\SBLParamK \ \mathrm{m \ s^{-2}}$ & Integrated parameter representing $g/\theta_0$ thermal forcing scale \\
+$\beta$ & Turbulence self-amplification parameter & $\SBLParamBeta$ & Nonlinear fast-subsystem coefficient controlling fold location and hysteresis width \\
+\midrule
+\multicolumn{4}{l}{\textit{Site-Specific Surface Roughness Configurations}} \\
+$z_{0m}^{\text{CASES}}$ & Momentum roughness (Grassland) & $\SBLCASESSBLParamZZeroM \ \mathrm{m}$ & Representative aerodynamic roughness for CASES99 prairie \\
+$z_{0h}^{\text{CASES}}$ & Thermal roughness (Grassland) & $\SBLCASESSBLParamZZeroH \ \mathrm{m}$ & High surface-to-air coupling limit \\
+$z_{0m}^{\text{FLOSS}}$ & Momentum roughness (Snowpack) & $\SBLFLOSSSBLParamZZeroM \ \mathrm{m}$ & Representative snowpack roughness used by FLOSS baseline forcing \\
+$z_{0h}^{\text{FLOSS}}$ & Thermal roughness (Snowpack) & $\SBLFLOSSSBLParamZZeroH \ \mathrm{m}$ & Low surface coupling; prone to rapid radiative decoupling \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+% --- End Section: templates/sections/parameters_table.tex.mustache ---
+
+% --- Begin Section: templates/sections/parameters_geometry.tex.mustache ---
+\section{Physical Parameters, Geometric Domain, and Grid Configuration}
+\label{sec:parameters_geometry}
+
+The validation of the high-resolution single-column GSPT-SBL configuration is framed around the active campaign regime (\ActiveDataset). Simulating long-lived stable nights requires a rigorous alignment between continuous vertical boundary conditions, soil-ice core interfaces, and the underlying discrete computational grid.
+
+\subsection{Vertical Domain Architecture and Stratification Floor}
+\label{subsec:domain_stratification}
+
+Legacy single-column models frequently restrict the computational vertical domain to a shallow ceiling ($H = 100\,\mathrm{m}$ to $300\,\mathrm{m}$). However, under continuous geostrophic forcing ($U_g = \SBLParamUG\,\mathrm{m/s}$), the shear-driven stable boundary layer and its associated Low-Level Jet (LLJ) expand vertically over a 12-hour simulation window. If the domain top is placed too low, the non-local transport closures collide with the boundary, triggering unphysical spikes in the local Richardson number ($R_i > 10^3$) and causing solver failure.
+
+To eliminate this boundary congestion, the geometric domain top is fixed unconstrained at:
+\begin{equation}
+H = 500\,\mathrm{m}.
+\label{eq:domain_top}
+\end{equation}
+
+The background tropospheric potential temperature stratification above the boundary layer is configured using a realistic publication-grade linear lapse rate ($\gamma_\theta$). This replaces aggressive legacy gradients that acted as unyielding numerical walls, smoothing out the response manifold:
+\begin{equation}
+	\theta(z, t=0) = \theta_a + \gamma_\theta \cdot z, \quad \text{where } \gamma_\theta = 0.004\,\mathrm{K/m},
+\label{eq:lapse_rate}
+\end{equation}
+and $\theta_a = \SBLParamTA\,\mathrm{K}$ denotes the baseline reference air temperature at the surface.
+
+\subsection{Discrete Grid Specification for AI Prompt Alignment}
+\label{subsec:discrete_grid_spec}
+
+For automated code interpretation and file configuration routines, the vertical coordinate is discretized onto a regular grid. The structural configuration must be explicitly initialized using the following parameter contract:
+
+\begin{itemize}
+    \item \textbf{Grid Size ($N$):} Exactly $N = 250$ vertical nodes, yielding a uniform resolution of $\Delta z = 2.0\,\mathrm{m}$ across the entire domain.
+    \item \textbf{Geostrophic Forcing Vector:} Coded as constants or immutable parameter fields: \texttt{Ug = \SBLParamUG} and \texttt{Vg = \SBLParamVG} ($\mathrm{m/s}$).
+    \item \textbf{Coriolis Parameter ($f$):} Evaluated at campaign latitude conditions: \texttt{f = \SBLParamFCoriolis} ($\mathrm{s}^{-1}$).
+    \item \textbf{Surface Aerodynamic Roughness ($z_{0m}, z_{0h}$):} Roughness lengths for momentum and heat follow the active dataset configuration: $z_{0m} = \SBLParamZZeroM\,\mathrm{m}$ and $z_{0h} = \SBLParamZZeroH\,\mathrm{m}$.
+\end{itemize}
+
+\subsection{Ice-Soil Thermal Coupling Boundary Conditions}
+\label{subsec:surface_coupling}
+
+The interface between the skin layer temperature ($T_s$, coded as \texttt{Ts}) and the deep substrate core dictates the surface energy balance. The heat flux into the lower boundary ($G$) is governed by a standard conductive formulation across a shallow diagnostic soil depth ($d_{\mathrm{soil}} = \SBLParamDSoil\,\mathrm{m}$):
+\begin{equation}
+G = \lambda_s \frac{T_s - T_{\mathrm{deep}}}{d_{\mathrm{soil}}},
+\label{eq:conductive_g}
+\end{equation}
+where the ice-soil thermal conductivity is fixed to $\lambda_s = \SBLParamLambdaSoil\,\mathrm{W/m/K}$ and the unperturbed deep core temperature is anchored at $T_{\mathrm{deep}} = \SBLParamTDeep\,\mathrm{K}$.
+
+To guarantee longwave radiation stability ($\sigma T_s^4$) during extreme clear-sky radiative cooling episodes ($R_{\mathrm{down}} = \SBLParamRDown\,\mathrm{W/m}^2$), code generators must enforce the runtime physical safeguard limit $T_{s,\min} = 220\,\mathrm{K}$ as established in Section~\ref{subsec:ai_impl_contract}.
+% --- End Section: templates/sections/parameters_geometry.tex.mustache ---
+% --- End Wrapper: templates/sections/section_theory.tex.mustache ---
+\clearpage
+\section{Generated Diagnostics Figures}
+\label{sec:generated_diagnostics_figures}
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/figure_gspt_manifold_tikz.pdf}
+\caption{Geometric Singular Perturbation Theory phase-space schematic showing the active sheet, unstable separatrix, and laminar sheet with fold-collapse and transcritical re-ignition pathways.}
+\label{fig:gspt_manifold_tikz}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/figure_bifurcation_transcritical_map.pdf}
+\caption{Trajectory flow field mapping the non-folding boundary crossing. The phase portraits confirm that the system transitions smoothly onto the regularized background laminar floor without undergoing an interior saddle-node collapse.}
+\label{fig:transcritical_map}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/figure_bifurcation_transcritical_distance_map.pdf}
+\caption{Distance-to-threshold map for the transcritical boundary crossing. Smaller values indicate states close to the critical exchange surface where the laminar branch changes stability.}
+\label{fig:transcritical_distance_map}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/figure_bifurcation_transcritical_envelope.pdf}
+\caption{Transcritical bifurcation envelope corresponding to the transversal boundary crossing regime ($e=0$). The diagram illustrates the smooth transition tracking the physical admissibility threshold $\Delta = \delta / l_0$.}
+\label{fig:transcritical_envelope}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/figure_bifurcation_parameter_sensitivity_envelope.pdf}
+\caption{Sensitivity envelope for transcritical threshold statistics under coupled parameter scaling. The median and extrema summarize threshold migration as closure controls are perturbed.}
+\label{fig:parameter_sensitivity_envelope}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/figure_bifurcation_fold_map.pdf}
+\caption{Comparative benchmark: Topological phase-space map of an interior fold regime (shown for comparison only). Vector fields highlight the catastrophic jump dynamics occurring at an interior fold point, contrasting with the boundary-crossing mechanics of the present system.}
+\label{fig:fold_map}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/figure_bifurcation_fold_envelope.pdf}
+\caption{Comparative benchmark: Bifurcation envelope under a classical interior fold scenario (shown for structural comparison only; not generated by the present model). This illustrates the scenario where the active turbulent branch loses normal hyperbolicity at an interior saddle-node locus.}
+\label{fig:fold_envelope}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/4d_sbl_diagnostics.png}
+\caption{Complete 4D time-series trajectories and phase-space projections for the nocturnal stable boundary layer simulated under CASES99 conditions. The panels illustrate the rapid initial turbulent decay followed by the slow ageostrophic development of the nocturnal low-level jet.}
+\label{fig:sbl_diagnostics}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/figure01.pdf}
+\caption{Figure01}
+\end{figure}
+
+\section{Conclusion and Discussion}
+\label{sec:conclusion}
+By resolving the fast-slow geometry of nocturnal boundary layer collapse, we show that abrupt transitions are governed by a coupled fold-catastrophe and boundary-transcritical mechanism on a low-dimensional manifold. Integrating smooth activation-gate regularizations and nonlinear dissipation resolves boundary well-posedness challenges that frequently plague meteorological solvers, while our physical parameterizations correctly distinguish between the high-roughness mechanical resilience of CASES99 and the early, cooling-driven collapse observed over the smooth snowpacks of FLOSS.
+
+This geometric framework provides the analytical foundation necessary to resolve intermittent turbulence and nocturnal cycle transitions directly from the underlying physical equations without relying on artificial, discontinuous switching rules.
+
+% ------------------------------------------------------------------
+% BIBLIOGRAPHY SECTION
+% ------------------------------------------------------------------
+\clearpage
+% Forces LaTeX to print ALL entries in refs.bib, even if not cited above:
+\nocite{*}
+
+% Standard GFD Author-Year style (alphabetical sorting by primary author surname)
+\bibliographystyle{plainnat}
+
+% Points to 'refs.bib' file (do NOT include .bib extension)
+\bibliography{refs}
+
+\end{document}

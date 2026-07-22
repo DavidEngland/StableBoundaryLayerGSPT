@@ -11,7 +11,7 @@ The core four-dimensional prognostic system for the state vector $\mathbf{x} = (
 \begin{aligned}
 \frac{dU}{dt} &= f(V - V_g) - C_D \frac{\sqrt{U^2+V^2}}{h} U \sqrt{e+\delta}, \\
 \frac{dV}{dt} &= -f(U - U_g) - C_D \frac{\sqrt{U^2+V^2}}{h} V \sqrt{e+\delta}, \\
-\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}}\left(R_{\downarrow} - \sigma_{\text{SB}}T_s^4 - \lambda\frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H\sqrt{U^2+V^2}\,(T_s - T_a)\sqrt{e+\delta}\right), \\
+\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}}\left(R_{\downarrow} - \sigma_{\text{SB}}T_s^4 - \lambda\frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H\sqrt{U^2+V^2+\delta_u}\,(T_s - T_a)\right), \\
 \varepsilon\frac{de}{dt} &= l_0\Delta(U,V,T_s)\left(\frac{e+\delta}{\sqrt{e+\delta}+\alpha}\right)+\beta(e+\delta)-\frac{(e+\delta)^{3/2}}{l_0},
 \end{aligned}
 \label{eq:mathematical_full_system}
@@ -31,12 +31,14 @@ Here, $f$ is the Coriolis frequency, $h$ is the bulk boundary layer depth, $C_{\
 The activated production factor $\frac{e+\delta}{\sqrt{e+\delta}+\alpha}$ and the Kolmogorov-type dissipation term $-(e+\delta)^{3/2}/l_0$ remove boundary non-Lipschitz behavior while preserving the folded fast-slow geometry. In the singular limit, the reduced branch structure is organized by fold and transcritical sets rather than by a single linear threshold.
 \end{remark}
 
-In the multi-layer SCM closure, the constant scale height $h$ is replaced by an emergent effective scale height $h_{\text{eff}}$ that feeds resolved column momentum back into the local log-law damping coefficients:
+In the multi-layer SCM closure, the constant scale height $h$ is replaced by a hybrid effective scale height $h_{\text{eff}}$ that combines mechanical and buoyancy limits:
 \begin{equation}
-h_{\text{eff}} = \operatorname{clamp}\!\left((1-w)h_0 + w\,\frac{\sqrt{U^2 + V^2 + \delta_u}}{\max(|f|, f_{\text{floor}})},\; h_{\min},\; h_{\max}\right),
+h_{\text{eff}}^{\star}=\min\left(c_1\frac{u_*}{|f|},\;c_2\frac{\sqrt{e+\delta}}{N+N_{\text{floor}}}\right),
+\qquad
+h_{\text{eff}}=\operatorname{clamp}(h_{\text{eff}}^{\star},\,h_{\min},\,h_{\max}),
 \label{eq:heff_emergent}
 \end{equation}
-where $w \in [0,1]$ is the non-local blend weight and $\delta_u$ is a small velocity floor regularizer.
+where $N=\sqrt{\max\left((g/\theta_0)\,\partial\theta/\partial z,\,0\right)}$ and $\delta_u$ is a small velocity-floor regularizer.
 
 \subsection{Geometric Analysis: Boundary Crossings vs. Thermodynamic Folds}
 \label{subsec:geometric_consequences}

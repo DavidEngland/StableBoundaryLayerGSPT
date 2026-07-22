@@ -3,9 +3,10 @@
 \caption{Dynamical System Parameters, Aerodynamic Constants, and Scaling Rationale.}
 \label{tab:system_parameters}
 \small
-\begin{tabular}{llll}
-	oprule
-	extbf{Symbol} & \textbf{Physical Parameter} & \textbf{Default Value} & \textbf{Physical Rationale / Scaling Origin} \\
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{p{0.12\textwidth}p{0.22\textwidth}p{0.18\textwidth}p{0.40\textwidth}}
+\toprule
+\textbf{Symbol} & \textbf{Physical Parameter} & \textbf{Default Value} & \textbf{Physical Rationale / Scaling Origin} \\
 \midrule
 \multicolumn{4}{l}{\textit{GSPT \& System Constants}} \\
 $\varepsilon$ & Singular perturbation timescale & $\SBLParamEpsilon$ & Ratio of fast TKE relaxation ($\sim 10^2$ s) to slow synoptic evolution ($\sim 10^4$ s) \\
@@ -28,4 +29,5 @@ $z_{0m}^{\text{FLOSS}}$ & Momentum roughness (Snowpack) & $\SBLFLOSSSBLParamZZer
 $z_{0h}^{\text{FLOSS}}$ & Thermal roughness (Snowpack) & $\SBLFLOSSSBLParamZZeroH \ \mathrm{m}$ & Low surface coupling; prone to rapid radiative decoupling \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
