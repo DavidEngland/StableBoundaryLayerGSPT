@@ -1,4 +1,4 @@
-.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all generate-parameter-macros generate-parameter-macros-all check-parameter-drift check-parameter-drift-all lint-prose lint-prose-strict assemble-manuscript visual-assets paper-all archive-paper paper-stamped stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports sweep-two-layer-envelope test clean
+.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all generate-parameter-macros generate-parameter-macros-all check-parameter-drift check-parameter-drift-all lint-prose lint-prose-strict assemble-manuscript visual-assets figure-phase-space-hysteresis figure-blackadar-hodograph figure-triheight-hovmoller figure-triheight-hovmoller-theta figure-triheight-suite figure-regularization-smooth figure-regime-map figure-comparative-sensitivity figure-publication-suite paper-all archive-paper paper-stamped stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports sweep-two-layer-envelope test clean
 
 DATASET ?= CASES99
 
@@ -140,13 +140,38 @@ visual-assets:
 	@mkdir -p reports/generated/figures
 	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated/figures templates/figures/figure_gspt_manifold_tikz.tex
 
+figure-phase-space-hysteresis:
+	julia --project=. scripts/plot_phase_space_hysteresis.jl --datasets CASES99,FLOSS --out reports/generated/figures/phase_space_hysteresis_orbit.png
+
+figure-blackadar-hodograph:
+	julia --project=. scripts/plot_blackadar_hodograph_sc.jl --datasets CASES99,FLOSS --out reports/generated/figures/blackadar_hodograph_critical_radius.png
+
+figure-triheight-hovmoller:
+	julia --project=. scripts/plot_triheight_hovmoller.jl --input results/gabls1/payload.jld2 --field e_xi --out reports/generated/figures/triheight_hovmoller_gabls1.png
+
+figure-triheight-hovmoller-theta:
+	julia --project=. scripts/plot_triheight_hovmoller.jl --input results/gabls1/payload.jld2 --field theta --out reports/generated/figures/triheight_hovmoller_theta_gabls1.png
+
+figure-triheight-suite: figure-triheight-hovmoller figure-triheight-hovmoller-theta
+
+figure-regularization-smooth:
+	julia --project=. scripts/plot_regularization_smooth_vs_clipped.jl --summary results/CASES99/latest/summary.json --out reports/generated/figures/regularization_smooth_vs_clipped.png
+
+figure-regime-map:
+	julia --project=. scripts/plot_regime_map_z0m_ug.jl --out reports/generated/figures/regime_map_z0m_ug.png
+
+figure-comparative-sensitivity:
+	julia --project=. scripts/plot_comparative_sensitivity_envelopes.jl --out reports/generated/figures/comparative_parameter_sensitivity_envelope.png
+
+figure-publication-suite: visual-assets figure-phase-space-hysteresis figure-blackadar-hodograph figure-triheight-suite figure-regularization-smooth figure-regime-map
+
 paper-all:
 	$(MAKE) clean
 	$(MAKE) run-solver-all
 	$(MAKE) generate-parameter-macros
 	julia --project=. scripts/sweep_bifurcation.jl --dataset $(DATASET)
 	julia --project=. scripts/plot_4d_diagnostics.jl --solution results/$(DATASET)/latest/solution.csv --out reports/generated/figures/4d_sbl_diagnostics.png
-	$(MAKE) visual-assets
+	$(MAKE) figure-publication-suite
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET)
 	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
 	-bibtex reports/generated/paper

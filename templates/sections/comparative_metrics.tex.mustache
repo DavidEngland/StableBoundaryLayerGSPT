@@ -41,3 +41,57 @@ Primary Transition Driver & Boundary Shear & Radiative Cooling & Combined Polar 
 As shown in Table~\ref{tab:site_comparison_metrics}, the FLOSS simulations yield a significantly lower manifold fit RMSE for the skin layer temperature. Because the aerodynamic smoothness of the snowpack dampens mechanical shear, the fast TKE coordinate is constrained tightly to the stable, non-turbulent residual sheet $\mathcal{M}_0^{\text{lam}}$ for the majority of the night, yielding a highly predictable, radiation-dominated thermodynamic surface state.
 
 In contrast, the larger roughness length of CASES99 drives continuous, intermittent turbulence. The state-space trajectories of CASES99 undergo broader dynamic excursions across the linear boundary-mediated transition zone of the active critical manifold sheet $\mathcal{M}_0^{\text{act}}$. This active mixing naturally increases the geometric projection error (producing a higher regression RMSE) while maintaining a higher overall trajectory capture rate within the active turbulent envelope.
+
+\paragraph{Geometric Resolution of the RMSE Paradox.}
+Figure~\ref{fig:phase_space_rmse_paradox} resolves the apparent contradiction between larger CASES99 regression RMSE and robust model skill. The $(S,\Delta,e)$ phase portrait shows CASES99 tracing wide, high-energy loops over the active turbulent sheet, while FLOSS trajectories collapse toward and persist near the laminar floor. The companion Blackadar hodographs with dynamic critical wind-radius overlays identify entry into collapse-favoring states ($S<S_c$) and re-ignition exits ($S\ge S_c$), directly connecting trajectory geometry to transition timing.
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/phase_space_hysteresis_orbit.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/blackadar_hodograph_critical_radius.png}
+\end{minipage}
+\caption{Phase-space and hodograph diagnostics for CASES99 and FLOSS. Left: 3D hysteresis trajectories in $(S,\Delta,e)$ over an inferred active-sheet geometry, showing broad CASES99 excursions versus FLOSS laminar pinning. Right: Blackadar hodographs in the $(U,V)$ plane with dynamic critical wind-radius markers, highlighting collapse-entry and re-ignition crossings.}
+\label{fig:phase_space_rmse_paradox}
+\end{figure}
+
+\paragraph{Tri-Height Convergence as an Observable Collapse Marker.}
+Figure~\ref{fig:triheight_hovmoller_convergence} provides a time-height diagnostic view that links manifold transitions to physically observable boundary-layer structure. The three geometric trackers $h_D(t)$, $h_e(t)$, and $h_{\partial e}(t)$ begin separated, then contract toward a common cap during collapse-favoring intervals, before diverging again as turbulence re-ignites. This confirms that tri-height metrics encode a coherent interface rather than independent fit heuristics.
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/triheight_hovmoller_gabls1.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/triheight_hovmoller_theta_gabls1.png}
+\end{minipage}
+\caption{Tri-height Hovmoller diagnostics with overlaid geometric trackers ($h_D$, $h_e$, $h_{\partial e}$). Left: regularized turbulent-energy proxy $e_\xi(z,t)$. Right: potential temperature $\theta(z,t)$. The synchronized convergence and re-separation of the three height tracks marks collapse and recovery structure in a directly observable time-height frame.}
+\label{fig:triheight_hovmoller_convergence}
+\end{figure}
+
+\paragraph{Unified Regime Taxonomy Across Campaign Forcing Space.}
+Figure~\ref{fig:regime_map_z0m_ug} consolidates the campaign narratives into a single roughness-forcing phase map. High-roughness and strong-forcing combinations occupy a sustained weak-turbulence regime, low-roughness and weak-forcing combinations favor radiative decoupling, and a transition corridor between them supports intermittent collapse-recovery cycles. Placing CASES99, FLOSS, and SHEBA on this map emphasizes that they are not disconnected case studies, but operating points on one governing dynamical surface.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\linewidth]{figures/regime_map_z0m_ug.png}
+\caption{Regime bifurcation map in $(z_{0m},U_g)$ space with campaign markers. Colors indicate three operational classes: Regime I (continuous weak turbulence), Regime II (intermittent relaxation oscillations), and Regime III (runaway radiative decoupling). CASES99, FLOSS, and SHEBA are overlaid as observed operating points.}
+\label{fig:regime_map_z0m_ug}
+\end{figure}
+
+\paragraph{Comparative OAT Sensitivity Across Campaign Regimes.}
+Figure~\ref{fig:comparative_parameter_sensitivity_envelope} summarizes campaign-dependent sensitivity of the critical collapse threshold under one-at-a-time parameter scaling. The three panels separate as expected under campaign-specific baselines, with CASES99 occupying a higher-threshold shear-resilient regime, FLOSS occupying a lower-threshold radiatively vulnerable regime, and SHEBA exhibiting an intermediate polar-inversion response.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.98\linewidth]{figures/comparative_parameter_sensitivity_envelope.png}
+\caption{Comparative 3-panel One-At-A-Time (OAT) parameter sensitivity envelopes for CASES99 (Panel A), FLOSS (Panel B), and SHEBA (Panel C). The median threshold ($\gamma_c$) and min-max variation bands illustrate how surface roughness ($z_{0m}$) and radiative cooling shift the critical boundary-layer collapse threshold across regimes. Full provenance traceability: CASES99 (\texttt{bifurcation\_20260722\_161338}), FLOSS (\texttt{bifurcation\_20260722\_161357}), SHEBA (\texttt{bifurcation\_20260722\_161416}).}
+\label{fig:comparative_parameter_sensitivity_envelope}
+\end{figure}

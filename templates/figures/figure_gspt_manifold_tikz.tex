@@ -1,44 +1,61 @@
 % templates/figures/figure_gspt_manifold_tikz.tex
-\documentclass[tikz,border=3pt]{standalone}
-\usepackage{amsmath}
-\usetikzlibrary{arrows.meta}
+\documentclass[tikz,border=5pt]{standalone}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta,decorations.markings,calc}
 
 \begin{document}
 \begin{tikzpicture}[scale=1.1, >=Stealth]
-    % Axes
-    \draw[->, thick] (-2.5, 0) -- (4.5, 0) node[right] {Net Forcing $\Delta$};
-    \draw[->, thick] (0, -0.5) -- (0, 3.5) node[above] {Turbulence Scale $q = \sqrt{e+\delta}$};
+    % --- Axes ---
+    \draw[->, thick] (-2.8, 0) -- (4.5, 0) node[right] {Net Forcing $\Delta$};
+    \draw[->, thick] (0, -0.6) -- (0, 3.6) node[above] {Turbulence Scale $q = \sqrt{e+\delta}$};
 
-    % Fold point coordinates
+    % --- Key Coordinates ---
     \coordinate (Fold) at (-1.5, 1.2);
-    \coordinate (Transcritical) at (0, 0);
+    \coordinate (Transcritical) at (0.75, 0);
 
-    % Upper active sheet (q_plus)
-    \draw[very thick, blue!80!black, domain=-1.5:4.0, samples=100]
-        plot ({\x}, {1.2 + 0.8*sqrt(\x + 1.5)});
-    \node[blue!80!black, right, align=left] at (3.15, 2.8)
-        {$\mathcal{M}_0^{\mathrm{act}}$\\Active attracting sheet};
+    % --- 1. Attracting Laminar Manifold S_0^lam (q = 0) ---
+    \draw[very thick, green!50!black] (-2.8, 0) -- (4.2, 0);
+    \node[green!50!black, below right, align=left] at (1.2, -0.15)
+        {$\mathcal{S}_0^{\mathrm{lam}}$: Residual laminar manifold\\$q=0$ (regularized $e=-\delta$)};
 
-    % Middle unstable separatrix (q_minus)
-    \draw[thick, dashed, red!80!black, domain=-1.5:0.0, samples=50]
+    % --- 2. Repelling Separatrix S_0^- (Dashed Red, Fold to Transcritical) ---
+    \draw[thick, dashed, red!80!black, domain=-1.5:0.75, samples=60]
         plot ({\x}, {1.2 - 0.8*sqrt(\x + 1.5)});
-    \node[red!80!black, below left] at (-0.45, 0.6) {$q_{-}$ (Separatrix)};
+    \node[red!80!black, above left, font=\small] at (0.2, 0.45)
+        {$\mathcal{S}_0^-$ (Repelling separatrix)};
 
-    % Laminar residual sheet (q_lam = 0)
-    \draw[very thick, green!50!black] (-2.5, 0) -- (4.0, 0);
-    \node[green!50!black, below right, align=left] at (1.5, -0.1)
-        {$\mathcal{M}_0^{\mathrm{lam}}$\\Laminar sheet: $e=-\delta$};
+    % --- 3. Attracting Turbulent Manifold S_0^+ (Solid Blue) ---
+    \draw[very thick, blue!80!black, domain=-1.5:4.2, samples=100]
+        plot ({\x}, {1.2 + 0.8*sqrt(\x + 1.5)});
+    \node[blue!80!black, right, align=left] at (3.0, 2.9)
+        {$\mathcal{S}_0^+$ (or $\mathcal{S}_0^{\mathrm{turb}}$)\\Attracting turbulent sheet};
 
-    % Critical points
+    % --- 4. Slow Flow Dynamics (Tangent Drift along Attracting Sheets) ---
+    % Slow cooling drift leftward along S_0^+ towards fold
+    \draw[->, thick, blue!90!black] (2.8, 2.53) -- (2.0, 2.30)
+        node[midway, above, sloped, font=\footnotesize] {Slow drift $\dot{\Delta} < 0$};
+    % Slow momentum recovery drift rightward along S_0^lam
+    \draw[->, thick, green!40!black] (-2.2, 0) -- (-1.0, 0)
+        node[midway, above, font=\footnotesize] {Slow drift};
+
+    % --- 5. Critical Points (Bifurcations) ---
+    % Fold / Saddle-Node
     \filldraw[red] (Fold) circle (2.5pt)
-        node[above left, align=left] {Fold catastrophe\\$\Delta_{\mathrm{fold}}=-\beta^2/4$};
-    \filldraw[orange!90!black] (Transcritical) circle (2.5pt)
-        node[above right=3pt, align=left] {Transcritical point\\$\Delta=0$};
+        node[above left=2pt, align=left, font=\small]
+        {\textbf{Fold (Saddle-Node)}\\$\Delta_{\mathrm{fold}} = -\beta^2/4$};
 
-    % Fast trajectory arrows
-    \draw[->, ultra thick, violet] (1.0, 0.1) -- (1.0, 1.8)
-        node[midway, right, align=left] {Fast re-ignition\\$1/\varepsilon$};
-    \draw[->, ultra thick, violet] (-2.0, 1.0) -- (-2.0, 0.1)
-        node[midway, left, align=left] {Fast collapse\\$1/\varepsilon$};
+    % Transcritical Point (Intersection of S_0^- and S_0^lam at \Delta = 0.75)
+    \filldraw[orange!90!black] (Transcritical) circle (2.5pt)
+        node[above right=2pt, align=left, font=\small]
+        {\textbf{Transcritical point}\\$\Delta_{\mathrm{trans}} = 0.75$};
+
+    % --- 6. Fast Subsystem Dynamics (Vertical Jumps O(1/\varepsilon)) ---
+    % Fast Collapse past the fold
+    \draw[->, ultra thick, violet] (-2.1, 1.2) -- (-2.1, 0.08)
+        node[midway, left, align=right, font=\small] {Fast collapse\\$\mathcal{O}(1/\varepsilon)$};
+
+    % Fast Re-ignition above the separatrix
+    \draw[->, ultra thick, violet] (1.8, 0.15) -- (1.8, 2.0)
+        node[midway, right, align=left, font=\small] {Fast re-ignition\\$\mathcal{O}(1/\varepsilon)$};
 \end{tikzpicture}
 \end{document}

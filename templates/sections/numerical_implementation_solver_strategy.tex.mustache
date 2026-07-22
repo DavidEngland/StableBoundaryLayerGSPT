@@ -51,6 +51,16 @@ This formulation ensures that the solver interacts with an infinitely differenti
     \item \textbf{Forward Invariance:} The boundary $e = -\delta$ becomes a smooth, invariant orbit of the numerical system, guaranteeing that $e(t) > -\delta$ for all $t > 0$ under any consistent discretization scheme.
 \end{enumerate}
 
+\paragraph{Smooth Embedding Versus Kinked Clipping.}
+Figure~\ref{fig:regularization_smooth_vs_clipped} compares the hard clipped closure branch with the $C^{\infty}$ hyperbolic embedding used for differentiable diagnostics. Near the collapse threshold $\Delta=\delta/l_0$, the hard clip introduces a slope kink in $e^*(\Delta)$, while the embedded branch $e^*_{\xi}(\Delta)$ remains smooth for all $\xi>0$. The corresponding eddy-diffusivity response inherits this smoothness and preserves a strictly positive mixing floor set by $\delta$, improving Newton convergence behavior for implicit solvers and maintaining gradient continuity for variational workflows.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.98\linewidth]{figures/regularization_smooth_vs_clipped.png}
+\caption{Regularization diagnostics around the laminar threshold. Panel A compares hard clipping and smooth hyperbolic embedding of $e^*(\Delta)$. Panel B shows the induced $K_m(\Delta)$ response, including the strictly positive background mixing floor. The smooth embedding removes threshold kinks while preserving asymptotic agreement away from transition.}
+\label{fig:regularization_smooth_vs_clipped}
+\end{figure}
+
 \subsection{Solver Strategy and Sparsity Structure}
 \label{subsec:solver_strategy}
 

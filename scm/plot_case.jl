@@ -157,6 +157,20 @@ function _safe_clims(arr; pad::Float64=1.0e-12)
     return (lo, hi)
 end
 
+function _percentile_clims(arr; p_lo::Float64=0.01, p_hi::Float64=0.995, pad::Float64=1.0e-12)
+    flat = vec(Float64.(arr))
+    finite_vals = filter(isfinite, flat)
+    if isempty(finite_vals)
+        return (0.0, 1.0)
+    end
+    lo = quantile(finite_vals, p_lo)
+    hi = quantile(finite_vals, p_hi)
+    if hi <= lo
+        return _safe_clims(arr; pad=pad)
+    end
+    return (lo, hi)
+end
+
 function _savefig(Plots, fig, outdir::String, stem::String, ext::String)
     path = joinpath(outdir, string(stem, ".", ext))
     Plots.savefig(fig, path)
@@ -303,6 +317,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         title="Figure 2: Time-Height Wind Speed",
         colorbar_title="|V| (m s^-1)",
         legend=:topright,
+        clims=_percentile_clims(hov_wind; p_lo=0.005, p_hi=0.995),
         dpi=dpi,
         right_margin=6Plots.mm,
     )
@@ -321,6 +336,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         title="Figure 3: Time-Height Potential Temperature",
         colorbar_title="theta (K)",
         legend=:topright,
+        clims=_percentile_clims(hov_theta; p_lo=0.005, p_hi=0.995),
         dpi=dpi,
         right_margin=6Plots.mm,
     )
@@ -330,29 +346,34 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     _savefig(Plots, p3, outdir, "fig03_hovmoller_theta", fmt)
 
     # Figure 3b: Time-height closure diagnostics (K_m and e_xi)
+    km_plot = log10.(max.(hov_km, 1.0e-6))
+    q_plot = sqrt.(max.(hov_exi, 1.0e-12))
+    q_ref = median(vec(q_plot))
+    q_norm = log10.(max.(q_plot ./ max(q_ref, 1.0e-12), 1.0e-8))
+
     p3b_a = Plots.heatmap(
         hov_t,
         zf_mid,
-        permutedims(hov_km),
+        permutedims(km_plot),
         xlabel="Time (h)",
         ylabel="z_face (m)",
-        title="Figure 3b: Time-Height K_m",
-        colorbar_title="K_m (m^2 s^-1)",
+        title="Figure 3b: Time-Height log10(K_m)",
+        colorbar_title="log10(K_m)",
         c=:viridis,
-        clims=_safe_clims(hov_km),
+        clims=_percentile_clims(km_plot; p_lo=0.005, p_hi=0.995),
         legend=:topright,
         dpi=dpi,
     )
     p3b_b = Plots.heatmap(
         hov_t,
         zf_mid,
-        permutedims(hov_exi),
+        permutedims(q_norm),
         xlabel="Time (h)",
         ylabel="z_face (m)",
-        title="Time-Height e_xi",
-        colorbar_title="e_xi",
-        c=:inferno,
-        clims=_safe_clims(hov_exi),
+        title="Time-Height log10(q / q_med), q=sqrt(e_xi)",
+        colorbar_title="log10(q/q_med)",
+        c=Plots.cgrad([:midnightblue, :royalblue3, :deepskyblue2, :gold1]),
+        clims=_percentile_clims(q_norm; p_lo=0.005, p_hi=0.995),
         legend=:topright,
         dpi=dpi,
     )
@@ -362,6 +383,75 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     end
     p3b = Plots.plot(p3b_a, p3b_b; layout=(1, 2), size=(1500, 480), margin=5Plots.mm)
     _savefig(Plots, p3b, outdir, "fig03b_hovmoller_km_exi", fmt)
+
+    # Figure 3c: Startup zoom for Hovmoller diagnostics (captures rapid initial adjustment)
+    zoom_h = min(0.30, maximum(hov_t))
+    zoom_idx = findall(t -> t <= zoom_h, hov_t)
+    if isempty(zoom_idx)
+        zoom_idx = [1]
+    end
+    hov_t_zoom = hov_t[zoom_idx]
+    hov_wind_zoom = hov_wind[zoom_idx, :]
+    hov_theta_zoom = hov_theta[zoom_idx, :]
+    km_zoom = km_plot[zoom_idx, :]
+    qnorm_zoom = q_norm[zoom_idx, :]
+
+    p2_zoom = Plots.heatmap(
+        hov_t_zoom,
+        zc,
+        permutedims(hov_wind_zoom),
+        xlabel="Time (h)",
+        ylabel="z (m)",
+        title="Wind Startup Zoom (0-$(round(zoom_h, digits=2)) h)",
+        colorbar_title="|V| (m s^-1)",
+        c=:inferno,
+        clims=_percentile_clims(hov_wind; p_lo=0.005, p_hi=0.995),
+        legend=:none,
+        dpi=dpi,
+    )
+    p3_zoom = Plots.heatmap(
+        hov_t_zoom,
+        zc,
+        permutedims(hov_theta_zoom),
+        xlabel="Time (h)",
+        ylabel="z (m)",
+        title="Theta Startup Zoom (0-$(round(zoom_h, digits=2)) h)",
+        colorbar_title="theta (K)",
+        c=:thermal,
+        clims=_percentile_clims(hov_theta; p_lo=0.005, p_hi=0.995),
+        legend=:none,
+        dpi=dpi,
+    )
+    pkm_zoom = Plots.heatmap(
+        hov_t_zoom,
+        zf_mid,
+        permutedims(km_zoom),
+        xlabel="Time (h)",
+        ylabel="z_face (m)",
+        title="log10(K_m) Startup Zoom",
+        colorbar_title="log10(K_m)",
+        c=:viridis,
+        clims=_percentile_clims(km_plot; p_lo=0.005, p_hi=0.995),
+        legend=:none,
+        dpi=dpi,
+    )
+    pq_zoom = Plots.heatmap(
+        hov_t_zoom,
+        zf_mid,
+        permutedims(qnorm_zoom),
+        xlabel="Time (h)",
+        ylabel="z_face (m)",
+        title="log10(q/q_med) Startup Zoom",
+        colorbar_title="log10(q/q_med)",
+        c=Plots.cgrad([:midnightblue, :royalblue3, :deepskyblue2, :gold1]),
+        clims=_percentile_clims(q_norm; p_lo=0.005, p_hi=0.995),
+        legend=:none,
+        dpi=dpi,
+    )
+    _savefig(Plots, p2_zoom, outdir, "fig03c_wind_startup_zoom", fmt)
+    _savefig(Plots, p3_zoom, outdir, "fig03c_theta_startup_zoom", fmt)
+    _savefig(Plots, pkm_zoom, outdir, "fig03c_km_startup_zoom", fmt)
+    _savefig(Plots, pq_zoom, outdir, "fig03c_qnorm_startup_zoom", fmt)
 
     # =========================================================================
     # Figure 4: Vertical profiles
@@ -580,7 +670,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     open(manifest_path, "w") do io
         println(io, "Generated figures from payload: $(payload_path)")
         for fig in ("fig01_timeseries_ts_h_ustar", "fig02_hovmoller_wind", "fig03_hovmoller_theta",
-            "fig03b_hovmoller_km_exi", "fig04_profiles_u_theta_km", "fig05_surface_energy_budget",
+            "fig03b_hovmoller_km_exi", "fig03c_wind_startup_zoom", "fig03c_theta_startup_zoom", "fig03c_km_startup_zoom", "fig03c_qnorm_startup_zoom", "fig04_profiles_u_theta_km", "fig05_surface_energy_budget",
             "fig06_phase_delta_exi", "fig07_diffusivity_vs_ri", "fig08_fold_proximity")
             println(io, "- $(fig).$(fmt)")
         end

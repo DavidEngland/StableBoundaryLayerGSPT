@@ -362,14 +362,14 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
     # Figure F: parameter-sensitivity envelope
     fig_f = "figure_bifurcation_parameter_sensitivity_envelope"
     rel_f = _tex_safe_path(sensitivity_env_csv)
-    opts_f = "xlabel={scale multiplier}, ylabel={critical threshold}, legend pos=north west, title={Parameter Sensitivity Envelope}"
+    opts_f = "xlabel={scale multiplier}, ylabel={\$\\gamma_c\$ threshold}, legend pos=north west, title={Parameter Sensitivity Envelope}"
     plot_f = """
 \\addplot[name path=gmax, draw=none] table[x=scale,y=gamma_c_max,col sep=comma] {$(rel_f)};
 \\addplot[name path=gmin, draw=none] table[x=scale,y=gamma_c_min,col sep=comma] {$(rel_f)};
 \\addplot[red!20, fill opacity=0.35] fill between[of=gmax and gmin];
 \\addlegendentry{min--max}
 \\addplot[thick, black] table[x=scale,y=gamma_c_p50,col sep=comma] {$(rel_f)};
-\\addlegendentry{gamma\\_c p50}
+\\addlegendentry{median}
 """
     bundles[fig_f] = _build_figure(
         figure_id=fig_f,

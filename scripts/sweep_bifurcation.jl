@@ -2,6 +2,7 @@
 
 using CSV
 using Dates
+using JSON3
 using StableBoundaryLayerGSPT
 using YAML
 
@@ -36,6 +37,28 @@ end
 function load_base_parameters(dataset::String)
     params = StableBoundaryLayerGSPT.DataAdapters.ingest_dataset(dataset)
 
+    # Prefer dataset-level four_d_solver parameters when available.
+    dataset_yaml_path = joinpath("spec", "datasets", "$(dataset).yaml")
+    if isfile(dataset_yaml_path)
+        dataset_raw = YAML.load_file(dataset_yaml_path)
+        four_d = get(dataset_raw, "four_d_solver", Dict{Any,Any}())
+        four_d_params = get(four_d, "parameters", Dict{Any,Any}())
+        for (k, v) in four_d_params
+            params[string(k)] = v
+        end
+    end
+
+    # Merge the latest campaign summary parameters when present.
+    summary_path = joinpath("results", dataset, "latest", "summary.json")
+    if isfile(summary_path)
+        summary = JSON3.read(read(summary_path, String))
+        if haskey(summary, :parameters)
+            for (k, v) in pairs(summary.parameters)
+                params[string(k)] = v
+            end
+        end
+    end
+
     defaults_path = "spec/parameters/defaults.yaml"
     if isfile(defaults_path)
         defaults_raw = YAML.load_file(defaults_path)
@@ -46,9 +69,27 @@ function load_base_parameters(dataset::String)
     end
 
     # Synthetic sweep controls for bifurcation geometry.
-    params["sigma"] = get(params, "sigma", 1.0)
-    params["K"] = get(params, "K", 0.8)
-    params["alpha"] = get(params, "alpha", 0.6)
+    # These are campaign-specific baselines inferred from current run parameters.
+    Ug = Float64(get(params, "U_g", 8.0))
+    Ta = Float64(get(params, "T_a", 280.0))
+    Tdeep = Float64(get(params, "T_deep", Ta - 1.0))
+    Rdown = Float64(get(params, "R_down", 250.0))
+    shear_eff = Float64(get(params, "shear_production_efficiency", 1.0))
+    K_phys = Float64(get(params, "K", 0.32))
+    alpha_air = Float64(get(params, "alpha_air", 0.15))
+
+    ug_proxy = (Ug / 8.0)^2 * shear_eff
+    polar_boost = 1.0 + max(275.0 - Ta, 0.0) / 8.0
+    cooling_contrast = max(Ta - Tdeep, 0.0)
+    radiative_deficit = max(280.0 - Rdown, 0.0)
+
+    sigma_syn = ug_proxy * polar_boost
+    K_syn = K_phys * (1.0 + 0.25 * cooling_contrast + 0.30 * (radiative_deficit / 40.0))
+    alpha_syn = alpha_air * (1.0 + 0.20 * (radiative_deficit / 40.0))
+
+    params["sigma"] = get(params, "sigma_sensitivity_baseline", sigma_syn)
+    params["K"] = get(params, "K_sensitivity_baseline", K_syn)
+    params["alpha"] = get(params, "alpha_sensitivity_baseline", alpha_syn)
     params["a_fold"] = get(params, "a_fold", 0.6)
     params["b_fold"] = get(params, "b_fold", 0.35)
     params["T0"] = get(params, "T0", 280.0)

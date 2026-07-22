@@ -135,6 +135,8 @@ function synthetic_bifurcation_analysis(
     transcritical_envelope = DataFrame(envelope_rows)
 
     # Parameter-sensitivity envelope for critical transcritical threshold.
+    # Sweep each control independently around baseline to avoid ratio-locking
+    # artifacts (e.g., sigma and K scaled together produces a flat response).
     sensitivity_scale = collect(range(0.7, 1.3; length=max(ngrid, 15)))
     sensitivity_rows = NamedTuple[]
     for scale in sensitivity_scale
@@ -142,7 +144,12 @@ function synthetic_bifurcation_analysis(
         k_i = max(1e-6, k0 * scale)
         alpha_i = max(1e-6, alpha0 * scale)
 
-        gamma_curve = (sigma_i / k_i) .* (s_grid .^ 2)
+        gamma_sigma = (sigma_i / k0) .* (s_grid .^ 2)
+        gamma_k = (sigma0 / k_i) .* (s_grid .^ 2)
+        # Alpha enters as a smooth attenuation factor in threshold response.
+        gamma_alpha = ((sigma0 / k0) .* (s_grid .^ 2)) ./ (1 .+ alpha_i)
+
+        gamma_pool = vcat(gamma_sigma, gamma_k, gamma_alpha)
         push!(
             sensitivity_rows,
             (
@@ -150,9 +157,9 @@ function synthetic_bifurcation_analysis(
                 sigma=sigma_i,
                 K=k_i,
                 alpha=alpha_i,
-                gamma_c_min=minimum(gamma_curve),
-                gamma_c_p50=quantile(gamma_curve, 0.50),
-                gamma_c_max=maximum(gamma_curve),
+                gamma_c_min=minimum(gamma_pool),
+                gamma_c_p50=quantile(gamma_pool, 0.50),
+                gamma_c_max=maximum(gamma_pool),
             ),
         )
     end
