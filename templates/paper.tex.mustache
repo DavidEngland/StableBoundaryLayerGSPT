@@ -2,7 +2,7 @@
 
 % --- Layout & Geometry ---
 \usepackage[margin=1in]{geometry}
-\usepackage{setspace} % For line spacing control if needed (\singlespacing, \onehalfspacing)
+\usepackage{setspace} % For line spacing control (\singlespacing, \onehalfspacing)
 \singlespacing
 
 % --- Essential Packages ---
@@ -16,8 +16,12 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{siunitx}
-\usepackage{cite}
-\usepackage[pagebackref=false,breaklinks=true,colorlinks,bookmarks=false]{hyperref}
+
+% --- GFD Citation Engine (Author-Year Style) ---
+\usepackage[round,authoryear]{natbib}
+\usepackage[pagebackref=false,breaklinks=true,colorlinks,citecolor=blue,urlcolor=blue,linkcolor=blue,bookmarks=false]{hyperref}
+
+% --- Generated Parameter Macros ---
 \input{parameters/parameters_all.tex}
 
 % --- Custom Mathematical Commands and Operators ---
@@ -57,7 +61,7 @@ The manuscript is organized as a unified applied-mathematics stack: governing sy
 % --- Dynamic Sections Compiled via Mustache ---
 
 {{{template_sections_tex}}}
-
+\clearpage
 \section{Generated Diagnostics Figures}
 \label{sec:generated_diagnostics_figures}
 {{{figure_tex_includes}}}
@@ -67,16 +71,18 @@ The manuscript is organized as a unified applied-mathematics stack: governing sy
 By resolving the fast-slow geometry of nocturnal boundary layer collapse, we show that abrupt transitions are governed by a coupled fold-catastrophe and boundary-transcritical mechanism on a low-dimensional manifold. Integrating smooth activation-gate regularizations and nonlinear dissipation resolves boundary well-posedness challenges that frequently plague meteorological solvers, while our physical parameterizations correctly distinguish between the high-roughness mechanical resilience of CASES99 and the early, cooling-driven collapse observed over the smooth snowpacks of FLOSS.
 
 This geometric framework provides the analytical foundation necessary to resolve intermittent turbulence and nocturnal cycle transitions directly from the underlying physical equations without relying on artificial, discontinuous switching rules.
+
 % ------------------------------------------------------------------
 % BIBLIOGRAPHY SECTION
 % ------------------------------------------------------------------
-
+\clearpage
 % Forces LaTeX to print ALL entries in refs.bib, even if not cited above:
 \nocite{*}
 
-% Choose a reference style (e.g., plainnat, amsplain, unsrtnat)
+% Standard GFD Author-Year style (alphabetical sorting by primary author surname)
 \bibliographystyle{plainnat}
 
-% Points to your 'refs.bib' file (do NOT include the .bib extension)
+% Points to 'refs.bib' file (do NOT include .bib extension)
 \bibliography{refs}
+
 \end{document}

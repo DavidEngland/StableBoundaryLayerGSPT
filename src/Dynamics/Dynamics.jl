@@ -29,55 +29,51 @@ end
 function default_4d_parameters(; case_name::Union{Symbol,AbstractString}=:midlat)
     ts_min_default = get_case_ts_min(case_name)
     return Dict{String,Float64}(
-        # Environmental controls and geostrophic forcing.
+        # Environmental controls and geostrophic forcing
         "U_g" => 10.0,
         "V_g" => 0.0,
         "T_a" => 285.15,
         "theta_top" => 285.15,
-        "alpha_air" => 0.85,
+        "alpha_air" => 0.15,
         "T_deep" => 283.15,
         "R_down" => 260.0,
         "f_coriolis" => 1.0e-4,
-        # Fast-slow and turbulence controls.
+        # Fast-slow and turbulence controls
         "epsilon" => 0.01,
         "delta" => 1.0e-4,
         "K" => 0.32,
         "beta" => 15.0,
         "h" => 50.0,
-        # Optional non-local scaling controls for h (disabled by default).
+        # Optional non-local scaling controls for h
         "use_nonlocal_h" => 0.0,
         "nonlocal_h_weight" => 0.5,
         "nonlocal_h_min" => 20.0,
         "nonlocal_h_max" => 400.0,
         "nonlocal_velocity_floor" => 0.1,
         "nonlocal_f_floor" => 1.0e-5,
-        # Roughness and dissipation controls.
+        # Roughness and dissipation controls
         "kappa" => 0.40,
         "z0m" => 0.05,
         "z0h" => 0.01,
         "l0" => 15.0,
-        "gamma_efficiency" => 2.0,
-        "shear_production_efficiency" => 15.0,
-        # Thermal properties.
+        "gamma_efficiency" => 1.0,
+        "shear_production_efficiency" => 1.0,
+        # Thermal properties
         "sigma_sb" => 5.67e-8,
         "lambda_soil" => 1.2,
         "d_soil" => 0.5,
         "rho_cp" => 1200.0,
         "C_skin" => 2.0e4,
-        # Smooth positivity helper for e + delta.
+        # Smooth positivity helper for e + delta
         "smooth_eps" => _DEFAULT_SMOOTH_EPS,
-        # Saturation cap for bounded stability response.
+        # Saturation cap for bounded stability response
         "g_stability_max" => 1.0,
-        # Physical safeguards for surface temperature and smooth floor handling.
+        # Physical safeguards for surface temperature
         "ts_min" => ts_min_default,
         "ts_max" => 350.0,
         "ts_floor_transition" => 1.0e-3,
-        # C-infinity embedding width for reduced-branch diagnostics.
+        # Width for smooth hyperbolic embedding
         "xi" => 1.0e-5,
-        # Width for smoothly transitioning to the e floor limiter.
-        "e_floor_transition" => 1.0e-5,
-        # Smoothness for approximating min(de_dt, 0) near the floor.
-        "de_floor_smooth_eps" => 1.0e-10,
     )
 end
 
@@ -136,6 +132,14 @@ function _bounded_stability_response(Ts::Real, Ta::Real, beta::Real, g_stability
     return g_cap * tanh(arg)
 end
 
+"""C-infinity smooth positivity helper."""
+function _smooth_positive(x::Real, eps_pos::Real)
+    T = promote_type(typeof(x), typeof(eps_pos))
+    xT = convert(T, x)
+    eps_local = max(convert(T, eps_pos), eps(T))
+    return convert(T, 0.5) * (xT + sqrt(xT * xT + eps_local * eps_local))
+end
+
 function _smooth_max(a::Real, b::Real, eps_smooth::Real)
     T = promote_type(typeof(a), typeof(b), typeof(eps_smooth))
     aT = convert(T, a)
@@ -167,7 +171,7 @@ function _production_minus_buoyancy(
     g_stability_max = Float64(get(p, "g_stability_max", 1.0))
     shear_eff = Float64(get(p, "shear_production_efficiency", 1.0))
 
-    gamma = isnothing(gamma_override) ? closure_coefficients(p)[1] : Float64(gamma_override)
+    gamma = isnothing(gamma_override) ? closure_coefficients(p; U=U, V=V)[1] : Float64(gamma_override)
     G = _bounded_stability_response(Ts, Ta, beta, g_stability_max)
     return shear_eff * gamma * (U * U + V * V) - K * G
 end
@@ -176,10 +180,8 @@ end
     hyperbolic_embedding_e(Delta, p)
 
 Return the C-infinity embedded reduced-branch equilibrium
-
     e*_xi = 0.5 * (e_raw + sqrt(e_raw^2 + xi^2))
-
-where `e_raw = l0 * Delta - delta`.
+where e_raw = l0 * Delta - delta.
 """
 function hyperbolic_embedding_e(Delta::Real, p::AbstractDict{String,<:Real})
     l0 = Float64(p["l0"])
@@ -187,21 +189,6 @@ function hyperbolic_embedding_e(Delta::Real, p::AbstractDict{String,<:Real})
     xi = Float64(get(p, "xi", 1.0e-5))
     e_raw = l0 * Float64(Delta) - delta
     return 0.5 * (e_raw + sqrt(e_raw * e_raw + xi * xi))
-end
-
-function _regularized_positive(x::Real, eps_pos::Real)
-    # Numerical floor keeps turbulent closures strictly positive near laminar branch.
-    return max(x, eps_pos)
-end
-
-function _smooth_min_zero(x::Real, eps_smooth::Real)
-    eps_local = max(Float64(eps_smooth), eps(Float64))
-    return 0.5 * (x - sqrt(x * x + eps_local * eps_local))
-end
-
-function _smooth_floor_gate(e::Real, e_floor::Real, transition::Real)
-    width = max(Float64(transition), eps(Float64))
-    return 0.5 * (1.0 + tanh((e - e_floor) / width))
 end
 
 """
@@ -221,8 +208,8 @@ function fast_vector_field_F(
     l0 = Float64(p["l0"])
     eps_pos = Float64(get(p, "smooth_eps", _DEFAULT_SMOOTH_EPS))
 
-    gamma = isnothing(gamma_override) ? closure_coefficients(p)[1] : Float64(gamma_override)
-    e_plus = _regularized_positive(e + delta, eps_pos)
+    gamma = isnothing(gamma_override) ? closure_coefficients(p; U=U, V=V)[1] : Float64(gamma_override)
+    e_plus = _smooth_positive(e + delta, eps_pos)
     sqrt_e = sqrt(e_plus)
 
     production_minus_buoyancy = _production_minus_buoyancy(U, V, Ts, p; gamma_override=gamma)
@@ -240,7 +227,7 @@ function _rhs_4d!(du, u, p, t)
     delta = Float64(p["delta"])
     Ta = Float64(p["T_a"])
     theta_top = Float64(get(p, "theta_top", Ta))
-    alpha_air = clamp(Float64(get(p, "alpha_air", 0.85)), 0.0, 1.0)
+    alpha_air = clamp(Float64(get(p, "alpha_air", 0.15)), 0.0, 1.0)
     Tdeep = Float64(p["T_deep"])
     Rdown = Float64(p["R_down"])
     sigma_sb = Float64(p["sigma_sb"])
@@ -252,25 +239,17 @@ function _rhs_4d!(du, u, p, t)
     Ts_max = Float64(get(p, "ts_max", 350.0))
     ts_floor_transition = Float64(get(p, "ts_floor_transition", 1.0e-3))
     eps_pos = Float64(get(p, "smooth_eps", _DEFAULT_SMOOTH_EPS))
-    e_floor_transition = Float64(get(p, "e_floor_transition", 1.0e-5))
-    de_floor_smooth_eps = Float64(get(p, "de_floor_smooth_eps", 1.0e-10))
 
     Ts_floor = _smooth_max(Ts, Ts_min, ts_floor_transition)
     Ts_eff = _smooth_min(Ts_floor, Ts_max, ts_floor_transition)
 
     gamma, C_H = closure_coefficients(p; U=U, V=V)
-    e_plus = _regularized_positive(e + delta, eps_pos)
+    e_plus = _smooth_positive(e + delta, eps_pos)
     sqrt_e = sqrt(e_plus)
 
     F = fast_vector_field_F(e, U, V, Ts_eff, p; gamma_override=gamma)
 
-    de_dt_raw = F / epsilon
-    e_floor = -delta + eps_pos
-    gate = _smooth_floor_gate(e, e_floor, e_floor_transition)
-    negative_part = _smooth_min_zero(de_dt_raw, de_floor_smooth_eps)
-    de_dt = de_dt_raw - (1.0 - gate) * negative_part
-
-    du[1] = de_dt
+    du[1] = F / epsilon
     du[2] = f_coriolis * (V - Vg) - gamma * sqrt_e * U
     du[3] = -f_coriolis * (U - Ug) - gamma * sqrt_e * V
     theta_air_eff = muladd(alpha_air, Ts_eff, (1.0 - alpha_air) * theta_top)
@@ -317,8 +296,6 @@ end
 function solution_to_rows(sol, parameters::AbstractDict{String,<:Real})
     p = Dict{String,Float64}(k => Float64(v) for (k, v) in parameters)
     delta = p["delta"]
-    Ta = p["T_a"]
-    beta = p["beta"]
     eps_pos = Float64(get(p, "smooth_eps", _DEFAULT_SMOOTH_EPS))
 
     rows = NamedTuple[]
@@ -331,11 +308,11 @@ function solution_to_rows(sol, parameters::AbstractDict{String,<:Real})
 
         gamma, C_H = closure_coefficients(p; U=U, V=V)
 
-        e_plus = _regularized_positive(e + delta, eps_pos)
+        e_plus = _smooth_positive(e + delta, eps_pos)
         sqrt_e = sqrt(e_plus)
         Delta = _production_minus_buoyancy(U, V, Ts, p; gamma_override=gamma)
         e_star_smooth = hyperbolic_embedding_e(Delta, p)
-        sqrt_e_star = sqrt(_regularized_positive(e_star_smooth + delta, eps_pos))
+        sqrt_e_star = sqrt(_smooth_positive(e_star_smooth + delta, eps_pos))
 
         Km = gamma * sqrt_e
         Kh = C_H * sqrt_e

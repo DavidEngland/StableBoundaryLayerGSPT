@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-
+# scripts/run_4d_solver.jl
 using CSV
 using DataFrames
 using Dates
