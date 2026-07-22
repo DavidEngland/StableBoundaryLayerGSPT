@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-#src/Visualization/Visualization.jl
+# src/Visualization/Visualization.jl
 module Visualization
 
 using Dates
@@ -10,6 +10,11 @@ export generate_figure_bundle, generate_bifurcation_figure_bundles
 
 const FIGURES_DIR = "figures"
 const REPORTS_FIGURES_DIR = joinpath("reports", "generated", "figures")
+
+"""Normalize file paths to forward slashes for TeX compiler compatibility across operating systems."""
+function _tex_safe_path(path::String)
+    return replace(abspath(path), '\\' => '/')
+end
 
 function _tex_document(plot_body::String; extra_axis_opts::String="")
     return """
@@ -44,33 +49,41 @@ function _compile_tex_to_pdf(tex_path::String)
 
     mktempdir() do tmpdir
         if tectonic !== nothing
-            ok = open(compile_log, "w") do io
-                success(pipeline(`$(tectonic) --outdir $(tmpdir) $(tex_path)`, stdout=io, stderr=io))
-            end
-            tmp_pdf = joinpath(tmpdir, basename(pdf_path))
-            if ok && isfile(tmp_pdf) && filesize(tmp_pdf) > 0
-                cp(tmp_pdf, pdf_path; force=true)
-                compiled_ok = true
+            try
+                ok = open(compile_log, "w") do io
+                    success(pipeline(`$(tectonic) --outdir $(tmpdir) $(tex_path)`, stdout=io, stderr=io))
+                end
+                tmp_pdf = joinpath(tmpdir, basename(pdf_path))
+                if ok && isfile(tmp_pdf) && filesize(tmp_pdf) > 0
+                    cp(tmp_pdf, pdf_path; force=true)
+                    compiled_ok = true
+                end
+            catch err
+                @warn "Tectonic compilation failed, attempting fallback if available" exception=err
             end
         end
 
         if !compiled_ok && pdflatex !== nothing
-            ok = open(compile_log, tectonic === nothing ? "w" : "a") do io
-                if tectonic !== nothing
-                    write(io, "\n--- pdflatex fallback ---\n")
+            try
+                ok = open(compile_log, tectonic === nothing ? "w" : "a") do io
+                    if tectonic !== nothing
+                        write(io, "\n--- pdflatex fallback ---\n")
+                    end
+                    success(
+                        pipeline(
+                            `$(pdflatex) -interaction=nonstopmode -halt-on-error -output-directory $(tmpdir) $(tex_path)`,
+                            stdout=io,
+                            stderr=io,
+                        ),
+                    )
                 end
-                success(
-                    pipeline(
-                        `$(pdflatex) -interaction=nonstopmode -halt-on-error -output-directory $(tmpdir) $(tex_path)`,
-                        stdout=io,
-                        stderr=io,
-                    ),
-                )
-            end
-            tmp_pdf = joinpath(tmpdir, basename(pdf_path))
-            if ok && isfile(tmp_pdf) && filesize(tmp_pdf) > 0
-                cp(tmp_pdf, pdf_path; force=true)
-                compiled_ok = true
+                tmp_pdf = joinpath(tmpdir, basename(pdf_path))
+                if ok && isfile(tmp_pdf) && filesize(tmp_pdf) > 0
+                    cp(tmp_pdf, pdf_path; force=true)
+                    compiled_ok = true
+                end
+            catch err
+                @warn "PDFLaTeX compilation failed" exception=err
             end
         end
     end
@@ -188,11 +201,13 @@ function _write_figure_sidecars(
 
     mkpath(REPORTS_FIGURES_DIR)
     for src in (pdf_path, tex_path, md_path, json_path)
-        dst = joinpath(REPORTS_FIGURES_DIR, basename(src))
-        try
-            cp(src, dst; force=true)
-        catch err
-            @warn "Failed to copy figure artifact" source=src destination=dst exception=err
+        if isfile(src)
+            dst = joinpath(REPORTS_FIGURES_DIR, basename(src))
+            try
+                cp(src, dst; force=true)
+            catch err
+                @warn "Failed to copy figure artifact" source=src destination=dst exception=err
+            end
         end
     end
 
@@ -225,7 +240,7 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
 
     # Figure A: transcritical map with viridis shading and downsampling safeguard
     fig_a = "figure_bifurcation_transcritical_map"
-        rel_a = abspath(trans_map_csv)
+    rel_a = _tex_safe_path(trans_map_csv)
     opts_a = "xlabel={\$S\$}, ylabel={\$\\Gamma\$}, colorbar, colormap name=viridis, title={Transcritical Transition Boundary}"
     plot_a = """
 \\addplot[
@@ -233,25 +248,25 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
   mark=*,
   mark size=0.65pt,
   filter discard warning=false,
-    each nth point=$(trans_map_nth),
+  each nth point=$(trans_map_nth),
   scatter,
   scatter src=explicit,
 ] table[x=S,y=Gamma,meta=Delta,col sep=comma] {$(rel_a)};
 """
-        bundles[fig_a] = _build_figure(
+    bundles[fig_a] = _build_figure(
         figure_id=fig_a,
         dataset=dataset,
         caption="Transcritical map in (S, Gamma) space colored by Delta.",
         description="Synthetic sweep map identifying turbulent/laminar boundary geometry.",
         source_csv=trans_map_csv,
-                plot_body=plot_a,
-                extra_axis_opts=opts_a,
+        plot_body=plot_a,
+        extra_axis_opts=opts_a,
         provenance=provenance,
     )
 
     # Figure B: fold map with manifold projection labels
     fig_b = "figure_bifurcation_fold_map"
-        rel_b = abspath(fold_map_csv)
+    rel_b = _tex_safe_path(fold_map_csv)
     opts_b = "xlabel={\$T_s\$ (K)}, ylabel={\$S\$}, colorbar, colormap name=viridis, title={Fold Bifurcation Manifold Projection}"
     plot_b = """
 \\addplot[
@@ -259,25 +274,25 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
   mark=*,
   mark size=0.65pt,
   filter discard warning=false,
-    each nth point=$(fold_map_nth),
+  each nth point=$(fold_map_nth),
   scatter,
   scatter src=explicit,
 ] table[x=Ts,y=S,meta=H,col sep=comma] {$(rel_b)};
 """
-        bundles[fig_b] = _build_figure(
+    bundles[fig_b] = _build_figure(
         figure_id=fig_b,
         dataset=dataset,
         caption="Fold map in (Ts, S) space colored by manifold proxy H.",
         description="Synthetic reduced-manifold fold diagnostic map.",
         source_csv=fold_map_csv,
-                plot_body=plot_b,
-                extra_axis_opts=opts_b,
+        plot_body=plot_b,
+        extra_axis_opts=opts_b,
         provenance=provenance,
     )
 
     # Figure C: transcritical uncertainty envelope
     fig_c = "figure_bifurcation_transcritical_envelope"
-    rel_c = abspath(trans_env_csv)
+    rel_c = _tex_safe_path(trans_env_csv)
     opts_c = "xlabel={\$S\$}, ylabel={\$\\gamma_c\$}, legend pos=north west, title={Transcritical Uncertainty Bands}"
     plot_c = """
 \\addplot[name path=p95, draw=none] table[x=S,y=gamma_c_p95,col sep=comma] {$(rel_c)};
@@ -300,7 +315,7 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
 
     # Figure D: fold-point uncertainty summary
     fig_d = "figure_bifurcation_fold_envelope"
-    rel_d = abspath(fold_env_csv)
+    rel_d = _tex_safe_path(fold_env_csv)
     opts_d = "xlabel={\$T_{s,\\mathrm{p50}}\$ (K)}, ylabel={\$S_{\\mathrm{fold},\\mathrm{p50}}\$}, legend pos=south east, title={Fold-Point Median Coordinates}"
     plot_d = """
 \\addplot[only marks, mark=*, mark size=2.2pt, blue]
@@ -318,9 +333,9 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
         provenance=provenance,
     )
 
-    # Figure E: transcritical distance map to highlight near-threshold bands.
+    # Figure E: transcritical distance map
     fig_e = "figure_bifurcation_transcritical_distance_map"
-        rel_e = abspath(trans_map_csv)
+    rel_e = _tex_safe_path(trans_map_csv)
     opts_e = "xlabel={\$S\$}, ylabel={\$\\Gamma\$}, colorbar, colormap name=viridis, title={Transcritical Distance Field}"
     plot_e = """
 \\addplot[
@@ -328,25 +343,25 @@ function generate_bifurcation_figure_bundles(dataset::String, run_dir::String, p
   mark=square*,
   mark size=0.65pt,
   filter discard warning=false,
-    each nth point=$(trans_map_nth),
+  each nth point=$(trans_map_nth),
   scatter,
   scatter src=explicit,
 ] table[x=S,y=Gamma,meta=distance_to_transcritical,col sep=comma] {$(rel_e)};
 """
-        bundles[fig_e] = _build_figure(
+    bundles[fig_e] = _build_figure(
         figure_id=fig_e,
         dataset=dataset,
         caption="Transcritical distance field in (S, Gamma) space using absolute distance to Delta=0.",
         description="Heatmap-style scatter highlighting near-threshold regions for boundary-crossing transitions.",
         source_csv=trans_map_csv,
-                plot_body=plot_e,
-                extra_axis_opts=opts_e,
+        plot_body=plot_e,
+        extra_axis_opts=opts_e,
         provenance=provenance,
     )
 
-    # Figure F: parameter-sensitivity envelope for transcritical thresholds.
+    # Figure F: parameter-sensitivity envelope
     fig_f = "figure_bifurcation_parameter_sensitivity_envelope"
-    rel_f = abspath(sensitivity_env_csv)
+    rel_f = _tex_safe_path(sensitivity_env_csv)
     opts_f = "xlabel={scale multiplier}, ylabel={critical threshold}, legend pos=north west, title={Parameter Sensitivity Envelope}"
     plot_f = """
 \\addplot[name path=gmax, draw=none] table[x=scale,y=gamma_c_max,col sep=comma] {$(rel_f)};
@@ -377,15 +392,27 @@ function generate_figure_bundle(dataset::String, diagnostics::AbstractDict{Strin
 
     figure_id = "figure01"
     caption = "Phase-space diagnostic summary for $(dataset)."
-
-    md_path = joinpath(FIGURES_DIR, "$(figure_id).md")
-    tex_path = joinpath(FIGURES_DIR, "$(figure_id).tex")
-    json_path = joinpath(FIGURES_DIR, "$(figure_id).json")
     ri_mean = diagnostics["ri_mean"]
     tke_mean = diagnostics["tke_mean"]
 
+    opts = "xlabel={Ri Mean}, ylabel={TKE Mean}, title={Phase-Space Diagnostic Summary}"
+    plot_body = """
+\\node[draw, fill=blue!10, rounded corners, align=center] at (axis cs:0.5,0.5) {
+  \\textbf{$(caption)}\\\\[4pt]
+  Ri Mean: $(ri_mean)\\\\
+  TKE Mean: $(tke_mean)
+};
+"""
+
+    tex_path = joinpath(FIGURES_DIR, "$(figure_id).tex")
+    write(tex_path, _tex_document(plot_body; extra_axis_opts=opts))
+    _compile_tex_to_pdf(tex_path)
+
+    md_path = replace(tex_path, ".tex" => ".md")
+    pdf_path = replace(tex_path, ".tex" => ".pdf")
+    json_path = replace(tex_path, ".tex" => ".json")
+
     write(md_path, "# $(figure_id)\n\n$(caption)\n\nri_mean=$(ri_mean), tke_mean=$(tke_mean)\n")
-    write(tex_path, "% $(figure_id)\n\\textbf{$(caption)}\\\\\nri_mean=$(ri_mean), tke_mean=$(tke_mean)\n")
 
     meta = Dict(
         "artifact_id" => figure_id,
@@ -394,15 +421,19 @@ function generate_figure_bundle(dataset::String, diagnostics::AbstractDict{Strin
         "script" => "run_pipeline.jl",
         "kind" => "figure",
         "provenance" => provenance,
+        "paths" => Dict("pdf" => pdf_path, "tex" => tex_path, "md" => md_path, "json" => json_path),
     )
     open(json_path, "w") do io
         JSON3.pretty(io, meta)
     end
 
-    cp(md_path, joinpath(REPORTS_FIGURES_DIR, basename(md_path)); force=true)
-    cp(tex_path, joinpath(REPORTS_FIGURES_DIR, basename(tex_path)); force=true)
+    for src in (pdf_path, tex_path, md_path, json_path)
+        if isfile(src)
+            cp(src, joinpath(REPORTS_FIGURES_DIR, basename(src)); force=true)
+        end
+    end
 
-    return Dict("md" => md_path, "tex" => tex_path, "json" => json_path)
+    return Dict("pdf" => pdf_path, "md" => md_path, "tex" => tex_path, "json" => json_path)
 end
 
 end
