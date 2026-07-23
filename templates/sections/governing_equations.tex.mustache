@@ -9,7 +9,23 @@ The continuous, vertically distributed Single-Column Model (SCM) maps the intera
 \frac{\partial \theta}{\partial t} &= \frac{\partial}{\partial z} \left( K_h \frac{\partial \theta}{\partial z} \right), \label{eq:gov_theta}
 \end{align}
 
-where $U$ and $V$ represent the horizontal components of the wind velocity vector, $\theta$ is the potential temperature, and $f$ is the Coriolis parameter fixed at $\SBLParamFCoriolis\,\mathrm{s}^{-1}$. The vertical transport is regulated dynamically by the momentum and thermal eddy diffusivities ($K_m$ and $K_h$), which are functions of the underlying turbulent kinetic energy state.
+where $U$ and $V$ represent the horizontal components of the wind velocity vector, $\theta$ is the potential temperature, and $f = \SBLParamFCoriolis\,\mathrm{s}^{-1}$ is the Coriolis parameter. The vertical transport is regulated dynamically by the momentum and thermal eddy diffusivities ($K_m$ and $K_h$), which are functions of the underlying turbulent kinetic energy state and local atmospheric stability.
+
+\subsection{Turbulent Closure and Non-Iterative Similarity Functions}
+\label{subsec:gov_most}
+
+To model turbulent exchange without introducing artificial numerical stiffness or iterative root-finding solvers into the fast vector field, surface fluxes and vertical diffusivities are closed via Monin--Obukhov Similarity Theory (MOST). In classical MOST formulations, non-dimensional momentum and heat shear functions, $\phi_m(\zeta)$ and $\phi_h(\zeta)$, are parameterized by the stability ratio $\zeta = z/L$, where $L$ is the Obukhov length scale:
+\begin{equation}
+L = \frac{u_*^2 \theta_0}{\kappa g \theta_*}.
+\end{equation}
+Because $L$ inherently depends on the unknown surface friction velocity $u_*$ and scale temperature $\theta_*$, traditional boundary-layer models require implicit nested iteration loops at every timestep.
+
+To maintain strict structural continuity and local Lipschitz regularity required for Geometric Singular Perturbation Theory (GSPT), we adopt the closed-form analytical transformation developed by \citet{England1995}. By expressing the gradient Richardson number as an explicit function of $\zeta$:
+\begin{equation}
+Ri = \frac{\frac{g}{\theta_0}\frac{\partial \theta}{\partial z}}{\left(\frac{\partial U}{\partial z}\right)^2 + \left(\frac{\partial V}{\partial z}\right)^2} = \zeta \frac{\phi_h(\zeta)}{\phi_m^2(\zeta)},
+\label{eq:ri_definition}
+\end{equation}
+\citet{England1995} derived an exact analytical inversion $\zeta = f(Ri, z/z_0)$. This closed-form parameterization expresses surface stability functions $\Phi_m(Ri)$ and $\Phi_h(Ri)$, as well as surface exchange diffusivities $K_{h,\mathrm{surf}}$, directly as functions of the local layer-averaged Richardson number and surface roughness length $z_{0m}$. This exact elimination of implicit iterative loops ensures that the fast--slow atmospheric dynamics remain explicitly continuous across the critical stability threshold $Ri_c \approx 0.25$.
 
 \subsection{The Reduced Fast-Slow TKE Subsystem}
 \label{subsec:gov_tke}
@@ -47,7 +63,7 @@ The continuous system requires distinct coupling rules at both boundaries of the
     C_{\mathrm{skin}} \frac{dT_s}{dt} = R_{\mathrm{down}} - \sigma_{\mathrm{SB}} T_s^4 - \rho c_p K_{h,\mathrm{surf}} \left( \frac{T_s - \theta_1}{\Delta z_{\mathrm{surf}}} \right) - \lambda_s \frac{T_s - T_{\mathrm{deep}}}{d_{\mathrm{soil}}},
     \label{eq:continuous_surface_energy}
     \end{equation}
-    where $\theta_1$ designates the potential temperature evaluated at the first atmospheric grid level.
+    where $\theta_1$ designates the potential temperature evaluated at the first atmospheric grid level, and $K_{h,\mathrm{surf}}$ is closed non-iteratively via the $Ri$-dependent stability functions \citep{England1995}.
 \end{enumerate}
 
 \begin{remark}
