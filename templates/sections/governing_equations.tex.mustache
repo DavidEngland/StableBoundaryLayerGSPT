@@ -22,10 +22,10 @@ Because $L$ inherently depends on the unknown surface friction velocity $u_*$ an
 
 To maintain strict structural continuity and local Lipschitz regularity required for Geometric Singular Perturbation Theory (GSPT), we adopt the closed-form analytical transformation developed by \citet{England1995}. By expressing the gradient Richardson number as an explicit function of $\zeta$:
 \begin{equation}
-Ri = \frac{\frac{g}{\theta_0}\frac{\partial \theta}{\partial z}}{\left(\frac{\partial U}{\partial z}\right)^2 + \left(\frac{\partial V}{\partial z}\right)^2} = \zeta \frac{\phi_h(\zeta)}{\phi_m^2(\zeta)},
+Ri_g = \frac{\frac{g}{\theta_0}\frac{\partial \theta}{\partial z}}{\left(\frac{\partial U}{\partial z}\right)^2 + \left(\frac{\partial V}{\partial z}\right)^2} = \zeta \frac{\phi_h(\zeta)}{\phi_m^2(\zeta)},
 \label{eq:ri_definition}
 \end{equation}
-\citet{England1995} derived an exact analytical inversion $\zeta = f(Ri, z/z_0)$. This closed-form parameterization expresses surface stability functions $\Phi_m(Ri)$ and $\Phi_h(Ri)$, as well as surface exchange diffusivities $K_{h,\mathrm{surf}}$, directly as functions of the local layer-averaged Richardson number and surface roughness length $z_{0m}$. This exact elimination of implicit iterative loops ensures that the fast--slow atmospheric dynamics remain explicitly continuous across the critical stability threshold $Ri_c \approx 0.25$.
+\citet{England1995} derived an exact analytical inversion $\zeta = f(Ri_g, z/z_0)$. This closed-form parameterization expresses surface stability functions $\f_m(Ri_g)$ and $\f_h(Ri_g)$, as well as surface exchange diffusivities $K_{m,h}$, directly as functions of the local layer-averaged Richardson number and surface roughness length $z_{0m}$. This exact elimination of implicit iterative loops ensures that the fast--slow atmospheric dynamics remain explicitly continuous across the critical stability threshold $Ri_c \approx 0.25$.
 
 \subsection{The Reduced Fast-Slow TKE Subsystem}
 \label{subsec:gov_tke}
