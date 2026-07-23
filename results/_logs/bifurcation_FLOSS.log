@@ -1,4 +1,4 @@
 Bifurcation sweep complete
-run_dir=results/FLOSS/bifurcation_20260722_131242
-summary=results/FLOSS/bifurcation_20260722_131242/bifurcation_summary.json
+run_dir=results/FLOSS/bifurcation_20260723_070948
+summary=results/FLOSS/bifurcation_20260723_070948/bifurcation_summary.json
 report_fragment=reports/generated/diagnostics/03_bifurcation_sweep.md

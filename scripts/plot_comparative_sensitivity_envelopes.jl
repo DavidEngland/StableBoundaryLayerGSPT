@@ -21,7 +21,7 @@ function parse_args(args::Vector{String})
     while i <= length(args)
         arg = args[i]
         if arg == "--out" && i < length(args)
-            out = args[i + 1]
+            out = args[i+1]
             i += 2
         elseif arg == "--help"
             usage()
@@ -38,7 +38,9 @@ function latest_bifurcation_dir(dataset::String)
     base = joinpath("results", dataset)
     isdir(base) || error("Missing results directory: $(base)")
     runs = filter(p -> startswith(basename(p), "bifurcation_"), readdir(base; join=true))
-    isempty(runs) && error("No bifurcation runs found for $(dataset)")
+    if isempty(runs)
+        error("No bifurcation runs found for $(dataset). Please run 'make bifurcation-$(lowercase(dataset))' first.")
+    end
     sort!(runs; by=p -> stat(p).mtime, rev=true)
     return runs[1]
 end
@@ -64,31 +66,25 @@ function build_panel(dataset::String, df::DataFrame; show_ylabel::Bool)
     y_med = Float64.(df.gamma_c_p50)
     y_max = Float64.(df.gamma_c_max)
 
+    # 1. Draw shaded envelope fill first (background layer)
     p = plot(
         x,
-        y_med;
-        linewidth=2.4,
-        color=:black,
-        label="median",
+        y_max;
+        fillrange=y_min,
+        fillalpha=0.22,
+        fillcolor=:crimson,
+        linealpha=0.0,
+        color=:crimson,
+        label="min-max envelope",
         xlabel="Scale multiplier",
-        ylabel=show_ylabel ? "Critical threshold gamma_c" : "",
+        ylabel=show_ylabel ? "Critical threshold γ_c" : "",
         title=dataset,
         grid=true,
         gridalpha=0.28,
         legend=:topright,
     )
 
-    plot!(
-        x,
-        y_max;
-        fillrange=y_min,
-        fillalpha=0.25,
-        fillcolor=:crimson,
-        linealpha=0.0,
-        color=:crimson,
-        label="min-max envelope",
-    )
-
+    # 2. Draw dashed envelope boundary lines
     plot!(
         x,
         y_min;
@@ -106,6 +102,15 @@ function build_panel(dataset::String, df::DataFrame; show_ylabel::Bool)
         color=:crimson,
         alpha=0.65,
         label="",
+    )
+
+    # 3. Overlay sharp median line on top
+    plot!(
+        x,
+        y_med;
+        linewidth=2.4,
+        color=:black,
+        label="median",
     )
 
     return p
@@ -136,8 +141,8 @@ function main(args::Vector{String})
         size=(1900, 560),
         margin=6Plots.mm,
         bottom_margin=10Plots.mm,
-        title="Comparative OAT Parameter Sensitivity Envelope",
-        titlefontsize=13,
+        plot_title="Comparative OAT Parameter Sensitivity Envelope",
+        plot_titlefontsize=14,
     )
 
     mkpath(dirname(out_path))
