@@ -1,0 +1,18 @@
+\subsection{Visual Diagnostics: Fast-Slow Geometry and Tri-Height Evolution}
+\label{subsec:visual_phase_space_ascii}
+
+\paragraph{Phase-Space Trajectory Pathways.}
+The SBL system traverses three distinct operational regimes in the reduced phase space $(q, \Delta)$, as illustrated in Figure~\ref{fig:gspt_manifold_tikz}:
+\begin{enumerate}
+    \item \textbf{Evening Run-Up (Active Sheet):} Strong surface shear maintains positive net forcing ($\Delta > 0$), confining the state to the active attracting sheet $\mathcal{M}_0^{\text{act}}$ ($q = q_+$).
+    \item \textbf{Sudden Collapse (Fold Catastrophe):} Sustained radiative cooling shifts forcing below the saddle-node threshold $\Delta_{\text{fold}} = -\frac{\beta^2}{4}$. Loss of normal hyperbolicity forces a fast vertical collapse on the $O(\varepsilon^{-1})$ timescale down to the laminar floor.
+    \item \textbf{Re-Ignition Recovery (Transcritical Point):} As shear re-accumulates, forcing increases back to $\Delta = 0$. At this transcritical bifurcation point, the laminar residual sheet $\mathcal{M}_0^{\text{lam}}$ becomes repelling, allowing turbulence to re-ignite deterministically without artificial restart logic.
+\end{enumerate}
+
+\paragraph{Nocturnal Tri-Height Evolution.}
+Tracking vertical boundary-layer diagnostics over a 12-hour nocturnal cycle reveals distinct spatial decoupling scales:
+\begin{itemize}
+    \item \textbf{Diffusivity Cutoff ($h_D$):} Surface cooling induces rapid early-evening decoupling, collapsing $h_D$ down to the surface layer ($< 20\text{ m}$).
+    \item \textbf{TKE Floor ($h_e$):} Low-level turbulence decays along the fast manifold, establishing a residual floor at $z \approx h_e$.
+    \item \textbf{Inversion Capping Height ($h_{\partial \theta}$):} Shear aloft maintains an elevated Low-Level Jet (LLJ) nose ($z \approx 200\text{--}300\text{ m}$), preserving turbulent transport above the surface inversion layer.
+\end{itemize}

@@ -18,11 +18,11 @@ The core four-dimensional prognostic system for the state vector $\mathbf{x} = (
 \end{equation}
 with
 \begin{equation}
-\Delta(U,V,T_s)=\eta\,\gamma\,(U^2+V^2)-K\,G(T_s),
+\Delta(U,V,T_s)=\eta\,\gamma\,(U^2+V^2)-K\,G(T_s).
 \end{equation}
-and the bounded stability response
+with the bounded stability response
 \begin{equation}
-G(T_s)=\tanh\!\left(\beta\,\frac{T_a-T_s}{T_a}\right).
+G(T_s)=\tanh\!\left(\beta\,\frac{T_a-T_s}{T_a}\right),
 \end{equation}
 
 Here, $f$ is the Coriolis frequency, $h$ is the bulk boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant acceleration scale. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The bounded tanh response prevents runaway buoyancy growth under deep inversions, and the momentum and thermal transport terms scale with $\sqrt{e+\delta}$ to maintain asymptotic consistency with classical mixing-length theory.
@@ -38,7 +38,7 @@ h_{\text{eff}}^{\star} = \min\left( c_1 \frac{\sqrt{u_*^2 + \delta_u^2}}{|f|},\;
 h_{\text{eff}} = \operatorname{clamp}(h_{\text{eff}}^{\star},\, h_{\min},\, h_{\max}),
 \label{eq:heff_emergent}
 \end{equation}
-where $N = \sqrt{\max\left((g/\theta_0)\,\partial\theta/\partial z,\, 0\right)}$ is the local Brunt--Väisälä frequency, $\delta$ represents the background TKE floor parameter, and $\delta_u$ is a small velocity-scale regularizer ensuring well-posed mechanical limits as $u_* \to 0$. This dual-limit scale height incorporates empirical scaling regimes established during landmark SBL field campaigns, including CASES-99 \citep{Poulos2002, Sun2002} over midlatitude grasslands and SHEBA \citep{Uttal2002, Grachev2005} over Arctic sea ice.
+where $N = \sqrt{\max\left((g/\theta_0)\,\partial\theta/\partial z,\, 0\right)}$ is the local Brunt--Väisälä frequency, $\delta$ represents the background TKE floor parameter, and $\delta_u$ is a small velocity-scale regularizer ensuring well-posed mechanical limits as $u_* \to 0$.
 
 \subsection{Geometric Analysis: Boundary Crossings vs. Thermodynamic Folds}
 \label{subsec:geometric_consequences}
@@ -56,7 +56,7 @@ GSPT allows us to formally distinguish between two distinct physical transitions
     e_{\mathrm{fold}}=\frac{\beta^2 l_0^2}{4}-\delta,\qquad
     \Delta_{\mathrm{fold}}=-\frac{\beta^2}{4}.
     \end{equation}
-    Crossing this locus triggers fast departure from the attracting active sheet and jump toward the laminar branch, mathematically reproducing the abrupt TKE collapse and turbulence intermittency documented in nocturnal and polar observations \citep{Banta2002, Grachev2005, VanDeWiel2012}.
+    Crossing this locus triggers fast departure from the attracting active sheet and jump toward the laminar branch.
 \end{itemize}
 
 \subsection{Tri-Height Observability Diagnostics}
@@ -71,4 +71,4 @@ h_{\partial e} &= \operatorname*{arg\,max}_z\left(-\frac{\partial e}{\partial z}
 \end{aligned}
 \label{eq:triheight_diagnostics}
 \end{equation}
-These variables correspond to the geometric decoupling interface, the energetic turbulent floor, and the maximum-curvature inversion transition height, respectively, providing a clear window into the structural modifications of the vertical column in alignment with multi-sensor profiling methods used in CASES-99 and SHEBA analyses \citep{Poulos2002, Grachev2013}.
+These variables correspond to the geometric decoupling interface, the energetic turbulent floor, and the maximum-curvature inversion transition height, respectively, providing a clear window into the structural modifications of the vertical column.

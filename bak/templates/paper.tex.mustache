@@ -1,0 +1,125 @@
+\documentclass[11pt,letterpaper]{article}
+
+% --- Layout & Geometry ---
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\singlespacing
+
+% --- Essential Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm} % <--- Add this line for \begin{proof} support
+\usepackage{mathtools} % For \coloneqq
+\usepackage{booktabs}  % For professional tables (\toprule, \midrule, etc.)
+\usepackage{microtype} % For optimal typographic spacing
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{siunitx}
+
+% --- Citation Engine (Author-Year Style) ---
+\usepackage[round,authoryear]{natbib}
+\usepackage[pagebackref=false,breaklinks=true,colorlinks,citecolor=blue,urlcolor=blue,linkcolor=blue,bookmarks=false]{hyperref}
+
+% --- Generated Parameter Macros ---
+\input{parameters/parameters_all.tex}
+
+% --- Custom Mathematical Commands and Operators ---
+\DeclareMathOperator{\TKE}{e}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ddt}[1]{\frac{d#1}{dt}}
+\newcommand{\partialderiv}[2]{\frac{\partial #1}{\partial #2}}
+
+% --- Theorem and Remark Environments ---
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+% --- Document Metadata ---
+\title{\textbf{Geometric Singular Perturbation Analysis of the Nocturnal Stable Boundary Layer: Transitions, Regularizations, and Topological Folds}}
+
+\author{
+    \textbf{David E. England, PhD} \\
+    \small Research Engineer III \\
+    \small University of Alabama in Huntsville (UAH) \\
+    \small \href{mailto:david.england@uah.edu}{david.england@uah.edu}
+}
+\date{\small\itshape Manuscript prepared for SBL-GSPT collaborative research project stack. \\ Last compiled: \today}
+
+\begin{document}
+
+\maketitle
+
+{{{abstract_tex}}}
+
+% --- Main Body Sections ---
+\section{Introduction}
+\label{sec:introduction}
+Nocturnal boundary layer transitions present a notorious modeling challenge due to the highly non-linear, non-equilibrium coupling between atmospheric dynamics, surface energy budgets, and microphysical turbulence scales \citep{mahrt1999, vanDeWiel2017}. This work provides a rigorous Geometric Singular Perturbation Theory (GSPT; \citealp{Fenichel1979, Kuehn2015}) characterization of these transitions, mapping the stable boundary layer (SBL) state-space trajectories as constrained flows on a low-dimensional manifold.
+
+The manuscript is organized as a unified applied-mathematics stack: governing system, fast--slow decomposition, critical manifold geometry, regularization, regime-transition geometry, and numerical experiments.
+
+% --- Dynamic Sections Compiled via Mustache ---
+
+{{{template_sections_tex}}}
+
+\section{Generated Diagnostics Figures}
+\label{sec:generated_diagnostics_figures}
+{{{figure_tex_includes}}}
+
+\section{Conclusion: A Geometric Framework for Stable Boundary-Layer Dynamics}
+\label{sec:conclusion}
+
+By resolving the fast--slow geometry of nocturnal boundary-layer evolution, this work demonstrates that the abrupt decay of turbulent mixing can be understood as a boundary-mediated transition on a low-dimensional invariant manifold rather than solely through empirical similarity relations. The resulting $4\text{D}$ GSPT-SBL framework provides a geometrically consistent bridge between non-equilibrium fluid dynamics and atmospheric boundary-layer theory while offering an alternative explanation for persistent limitations of Monin--Obukhov Similarity Theory (MOST; \citealp{nieuwstadt1984}) under strongly stable conditions.
+
+\subsection{Mathematical and Topological Rigor}
+The framework formally distinguishes between two physical transitions previously conflated in meteorological literature:
+\begin{enumerate}
+    \item \textbf{Transversal Boundary Crossing ($e = 0$):} The isolated fast TKE subsystem undergoes a deterministic recovery pathway along the boundary of physical phase space.
+    \item \textbf{Emergent Fold Catastrophe ($\mathcal{C}_{\text{fold}}$):} An $S$-shaped fold catastrophe is demonstrated analytically to be an emergent phenomenon occurring exclusively when the boundary layer is coupled to the nonlinear Surface Energy Budget (SEB).
+\end{enumerate}
+This distinction clarifies the origin of the ``Fold Illusion'' and provides a first-principles framework necessary to describe intermittent turbulence and relaxation oscillations without relying on ad-hoc empirical switching functions \citep{zilitinkevich2007, basu2008}.
+
+\subsection{Physical Realism and the Nocturnal Lifecycle}
+The coupled dynamical system naturally generates a four-phase nocturnal lifecycle consisting of Evening Cooling, Catastrophic Collapse, Inertial Acceleration, and Turbulent Breakout, forming a closed relaxation oscillation. Crucially, the Low-Level Jet (LLJ) is no longer prescribed phenomenologically; it emerges naturally as the Blackadar inertial response along the laminar manifold sheet following frictional decoupling. The introduction of an adaptive emergent scale height ($h_{\text{eff}}$) further ensures that SBL depth is a dynamic property of state-space trajectories, substantially mitigating the runaway cooling tendencies encountered in static local closures \citep{Derbyshire1990, Holtslag1993}.
+
+\subsection{Observational Validation and the RMSE Paradox}
+Field campaign comparisons across CASES-99 \citep{poulos2002cases99}, FLOSS, and SHEBA highlight a geometric paradox where standard error metrics (RMSE) act as a proxy for frictional regularization. Rather than treating RMSE solely as a measure of model deficiency, the manifold framework suggests that part of the observed error reflects physically meaningful exploration of nonlinear state space. The framework explains why higher errors in open terrain (CASES-99) correspond to unconstrained global dynamics exploring non-linear phase space, whereas high-roughness canopy or snowpack environments (FLOSS) act as dynamic dampers that pin trajectories tightly to the manifold.
+
+\subsection{Numerical Innovation and Future Extensions}
+Implemented in the modern Julia/SciML ecosystem, the framework achieves a $\sim 20\times$ computational efficiency gain through Banded Jacobian prototypes when evaluated against dense benchmarks, decoupling solver overhead from vertical grid resolution. The Discrete Exterior Calculus (DEC) formulation is designed to preserve discrete geometric structure and improve global conservation properties, reducing susceptibility to unphysical numerical artifacts during rapid transitions.
+
+Future work will extend this $4\text{D}$ construction into a $5\text{D}$ autonomous ODE system by promoting potential temperature ($\theta$) to a slow dynamical variable. This $5\text{D}$ extension represents the smallest autonomous extension expected to support canard-mediated transitions \citep{krupa2001extending, desroches2012canards} and mixed-mode oscillations (MMOs) natively, offering a path toward unifying deterministic and intermittent SBL regimes.
+
+\subsection{Synthesis and Outlook}
+The geometric viewpoint developed here suggests that stable boundary-layer dynamics are governed not by isolated empirical stability corrections but by the global organization of trajectories on a coupled fast--slow manifold. Within this framework, turbulent collapse, intermittent recovery, inertial oscillations, and surface-energy feedback emerge as interconnected manifestations of a single nonlinear dynamical system. By combining geometric singular perturbation theory with physically consistent boundary-layer physics, the proposed framework establishes a mathematically rigorous foundation for future turbulence parameterizations while providing a pathway toward more robust and physically interpretable weather and climate models.
+
+% ------------------------------------------------------------------
+% BIBLIOGRAPHY SECTION
+% ------------------------------------------------------------------
+\clearpage
+
+% --- Reference Display Control ---
+% Uncomment during draft/curation phase to render ALL entries in refs.bib:
+\nocite{*}
+% For final submission (rendering ONLY cited references), comment out the line above.
+
+% --- Bibliography Style Selection (Uncomment ONE desired target style) ---
+
+% [Option A] Standard Natbib Author-Year (Default for general/GFD drafting)
+%\bibliographystyle{plainnat}
+
+% [Option B] AMS / JAS Official Submission Style (Requires ametsoc2014.bst in template dir)
+% \bibliographystyle{ametsoc2014}
+
+% [Option C] Concise APA Author-Year Style
+% \bibliographystyle{apalike}
+
+% [Option D] Sequential Numerical Order (For physical/computational journal targets)
+\bibliographystyle{unsrtnat}
+
+% Points to 'refs.bib' file (do NOT include .bib extension)
+\bibliography{refs}
+
+\end{document}

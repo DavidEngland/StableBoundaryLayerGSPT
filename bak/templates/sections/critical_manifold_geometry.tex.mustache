@@ -1,0 +1,104 @@
+\subsection{Critical Manifold Geometry and Stability Properties}
+\label{subsec:critical_manifold_geometry}
+
+In the singular limit $\varepsilon \to 0$, the fast turbulent kinetic energy (TKE) coordinate relaxes instantaneously to its local equilibrium state. This defines the critical manifold $\mathcal{M}_0$ as an invariant algebraic variety embedded within the four-dimensional state space $\mathbb{R}^4$:
+
+\begin{equation}
+\mathcal{M}_0 = \left\{(U,V,T_s,e) \in \mathbb{R}^4 \;\middle|\; F_{\mathrm{reg}}(\tilde e,\mathbf{y})=0\right\},
+\end{equation}
+where $\tilde e = e + \delta \ge 0$, $\mathbf{y} = (U,V,T_s) \in \mathbb{R}^3$ represents the slow vector field, and
+\begin{equation}
+F_{\mathrm{reg}}(\tilde e,\mathbf{y}) = l_0\,\Delta(\mathbf{y})\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right) + \beta\tilde e - \frac{\tilde e^{3/2}}{l_0},
+\qquad
+\Delta(\mathbf{y}) = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
+\end{equation}
+
+In single-column model (SCM) realizations, the damping-scale contribution entering $\gamma$ is evaluated using the state-dependent boundary layer height $h_{\text{eff}}$, coupling column momentum directly back into the local manifold geometry.
+
+Outside the $\mathcal{O}(\alpha)$ boundary layer near $\tilde e = 0$, transforming variables to $q \coloneqq \sqrt{\tilde e}$ yields the asymptotic manifold equation $F(q,\mathbf{y}) = q \cdot \mathcal{F}(q,\mathbf{y}) = 0$, where
+\begin{equation}
+\mathcal{F}(q,\mathbf{y}) = l_0\Delta(\mathbf{y}) + \beta q - \frac{q^2}{l_0}.
+\label{eq:manifold_factor_F}
+\end{equation}
+Setting $F(q,\mathbf{y}) = 0$ exposes three distinct equilibrium branches:
+\begin{align}
+q_{\mathrm{lam}} &= 0 \qquad\quad\; (e^* = -\delta < 0, \text{ physical laminar floor}), \label{eq:branch_lam} \\
+q_{-}(\Delta) &= \frac{\beta l_0 - l_0\sqrt{\beta^2+4\Delta}}{2}, \label{eq:branch_minus} \\
+q_{+}(\Delta) &= \frac{\beta l_0 + l_0\sqrt{\beta^2+4\Delta}}{2}. \label{eq:branch_plus}
+\end{align}
+Here, $q_{+}(\Delta)$ defines the active attracting sheet ($\partial_q \mathcal{F} < 0$), whereas $q_{-}(\Delta)$ defines the unstable threshold sheet ($\partial_q \mathcal{F} > 0$).
+
+The fold locus of the non-trivial parabolic branch is determined by the local turning point condition:
+\begin{equation}
+\mathcal{F}(q,\mathbf{y}) = 0, \qquad \frac{\partial \mathcal{F}}{\partial q}(q,\mathbf{y}) = 0.
+\label{eq:fold_conditions_unified}
+\end{equation}
+Differentiating Eq. \eqref{eq:manifold_factor_F} with respect to $q$ yields $q_{\mathrm{fold}} = \frac{1}{2}\beta l_0$. Substituting $q_{\mathrm{fold}}$ back into $\mathcal{F} = 0$ determines the critical fold coordinates in state space:
+\begin{equation}
+q_{\mathrm{fold}} = \frac{\beta l_0}{2},
+\qquad
+e_{\mathrm{fold}} = \frac{\beta^2 l_0^2}{4} - \delta,
+\qquad
+\Delta_{\mathrm{fold}} = -\frac{\beta^2}{4}.
+\end{equation}
+
+In addition to fold-mediated collapse, system recovery is organized by a boundary transcritical exchange at $\Delta = 0$, where the local normal stability of the laminar boundary branch changes sign.
+
+\subsection{Resolution of the Fold Illusion: Boundary Crossing Versus Emergent Hysteresis}
+\label{subsec:fold_illusion_resolution}
+
+A common classification ambiguity in reduced stable boundary-layer (SBL) modeling is interpreting turbulent collapse as an interior saddle-node bifurcation of the isolated atmospheric fast subsystem. In our $4\text{D}$ GSPT formulation, the geometric structure is more precise: the isolated atmospheric fast TKE subsystem undergoes a \textbf{transversal boundary crossing} at $e = 0$, whereas a genuine $S$-shaped fold catastrophe emerges only when the fast atmosphere is coupled to the non-linear surface thermodynamic feedback.
+
+\paragraph{1. Isolated Fast Subsystem: Transversal Boundary Crossing.}
+For a fixed slow atmospheric vector $\mathbf{y}$, the simultaneous interior fold conditions
+\begin{equation}
+F_{\mathrm{reg}}(e;\mathbf{y}) = 0,
+\qquad
+\frac{\partial F_{\mathrm{reg}}}{\partial e}(e;\mathbf{y}) = 0
+\end{equation}
+admit no smooth interior turning point ($e > 0$) on the active physical sheet. Instead, the active branch $e^*(\Delta)$ terminates directly at the physical boundary $e = 0$ with a non-zero normal derivative $\partial F_{\mathrm{reg}}/\partial e \neq 0$. Atmospheric transition across this boundary is driven transversely as the slow forcing crosses the regularized threshold $\Delta = \delta / l_0$.
+
+\paragraph{2. Coupled Atmosphere--SEB Dynamics: Emergent Thermodynamic Fold.}
+When the atmospheric manifold is coupled to the non-linear Surface Energy Budget (SEB), an emergent hysteretic fold locus $\mathcal{C}_{\mathrm{fold}}$ develops. Let $\mathcal{H}(T_s, U, V, e)$ define the slow surface thermodynamic map:
+\begin{equation}
+\mathcal{H}(T_s, U, V, e) \equiv R_{\mathrm{net}}(T_s) + H(T_s, e) + G_{\mathrm{soil}}(T_s),
+\label{eq:seb_map_def}
+\end{equation}
+where $R_{\mathrm{net}}$ is net longwave radiation, $H$ is downward sensible heat flux, and $G_{\mathrm{soil}}$ is ground conduction. At thermal collapse onset, the slow thermodynamic map loses rank along $T_s$:
+\begin{equation}
+\frac{\partial \mathcal{H}}{\partial T_s} = 0,
+\label{eq:seb_rank_loss}
+\end{equation}
+creating a saddle-node turning point in $T_s$ even while the fast atmospheric TKE subsystem remains locally normally hyperbolic away from $e = 0$.
+
+\paragraph{3. Physical and Modeling Implications.}
+This geometric separation resolves the false equivalence between a regularized boundary intersection ($e^*$ crossing $e = 0$) and a full thermodynamic fold catastrophe. Distinguishing these mechanisms is essential for modeling intermittency, collapse-recovery hysteresis, and self-sustained nocturnal oscillations without introducing ad hoc numerical thresholds or conditional switches.
+
+\paragraph{4. Surface Temperature Relaxation Oscillations.}
+With surface skin temperature $T_s$ acting as the primary slow variable governed by thermal capacity $C_s$:
+\begin{equation}
+C_s \frac{\mathrm{d}T_s}{\mathrm{d}t} = \mathcal{H}(T_s, U, V, e) = R_{\mathrm{net}}(T_s) + H(T_s,e) + G_{\mathrm{soil}}(T_s),
+\end{equation}
+the combined $(U,V,T_s,e)$ phase space exhibits canonical relaxation oscillations. On the active sheet ($e^* > 0$), downward sensible heat flux $H > 0$ buffers radiative cooling and drives a slow thermal decay ($T_s \downarrow$). As $T_s$ decreases, atmospheric stability $G(T_s)$ strengthens until $\Delta$ crosses the collapse threshold. Upon fast quenching ($e \to 0$), sensible heat supply vanishes ($H \to 0$), accelerating surface skin cooling while the decoupled wind aloft accelerates ($(U^2+V^2) \uparrow$). The resulting geostrophic shear accumulation eventually restores $\Delta > 0$, triggering a fast turbulent burst ($e \to e^*$) that completes the relaxation cycle without artificial numerical resets.
+
+\begin{proposition}[Thermal Downward Translation]
+\label{prop:thermal_shift_proof}
+Let the surface stability function satisfy $\frac{\partial G}{\partial T_s} < 0$ everywhere in the physical domain. Continuous radiative cooling of the surface skin temperature ($T_s \downarrow$) induces a uniform, monotonic downward geometric translation of the active critical manifold sheet along the fast TKE coordinate axis.
+\end{proposition}
+
+\paragraph{Proof.}
+Using the bounded SCM stability closure $G(T_s) = \tanh\!\left(\frac{\beta(T_a-T_s)}{T_a}\right)$, its thermal derivative is:
+\begin{equation}
+\frac{\partial G}{\partial T_s} = -\frac{\beta}{T_a}\operatorname{sech}^2\!\left(\frac{\beta(T_a-T_s)}{T_a}\right) < 0,
+\qquad \implies \qquad
+\frac{\partial \Delta}{\partial T_s} = -K\frac{\partial G}{\partial T_s} > 0.
+\end{equation}
+On the active attracting sheet, $e^* = q_{+}^2 - \delta$ with $q_{+} = q_{+}(\Delta(T_s,U,V))$. Differentiating $e^*$ with respect to $T_s$ via the chain rule yields:
+\begin{equation}
+\frac{\partial e^*}{\partial T_s} = 2q_{+}\,\frac{\partial q_{+}}{\partial \Delta}\,\frac{\partial \Delta}{\partial T_s}.
+\end{equation}
+Differentiating $q_{+}(\Delta)$ in Eq. \eqref{eq:branch_plus} with respect to $\Delta$:
+\begin{equation}
+\frac{\partial q_{+}}{\partial \Delta} = \frac{l_0}{\sqrt{\beta^2+4\Delta}} > 0.
+\end{equation}
+Because $q_+ > 0$, $\frac{\partial q_+}{\partial \Delta} > 0$, and $\frac{\partial \Delta}{\partial T_s} > 0$, it follows that $\frac{\partial e^*}{\partial T_s} > 0$ everywhere on the active sheet. Consequently, a monotonic decrease in surface temperature ($\Delta T_s < 0$) forces $\Delta e^* < 0$, translating the active critical manifold downward toward the laminar boundary. \hfill $\blacksquare$
