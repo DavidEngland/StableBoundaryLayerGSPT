@@ -1,61 +1,91 @@
-% templates/figures/figure_gspt_manifold_tikz.tex
 \documentclass[tikz,border=5pt]{standalone}
 \usepackage{amsmath,amssymb}
-\usetikzlibrary{arrows.meta,decorations.markings,calc}
+\usetikzlibrary{arrows.meta,decorations.markings,calc,backgrounds,matrix}
 
 \begin{document}
 \begin{tikzpicture}[scale=1.1, >=Stealth]
-    % --- Axes ---
-    \draw[->, thick] (-2.8, 0) -- (4.5, 0) node[right] {Net Forcing $\Delta$};
-    \draw[->, thick] (0, -0.6) -- (0, 3.6) node[above] {Turbulence Scale $q = \sqrt{e+\delta}$};
 
     % --- Key Coordinates ---
     \coordinate (Fold) at (-1.5, 1.2);
-    \coordinate (Transcritical) at (0.75, 0);
+    \coordinate (Extinction) at (0.75, 0);
 
-    % --- 1. Attracting Laminar Manifold S_0^lam (q = 0) ---
+    % --- 1. Transition Layer / Loss of Normal Hyperbolicity (Background Layer) ---
+    \begin{scope}[on background layer]
+        \filldraw[fill=gray!15, draw=gray!50, dashed] (Fold) circle (0.45);
+        \node[gray!80!black, font=\scriptsize, align=center, above left=8pt] at (Fold)
+            {Fold neighborhood\\[-1pt]\textit{(Loss of normal hyperbolicity)}};
+    \end{scope}
+
+    % --- 2. Axes ---
+    \draw[->, thick] (-2.8, 0) -- (4.5, 0) node[right] {Net Forcing $\Delta$};
+    \draw[->, thick] (0, -0.6) -- (0, 3.6) node[above, align=center] {Regularized TKE amplitude\\$q = \sqrt{e+\delta}$};
+
+    % --- 3. Figure Legend ---
+    \matrix [draw=gray!30, fill=white, rounded corners=3pt, inner sep=3pt, font=\scriptsize, anchor=north west, row sep=2pt]
+        at (-2.7, 3.5) {
+        \draw[very thick, blue!80!black] (0,0) -- (0.35,0); & \node[right]{Attracting turbulent manifold}; \\
+        \draw[thick, dashed, red!80!black] (0,0) -- (0.35,0); & \node[right]{Repelling slow manifold}; \\
+        \draw[very thick, green!50!black] (0,0) -- (0.35,0); & \node[right]{Laminar equilibrium manifold}; \\
+        \draw[->, ultra thick, violet] (0,0) -- (0.35,0); & \node[right]{Fast subsystem trajectories}; \\
+    };
+
+    % --- 4. Laminar Equilibrium Manifold S_0^lam (q = 0) ---
     \draw[very thick, green!50!black] (-2.8, 0) -- (4.2, 0);
     \node[green!50!black, below right, align=left] at (1.2, -0.15)
-        {$\mathcal{S}_0^{\mathrm{lam}}$: Residual laminar manifold\\$q=0$ (regularized $e=-\delta$)};
+        {$\mathcal{S}_0^{\mathrm{lam}}$: Laminar equilibrium manifold\\$q=0$ (regularized $e=-\delta$)};
 
-    % --- 2. Repelling Separatrix S_0^- (Dashed Red, Fold to Transcritical) ---
+    % --- 5. Repelling Slow Manifold S_0^- (Dashed Red, Fold to Extinction) ---
     \draw[thick, dashed, red!80!black, domain=-1.5:0.75, samples=60]
         plot ({\x}, {1.2 - 0.8*sqrt(\x + 1.5)});
     \node[red!80!black, above left, font=\small] at (0.2, 0.45)
-        {$\mathcal{S}_0^-$ (Repelling separatrix)};
+        {$\mathcal{S}_0^-$ (Repelling slow manifold)};
 
-    % --- 3. Attracting Turbulent Manifold S_0^+ (Solid Blue) ---
+    % --- 6. Attracting Turbulent Manifold S_0^+ (Solid Blue) ---
     \draw[very thick, blue!80!black, domain=-1.5:4.2, samples=100]
         plot ({\x}, {1.2 + 0.8*sqrt(\x + 1.5)});
-    \node[blue!80!black, right, align=left] at (3.0, 2.9)
-        {$\mathcal{S}_0^+$ (or $\mathcal{S}_0^{\mathrm{turb}}$)\\Attracting turbulent sheet};
+    \node[blue!80!black, right, align=left] at (3.4, 3.1)
+        {$\mathcal{S}_0^+$ (or $\mathcal{S}_0^{\mathrm{turb}}$)\\Attracting turbulent manifold};
 
-    % --- 4. Slow Flow Dynamics (Tangent Drift along Attracting Sheets) ---
-    % Slow cooling drift leftward along S_0^+ towards fold
+    % --- 7. Slow Flow Dynamics (Tangent Drift along Attracting Sheets) ---
+    % Primary slow cooling drift leftward along S_0^+ towards fold
     \draw[->, thick, blue!90!black] (2.8, 2.53) -- (2.0, 2.30)
         node[midway, above, sloped, font=\footnotesize] {Slow drift $\dot{\Delta} < 0$};
+    % Reinforcing slow drift vector approaching the fold singularity
+    \draw[->, thick, blue!90!black] (-0.3, 2.07) -- (-1.0, 1.73);
+
     % Slow momentum recovery drift rightward along S_0^lam
     \draw[->, thick, green!40!black] (-2.2, 0) -- (-1.0, 0)
         node[midway, above, font=\footnotesize] {Slow drift};
 
-    % --- 5. Critical Points (Bifurcations) ---
-    % Fold / Saddle-Node
-    \filldraw[red] (Fold) circle (2.5pt)
-        node[above left=2pt, align=left, font=\small]
-        {\textbf{Fold (Saddle-Node)}\\$\Delta_{\mathrm{fold}} = -\beta^2/4$};
-
-    % Transcritical Point (Intersection of S_0^- and S_0^lam at \Delta = 0.75)
-    \filldraw[orange!90!black] (Transcritical) circle (2.5pt)
-        node[above right=2pt, align=left, font=\small]
-        {\textbf{Transcritical point}\\$\Delta_{\mathrm{trans}} = 0.75$};
-
-    % --- 6. Fast Subsystem Dynamics (Vertical Jumps O(1/\varepsilon)) ---
-    % Fast Collapse past the fold
-    \draw[->, ultra thick, violet] (-2.1, 1.2) -- (-2.1, 0.08)
+    % --- 8. Fast Subsystem Dynamics (Exact Vertical Jumps) ---
+    % Fast Collapse past the fold (at \Delta = -1.45, starting on S_0^+)
+    \pgfmathsetmacro{\qcollapse}{1.2 + 0.8*sqrt(-1.45 + 1.5)}
+    \draw[->, ultra thick, violet] (-1.45, \qcollapse) -- (-1.45, 0.05)
         node[midway, left, align=right, font=\small] {Fast collapse\\$\mathcal{O}(1/\varepsilon)$};
 
-    % Fast Re-ignition above the separatrix
-    \draw[->, ultra thick, violet] (1.8, 0.15) -- (1.8, 2.0)
+    % Fast Re-ignition past the separatrix (at \Delta = 1.8, ending on S_0^+)
+    \pgfmathsetmacro{\qreignite}{1.2 + 0.8*sqrt(1.8 + 1.5)}
+    \draw[->, ultra thick, violet] (1.8, 0.0) -- (1.8, \qreignite)
         node[midway, right, align=left, font=\small] {Fast re-ignition\\$\mathcal{O}(1/\varepsilon)$};
+
+    % --- 9. Critical Points (Singularities & Thresholds) ---
+    % Fold Singularity
+    \filldraw[red] (Fold) circle (2.5pt)
+        node[below left=2pt, align=right, font=\small]
+        {\textbf{Fold singularity}\\$\Delta_{\mathrm{fold}} = -\beta^2/4$};
+
+    % Extinction Threshold
+    \filldraw[orange!90!black] (Extinction) circle (2.5pt)
+        node[above right=2pt, align=left, font=\small]
+        {\textbf{Turbulence extinction threshold}\\$\Delta_{\mathrm{ext}} = 0.75$};
+
+    % --- 10. Timescale Box ---
+    \node[draw=gray!40, fill=white, rounded corners=3pt, inner sep=4pt, align=left, font=\footnotesize]
+        at (3.3, 0.9) {
+            \textbf{GSPT Regimes:}\\[1pt]
+            Reduced flow: $\dot{\Delta} = \mathcal{O}(1)$\\[1pt]
+            Layer flow: $\dot{q} = \mathcal{O}(1/\varepsilon)$
+        };
+
 \end{tikzpicture}
 \end{document}
