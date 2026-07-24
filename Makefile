@@ -149,6 +149,7 @@ assemble-manuscript: generate-parameter-macros
 visual-assets:
 	@mkdir -p reports/generated/figures
 	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated/figures templates/figures/figure_gspt_manifold_tikz.tex
+	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated/figures templates/figures/fig_gspt_manifold_schematic.tex
 
 figure-phase-space-hysteresis:
 	julia --project=. scripts/plot_phase_space_hysteresis.jl --datasets CASES99,FLOSS --out reports/generated/figures/phase_space_hysteresis_orbit.png

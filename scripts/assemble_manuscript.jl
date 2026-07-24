@@ -648,7 +648,7 @@ function build_tex_figure_includes(fig_dir::String;
         ),
         "regime_map_z0m_ug" => (
             title="Analytical regime map in \$(z_{0m}, U_g)\$ parameter space derived from surface-layer similarity scaling. The three dynamic regimes—continuous weak turbulence (Regime I), intermittent relaxation oscillations (Regime II), and runaway radiative decoupling (Regime III)—are partitioned by the critical geostrophic shear boundaries \$S_c\$. Observational field campaign markers locate typical parameter pairs for CASES99, FLOSS, and SHEBA.",
-            label="fig:regime_map_z0m_ug",
+            label="fig:regime_map_z0m_ug_generated",
         ),
         "figure_regime_map_z0m_ug" => (
             title="Analytical regime map in \$(z_{0m}, U_g)\$ parameter space derived from surface-layer similarity scaling. The three dynamic regimes—continuous weak turbulence (Regime I), intermittent relaxation oscillations (Regime II), and runaway radiative decoupling (Regime III)—are partitioned by the critical geostrophic shear boundaries \$S_c\$. Observational field campaign markers locate typical parameter pairs for CASES99, FLOSS, and SHEBA.",
