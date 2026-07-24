@@ -1,0 +1,85 @@
+\documentclass[tikz,border=5pt]{standalone}
+\usepackage{amsmath,amssymb}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{arrows.meta,calc,decorations.markings,shapes.geometric}
+
+\begin{document}
+
+% Set viewing angle (azimuth, elevation)
+\tdplotsetmaincoords{65}{120}
+
+\begin{tikzpicture}[tdplot_main_coords, scale=1.8, >=Stealth]
+
+  % --- Color Definitions ---
+  \colorlet{UpperManifold}{green!20!white}
+  \colorlet{UpperBorder}{green!50!black}
+  \colorlet{LowerManifold}{blue!12!white}
+  \colorlet{LowerBorder}{blue!60!black}
+  \colorlet{FoldLine}{orange!90!black}
+  \colorlet{FastFiber}{red!80!black}
+  \colorlet{TrajColor}{blue!80!black}
+
+  % --- Coordinate System Axes ---
+  \draw[->, thick, gray!80] (0,0,0) -- (3.2,0,0) node[anchor=north east]{\small $U$};
+  \draw[->, thick, gray!80] (0,0,0) -- (0,3.2,0) node[anchor=north west]{\small $V$};
+  \draw[->, thick, gray!80] (0,0,0) -- (0,0,2.8) node[anchor=south]{\small $e \text{ (TKE)}$};
+
+  % --- 1. Lower Decoupled Manifold (M_0^0) ---
+  % Flat sheet at e = 0
+  \fill[LowerManifold, opacity=0.85] (0.2,0.2,0) -- (2.8,0.2,0) -- (2.8,2.8,0) -- (0.2,2.8,0) -- cycle;
+  \draw[LowerBorder, thick] (0.2,0.2,0) -- (2.8,0.2,0) -- (2.8,2.8,0) -- (0.2,2.8,0) -- cycle;
+
+  \node[LowerBorder, font=\bfseries\small] at (0.6,2.5,0.05) {$\mathcal{M}_0^0$ (Laminar Floor)};
+
+  % --- 2. Blackadar Inertial Spiral on Lower Sheet ---
+  % Parametric spiral on e = 0
+  \draw[TrajColor, thick, postaction={decorate, decoration={
+        markings, mark=at position 0.35 with {\arrow{>}}, mark=at position 0.8 with {\arrow{>}}
+      }}]
+    plot[domain=0:6.28, samples=60]
+    ({1.5 + 0.6*exp(-0.2*\x)*cos(\x r)}, {1.5 + 0.6*exp(-0.2*\x)*sin(\x r)}, {0});
+
+  \node[TrajColor, font=\scriptsize, align=center] at (2.2, 0.8, 0) {Blackadar Inertial\\Oscillation (LLJ)};
+
+  % --- 3. Upper Turbulent Manifold (M_0^+) ---
+  % Curved surface representing the "Potentual Cup"
+  \fill[UpperManifold, opacity=0.85]
+    plot[domain=0.5:2.5, samples=20] (\x, 0.5, {1.4 + 0.2*(\x-1.5)^2}) --
+    plot[domain=0.5:2.5, samples=20] (2.5-\x+0.5, 2.5, {1.8 + 0.2*(2.5-\x+0.5-1.5)^2}) -- cycle;
+
+  \draw[UpperBorder, thick]
+    plot[domain=0.5:2.5, samples=20] (\x, 0.5, {1.4 + 0.2*(\x-1.5)^2});
+  \draw[UpperBorder, thick]
+    plot[domain=0.5:2.5, samples=20] (\x, 2.5, {1.8 + 0.2*(\x-1.5)^2});
+  \draw[UpperBorder, thick] (0.5,0.5, 1.6) -- (0.5,2.5, 2.0);
+
+  \node[UpperBorder, font=\bfseries\small] at (1.1,2.0,2.3) {$\mathcal{M}_0^+$ (Turbulent Cup)};
+
+  % --- 4. Trajectory inside the Upper Cup ---
+  \draw[TrajColor, thick, postaction={decorate, decoration={
+        markings, mark=at position 0.5 with {\arrow{>}}
+      }}]
+    plot[domain=0:3.14, samples=40]
+    ({1.2 + 0.4*cos(\x r)}, {1.0 + 0.3*\x}, {1.6 + 0.1*sin(\x r)});
+
+  % --- 5. Fold Curve (C_fold) ---
+  % Front termination edge of the upper manifold
+  \draw[FoldLine, ultra thick]
+    plot[domain=0.5:2.5, samples=20] (2.5, \x, {1.8 + 0.2*(1.0)^2});
+
+  \node[FoldLine, font=\bfseries\scriptsize, anchor=west] at (2.5,2.5,2.0) {Fold Curve $\mathcal{C}_{\text{fold}}$};
+
+  % --- 6. Fast Fiber Transition (Catastrophic Jump) ---
+  % Downward vertical jump at the fold
+  \draw[FastFiber, ultra thick, dashed, ->] (2.5, 1.5, 1.8) -- (2.5, 1.5, 0.05);
+
+  \node[FastFiber, font=\bfseries\scriptsize, align=left, anchor=west] at (2.5, 1.5, 0.9)
+    {Fast Fiber Jump\\($\partial e / \partial t \ll 0$)};
+
+  % --- 7. Re-ignition / Return Path (Optional Shear Buildup) ---
+  \draw[green!60!black, thick, dotted, ->] (0.8, 1.5, 0) .. controls (0.4, 1.0, 0.8) .. (0.8, 0.8, 1.5);
+  \node[green!60!black, font=\tiny, align=center] at (0.2, 1.0, 0.7) {Shear\\Re-ignition};
+
+\end{tikzpicture}
+
+\end{document}

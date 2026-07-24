@@ -1,9 +1,14 @@
 #!/usr/bin/env julia
 # scripts/plot_regime_map_z0m_ug.jl
-# Figure Concept 5: Regime map in (z0m, U_g) space with campaign markers.
+# Figure Concept 5: Analytical Regime Map in (z0m, U_g) Parameter Space with campaign markers.
 
 using JSON
 using Plots
+using Plots.PlotMeasures
+
+# --- Script Constants ---
+const RATIO_UPPER = 1.25   # Weak Turbulence / Intermittent boundary threshold
+const RATIO_LOWER = 0.85   # Intermittent / Runaway Collapse boundary threshold
 
 function usage()
     println("Usage: julia scripts/plot_regime_map_z0m_ug.jl [options]")
@@ -77,40 +82,36 @@ function load_summary(dataset::String)
     return JSON.parsefile(path)
 end
 
+# Surface-layer drag coefficient C_D evaluated at first node height z1 = 2.0m
 function closure_gamma(z0m::Float64, p::Dict{String,Any})
-    kappa = Float64(p["kappa"])
+    kappa = Float64(get(p, "kappa", 0.4))
     gamma_efficiency = Float64(get(p, "gamma_efficiency", 1.0))
-    h = Float64(p["h"])
-    log_m = log(h / z0m)
+    z1 = 2.0 # First node surface layer height (m)
+    log_m = log(max(z1 / z0m, 1.05))
     return gamma_efficiency * (kappa^2 / (log_m^2))
 end
 
 function stability_response(Ts::Float64, p::Dict{String,Any})
-    Ta = Float64(p["T_a"])
-    beta = Float64(p["beta"])
+    Ta = Float64(get(p, "T_a", 273.15))
+    beta = Float64(get(p, "beta", 1.0))
     return tanh(beta * (Ta - Ts) / Ta)
 end
 
-# Regime classes:
-# 1.0 = Continuous weak turbulence (Green)
-# 2.0 = Intermittent relaxation oscillations (Gold)
-# 3.0 = Runaway decoupling (Red)
-function regime_class(Ug::Float64, z0m::Float64, p::Dict{String,Any}, Ts_ref::Float64)
+function regime_class(Ug::Float64, gamma::Float64, p::Dict{String,Any}, Ts_ref::Float64)
     eta = Float64(get(p, "shear_production_efficiency", 1.0))
-    Kb = Float64(p["K"])
-    gamma = closure_gamma(z0m, p)
+    Kb = Float64(get(p, "K", 0.05))
     G = stability_response(Ts_ref, p)
 
     denom = eta * max(gamma, eps(Float64))
     Sc = sqrt(max(Kb * G / denom, 0.0))
     ratio = Ug / max(Sc, 1.0e-8)
 
-    if ratio >= 1.25
-        return 1.0  # Regime I: Weak Turbulence
-    elseif ratio <= 0.85
-        return 3.0  # Regime III: Decoupling
+    if ratio >= RATIO_UPPER
+        return 1.0  # Regime I: Weak Turbulence (Green)
+    elseif ratio <= RATIO_LOWER
+        return 3.0  # Regime III: Runaway Decoupling (Red)
     else
-        return 2.0  # Regime II: Intermittent
+        return 2.0  # Regime II: Intermittent (Gold)
     end
 end
 
@@ -123,29 +124,31 @@ function main(args::Vector{String})
 
     p_ref = Dict{String,Any}(cases["parameters"])
     eta = Float64(get(p_ref, "shear_production_efficiency", 1.0))
-    Kb = Float64(p_ref["K"])
+    Kb = Float64(get(p_ref, "K", 0.05))
 
-    Ta = Float64(p_ref["T_a"])
+    Ta = Float64(get(p_ref, "T_a", 273.15))
     Ts_ref = Ta - 4.0
 
     ug_vals = collect(range(Float64(cfg["ug_min"]), Float64(cfg["ug_max"]); length=Int(cfg["ug_n"])))
 
-    # 1. Transform z0m to log10 coordinate space
+    # 1. Log-transformed z0m coordinates
     log_z0m_min = log10(Float64(cfg["z0m_min"]))
     log_z0m_max = log10(Float64(cfg["z0m_max"]))
     log_z0m_vals = collect(range(log_z0m_min, log_z0m_max; length=Int(cfg["z0m_n"])))
     z0m_vals = 10.0 .^ log_z0m_vals
 
-    # 2. Populate matrix
+    # 2. Vectorized pre-computation
+    gamma_vals = closure_gamma.(z0m_vals, Ref(p_ref))
+
+    # 3. Populate regime matrix
     regime = Array{Float64}(undef, length(log_z0m_vals), length(ug_vals))
-    for (j, Ug) in enumerate(ug_vals), (i, z0m) in enumerate(z0m_vals)
-        regime[i, j] = regime_class(Ug, z0m, p_ref, Ts_ref)
+    for (j, Ug) in enumerate(ug_vals), (i, gamma) in enumerate(gamma_vals)
+        regime[i, j] = regime_class(Ug, gamma, p_ref, Ts_ref)
     end
 
-    # 3. Categorical palette & perfectly centered color bounds
+    # 4. Color palette & bounds centered on states 1, 2, 3
     cmap = cgrad([:seagreen3, :goldenrod2, :firebrick2], 3; categorical=true)
 
-    # Custom log-space tick labels
     xticks_pos = [-4.0, -3.0, -2.0, -1.301]
     xticks_lbl = ["10⁻⁴", "10⁻³", "10⁻²", "0.05"]
 
@@ -156,58 +159,64 @@ function main(args::Vector{String})
         c=cmap,
         xlabel="Momentum Roughness Length z₀ₘ (m)",
         ylabel="Geostrophic Forcing U_g (m s⁻¹)",
-        title="Regime Bifurcation Map: Roughness vs Geostrophic Forcing",
-        colorbar_title="Operational Regime",
-        clims=(0.5, 3.5), # Centered on integer states 1.0, 2.0, 3.0
+        title="Analytical Regime Map in (z₀ₘ, U_g) Parameter Space",
+        colorbar_title="Analytical Regime",
+        clims=(0.5, 3.5),
         xticks=(xticks_pos, xticks_lbl),
-        colorbar_ticks=([1.0, 2.0, 3.0], ["I: Weak Turb.", "II: Intermittent", "III: Decoupling"]),
+        colorbar_ticks=([1.0, 2.0, 3.0], ["Weak turbulence", "Intermittent", "Runaway decoupling"]),
         dpi=240,
         size=(1200, 760),
-        right_margin=12Plots.mm,
-        left_margin=8Plots.mm,
-        bottom_margin=8Plots.mm,
+        right_margin=12mm,
+        left_margin=8mm,
+        bottom_margin=8mm,
     )
 
-    # 4. Compute and plot exact analytical boundary curves
+    # 5. Transition boundary curves
     ug_bnd_upper = Float64[]
     ug_bnd_lower = Float64[]
     G_val = stability_response(Ts_ref, p_ref)
 
-    for z0m in z0m_vals
-        gamma = closure_gamma(z0m, p_ref)
+    for gamma in gamma_vals
         denom = eta * max(gamma, eps(Float64))
         Sc = sqrt(max(Kb * G_val / denom, 0.0))
-        push!(ug_bnd_upper, 1.25 * Sc)
-        push!(ug_bnd_lower, 0.85 * Sc)
+        push!(ug_bnd_upper, RATIO_UPPER * Sc)
+        push!(ug_bnd_lower, RATIO_LOWER * Sc)
     end
 
-    plot!(plt, log_z0m_vals, ug_bnd_upper; line=(2, :dash, :black), label="Ratio = 1.25 Boundary")
-    plot!(plt, log_z0m_vals, ug_bnd_lower; line=(2, :dot, :black), label="Ratio = 0.85 Boundary")
+    plot!(plt, log_z0m_vals, ug_bnd_upper; line=(2, :dash, :black), label="Upper transition (Weak/Intermittent)")
+    plot!(plt, log_z0m_vals, ug_bnd_lower; line=(2, :dot, :black), label="Lower transition (Intermittent/Collapse)")
 
-    # 5. Direct region annotations in the heatmap space
-    annotate!(plt, -3.5, 12.5, text("REGIME I\nWeak Turbulence", 11, :bold, :white, :center))
-    annotate!(plt, -2.3, 6.5, text("REGIME II\nIntermittent", 11, :bold, :black, :center))
-    annotate!(plt, -3.2, 3.0, text("REGIME III\nDecoupled", 11, :bold, :white, :center))
+    # 6. Region text annotations positioned in each regime
+    xmin, xmax = extrema(log_z0m_vals)
+    ymin, ymax = extrema(ug_vals)
 
-    # 6. Overlay campaign markers
-    datasets = [
-        ("CASES99", Dict{String,Any}(cases["parameters"]), :diamond),
-        ("FLOSS", Dict{String,Any}(floss["parameters"]), :utriangle),
-        ("SHEBA", Dict{String,Any}(sheba["parameters"]), :star5),
-    ]
+    annotate!(plt, xmin + 0.25 * (xmax - xmin), ymin + 0.82 * (ymax - ymin), text("REGIME I\nWeak Turbulence", 11, :bold, :white, :center))
+    annotate!(plt, xmin + 0.50 * (xmax - xmin), ymin + 0.38 * (ymax - ymin), text("REGIME II\nIntermittent", 11, :bold, :black, :center))
+    annotate!(plt, xmin + 0.75 * (xmax - xmin), ymin + 0.12 * (ymax - ymin), text("REGIME III\nDecoupled", 11, :bold, :white, :center))
 
+    # 7. Campaign markers
     marker_z0m_fallback = Dict(
         "CASES99" => 2.0e-2,
         "FLOSS" => 1.0e-4,
         "SHEBA" => 5.0e-4,
     )
 
+    datasets = [
+        ("CASES99", Dict{String,Any}(cases["parameters"]), :diamond),
+        ("FLOSS", Dict{String,Any}(floss["parameters"]), :utriangle),
+        ("SHEBA", Dict{String,Any}(sheba["parameters"]), :star5),
+    ]
+
     for (name, p, mk) in datasets
-        z0m = Float64(p["z0m"])
-        if !(Float64(cfg["z0m_min"]) <= z0m <= Float64(cfg["z0m_max"]))
+        z0m_raw = get(p, "z0m", missing)
+        z0m = ismissing(z0m_raw) ? marker_z0m_fallback[name] : Float64(z0m_raw)
+
+        # Handle FLOSS canopy/measurement height anomaly safely
+        if z0m > 0.1
             z0m = marker_z0m_fallback[name]
         end
-        Ug = Float64(p["U_g"])
+
+        Ug = Float64(get(p, "U_g", 10.0))
         log_z0m = log10(z0m)
 
         scatter!(
@@ -223,13 +232,13 @@ function main(args::Vector{String})
         )
 
         dx = name == "FLOSS" ? 0.08 : 0.0
-        x_text = clamp(log_z0m + dx, minimum(log_z0m_vals) + 0.03, maximum(log_z0m_vals) - 0.03)
+        x_text = clamp(log_z0m + dx, xmin + 0.03, xmax - 0.03)
         annotate!(plt, x_text, Ug + 0.5, text(name, 10, :bold, :black))
     end
 
     mkpath(dirname(String(cfg["out"])))
     savefig(plt, String(cfg["out"]))
-    println("Saved corrected regime map: $(cfg["out"])")
+    println("Saved restored regime map: $(cfg["out"])")
 end
 
 main(ARGS)
