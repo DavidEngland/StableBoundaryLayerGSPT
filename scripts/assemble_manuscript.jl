@@ -8,6 +8,8 @@ using LinearAlgebra
 using Printf
 using Statistics
 
+include(joinpath(@__DIR__, "lib", "utils.jl"))
+
 const DEFAULT_DATASET = "CASES99"
 const DEFAULT_GENERATED_DATE_HUMAN = "July 13, 2026"
 const SUPPORTED_DATASETS = ["CASES99", "FLOSS", "SHEBA"]
@@ -591,10 +593,17 @@ function verify_parameter_macro_bundle!(macro_path::String, active_dataset::Stri
     end
 end
 
-function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinpath("reports", "generated"))
+function build_tex_figure_includes(fig_dir::String;
+                                   tex_output_dir::String=joinpath("reports", "generated"),
+                                   config_path::String=joinpath("config", "manuscript_figures.json"))
     if !isdir(fig_dir)
         return "% No generated figures directory found."
     end
+
+    figure_cfg = load_manuscript_figure_config(config_path)
+    fig_metadata_cfg = get(figure_cfg, "figures", Dict{String,Any}())
+    preferred_stems_cfg = Vector{String}(get(figure_cfg, "preferred_stems", String[]))
+    acronyms_cfg = get(figure_cfg, "acronyms", Dict{String,Any}())
 
     FIGURE_METADATA = Dict(
         "figure_bifurcation_fold_envelope" => (
@@ -648,6 +657,12 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
     )
 
     function figure_caption_and_label(stem::String)
+        if haskey(fig_metadata_cfg, stem)
+            meta = fig_metadata_cfg[stem]
+            title = get(meta, "title", prettify_figure_title(stem))
+            label = get(meta, "label", "")
+            return String(title), String(label)
+        end
         if haskey(FIGURE_METADATA, stem)
             meta = FIGURE_METADATA[stem]
             return meta.title, meta.label
@@ -666,7 +681,9 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
         normalized = String[]
         for part in parts
             lw = lowercase(part)
-            if lw == "4d"
+            if haskey(acronyms_cfg, lw)
+                push!(normalized, String(acronyms_cfg[lw]))
+            elseif lw == "4d"
                 push!(normalized, "4D")
             elseif lw == "sbl"
                 push!(normalized, "SBL")
@@ -714,7 +731,7 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
         candidate_paths[stem] = img_path
     end
 
-    preferred_stems = [
+    preferred_stems = isempty(preferred_stems_cfg) ? [
         "fig_gspt_manifold_tikz",
         "figure_gspt_manifold_tikz",
         "regime_map_z0m_ug",
@@ -727,7 +744,7 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
         "figure_bifurcation_fold_envelope",
         "4d_sbl_diagnostics",
         "diagnostic_regularization_comparison",
-    ]
+    ] : preferred_stems_cfg
 
     ordered_stems = String[]
     for stem in preferred_stems
@@ -877,7 +894,7 @@ function find_scm_summary_path()
     return ""
 end
 
-function read_scm_summary_context()
+function read_scm_summary_context(; config_path::String=joinpath("config", "manuscript_figures.json"))
     path = find_scm_summary_path()
     if isempty(path)
         return Dict{String,String}(
@@ -904,6 +921,9 @@ function read_scm_summary_context()
     fold_fraction = getnested(summary, ["verification", "fold_near_fraction"], "n/a")
     case_name = string(getnested(summary, ["case"], "n/a"))
     outdir = string(getnested(summary, ["outdir"], dirname(path)))
+
+    figure_cfg = load_manuscript_figure_config(config_path)
+    scm_fig_meta_cfg = get(figure_cfg, "scm_figures", Dict{String,Any}())
 
     SCM_FIG_META = Dict(
         "fig01" => (
@@ -955,7 +975,13 @@ function read_scm_summary_context()
             prefix_match = match(r"fig\d+", stem)
             prefix = prefix_match === nothing ? stem : prefix_match.match
 
-            caption, label = if haskey(SCM_FIG_META, prefix)
+            caption, label = if haskey(scm_fig_meta_cfg, prefix)
+                meta = scm_fig_meta_cfg[prefix]
+                default_label = "fig:scm_" * lowercase(replace(stem, r"[^A-Za-z0-9]+" => "_"))
+                caption_val = haskey(meta, "caption") ? meta["caption"] : stem
+                label_val = haskey(meta, "label") ? meta["label"] : default_label
+                String(caption_val), String(label_val)
+            elseif haskey(SCM_FIG_META, prefix)
                 SCM_FIG_META[prefix].caption, SCM_FIG_META[prefix].label
             else
                 fallback_label = "fig:scm_" * lowercase(replace(stem, r"[^A-Za-z0-9]+" => "_"))
