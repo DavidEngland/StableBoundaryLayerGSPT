@@ -300,8 +300,19 @@ function scm_gspt_tendencies!(dX, X, p, t)
         dtheta[N] = (flux_H_topN - K_h_faces[N-1] * (theta[N] - theta[N-1]) / dz) / dz
 
         # 8. Surface Energy Balance
+        # Use a bulk-transfer sensible heat operator at the surface to avoid
+        # treating K_h (a diffusivity) as a direct exchange coefficient.
+        z0m = max(convert(T, p.z0m), eps(T))
+        z0h = max(convert(T, p.z0h), eps(T))
+        ratio_floor = convert(T, 1.05)
+        h_ref_surf = max(h_eff_surf, max(z0m, z0h) * ratio_floor)
+        log_m = log(max(h_ref_surf / z0m, ratio_floor))
+        log_h = log(max(h_ref_surf / z0h, ratio_floor))
+        C_H_surf = (kappa * kappa) / max(log_m * log_h, eps(T))
+        wind_surf = hypot(U[1], V[1])
+
         R_net = R_down - sigma_SB * (T_s^4)
-        H_upward = rho_cp * K_h_surf * (T_s - theta[1]) / dz_surf
+        H_upward = rho_cp * C_H_surf * wind_surf * (T_s - theta[1])
         G_downward = lambda_s * (T_s - T_deep) / d_soil
 
         dX[1] = (one(T) / C_skin) * (R_net - H_upward - G_downward)
