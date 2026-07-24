@@ -92,9 +92,9 @@ function stability_response(Ts::Float64, p::Dict{String,Any})
 end
 
 # Regime classes:
-# 1 = Continuous weak turbulence (Green)
-# 2 = Intermittent relaxation oscillations (Gold)
-# 3 = Runaway decoupling (Red)
+# 1.0 = Continuous weak turbulence (Green)
+# 2.0 = Intermittent relaxation oscillations (Gold)
+# 3.0 = Runaway decoupling (Red)
 function regime_class(Ug::Float64, z0m::Float64, p::Dict{String,Any}, Ts_ref::Float64)
     eta = Float64(get(p, "shear_production_efficiency", 1.0))
     Kb = Float64(p["K"])
@@ -106,11 +106,11 @@ function regime_class(Ug::Float64, z0m::Float64, p::Dict{String,Any}, Ts_ref::Fl
     ratio = Ug / max(Sc, 1.0e-8)
 
     if ratio >= 1.25
-        return 1.0  # Regime I: Weak Turbulence (Green)
+        return 1.0  # Regime I: Weak Turbulence
     elseif ratio <= 0.85
-        return 3.0  # Regime III: Decoupling (Red)
+        return 3.0  # Regime III: Decoupling
     else
-        return 2.0  # Regime II: Intermittent (Gold)
+        return 2.0  # Regime II: Intermittent
     end
 end
 
@@ -122,32 +122,33 @@ function main(args::Vector{String})
     sheba = load_summary("SHEBA")
 
     p_ref = Dict{String,Any}(cases["parameters"])
+    eta = Float64(get(p_ref, "shear_production_efficiency", 1.0))
+    Kb = Float64(p_ref["K"])
 
     Ta = Float64(p_ref["T_a"])
     Ts_ref = Ta - 4.0
 
     ug_vals = collect(range(Float64(cfg["ug_min"]), Float64(cfg["ug_max"]); length=Int(cfg["ug_n"])))
 
-    # 1. Transform z0m to log10 coordinate space to bypass GR heatmap bug
+    # 1. Transform z0m to log10 coordinate space
     log_z0m_min = log10(Float64(cfg["z0m_min"]))
     log_z0m_max = log10(Float64(cfg["z0m_max"]))
     log_z0m_vals = collect(range(log_z0m_min, log_z0m_max; length=Int(cfg["z0m_n"])))
     z0m_vals = 10.0 .^ log_z0m_vals
 
-    # 2. Populate (N_x x N_y) matrix where x -> z0m and y -> Ug
+    # 2. Populate matrix
     regime = Array{Float64}(undef, length(log_z0m_vals), length(ug_vals))
     for (j, Ug) in enumerate(ug_vals), (i, z0m) in enumerate(z0m_vals)
         regime[i, j] = regime_class(Ug, z0m, p_ref, Ts_ref)
     end
 
-    # Explicit palette: 1 = Green (Weak Turb), 2 = Gold (Intermittent), 3 = Red (Decoupling)
+    # 3. Categorical palette & perfectly centered color bounds
     cmap = cgrad([:seagreen3, :goldenrod2, :firebrick2], 3; categorical=true)
 
     # Custom log-space tick labels
     xticks_pos = [-4.0, -3.0, -2.0, -1.301]
     xticks_lbl = ["10⁻⁴", "10⁻³", "10⁻²", "0.05"]
 
-    # 3. Transpose regime' so size is (N_y x N_x) matching (length(ug_vals), length(log_z0m_vals))
     plt = heatmap(
         log_z0m_vals,
         ug_vals,
@@ -157,9 +158,9 @@ function main(args::Vector{String})
         ylabel="Geostrophic Forcing U_g (m s⁻¹)",
         title="Regime Bifurcation Map: Roughness vs Geostrophic Forcing",
         colorbar_title="Operational Regime",
-        clims=(1.0, 3.0),
+        clims=(0.5, 3.5), # Centered on integer states 1.0, 2.0, 3.0
         xticks=(xticks_pos, xticks_lbl),
-        colorbar_ticks=([1.33, 2.0, 2.67], ["I: Weak Turb.", "II: Intermittent", "III: Decoupling"]),
+        colorbar_ticks=([1.0, 2.0, 3.0], ["I: Weak Turb.", "II: Intermittent", "III: Decoupling"]),
         dpi=240,
         size=(1200, 760),
         right_margin=12Plots.mm,
@@ -167,14 +168,34 @@ function main(args::Vector{String})
         bottom_margin=8Plots.mm,
     )
 
-    # Overlay campaign markers on the log_z0m axis
+    # 4. Compute and plot exact analytical boundary curves
+    ug_bnd_upper = Float64[]
+    ug_bnd_lower = Float64[]
+    G_val = stability_response(Ts_ref, p_ref)
+
+    for z0m in z0m_vals
+        gamma = closure_gamma(z0m, p_ref)
+        denom = eta * max(gamma, eps(Float64))
+        Sc = sqrt(max(Kb * G_val / denom, 0.0))
+        push!(ug_bnd_upper, 1.25 * Sc)
+        push!(ug_bnd_lower, 0.85 * Sc)
+    end
+
+    plot!(plt, log_z0m_vals, ug_bnd_upper; line=(2, :dash, :black), label="Ratio = 1.25 Boundary")
+    plot!(plt, log_z0m_vals, ug_bnd_lower; line=(2, :dot, :black), label="Ratio = 0.85 Boundary")
+
+    # 5. Direct region annotations in the heatmap space
+    annotate!(plt, -3.5, 12.5, text("REGIME I\nWeak Turbulence", 11, :bold, :white, :center))
+    annotate!(plt, -2.3, 6.5, text("REGIME II\nIntermittent", 11, :bold, :black, :center))
+    annotate!(plt, -3.2, 3.0, text("REGIME III\nDecoupled", 11, :bold, :white, :center))
+
+    # 6. Overlay campaign markers
     datasets = [
         ("CASES99", Dict{String,Any}(cases["parameters"]), :diamond),
         ("FLOSS", Dict{String,Any}(floss["parameters"]), :utriangle),
         ("SHEBA", Dict{String,Any}(sheba["parameters"]), :star5),
     ]
 
-    # Guard against malformed roughness entries in run summaries.
     marker_z0m_fallback = Dict(
         "CASES99" => 2.0e-2,
         "FLOSS" => 1.0e-4,
@@ -201,10 +222,9 @@ function main(args::Vector{String})
             label=name
         )
 
-        # Crisp white text annotation above marker
         dx = name == "FLOSS" ? 0.08 : 0.0
         x_text = clamp(log_z0m + dx, minimum(log_z0m_vals) + 0.03, maximum(log_z0m_vals) - 0.03)
-        annotate!(plt, x_text, Ug + 0.45, text(name, 10, :bold, :white))
+        annotate!(plt, x_text, Ug + 0.5, text(name, 10, :bold, :black))
     end
 
     mkpath(dirname(String(cfg["out"])))
