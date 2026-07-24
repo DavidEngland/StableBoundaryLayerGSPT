@@ -177,7 +177,7 @@ figure-comparative-sensitivity:
 figure-publication-suite: visual-assets figure-phase-space-hysteresis figure-blackadar-hodograph figure-triheight-suite figure-regularization-smooth figure-regime-map figure-comparative-sensitivity
 
 paper-all:
-	$(MAKE) clean
+# 	$(MAKE) clean
 	$(MAKE) run-solver-all
 	$(MAKE) generate-parameter-macros
 	$(MAKE) bifurcation-$(shell echo $(DATASET) | tr '[:upper:]' '[:lower:]')

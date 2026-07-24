@@ -31,6 +31,51 @@ function parse_args(args::Vector{String})
     return solution_csv, out_path
 end
 
+function infer_geostrophic_forcing(solution_csv::String, U, V)
+    ug_true = 0.0
+    vg_true = 0.0
+    param_found = false
+    run_dir = dirname(solution_csv)
+
+    possible_json_paths = [
+        joinpath(run_dir, "run_manifest.json"),
+        joinpath(run_dir, "provenance.json"),
+        joinpath(run_dir, "summary.json"),
+        joinpath(run_dir, "..", "summary.json")
+    ]
+
+    for path in possible_json_paths
+        if isfile(path)
+            try
+                data = JSON.parsefile(path)
+                # Handle nested parameter summaries or flat configurations.
+                target_dict = haskey(data, "parameters") ? data["parameters"] : data
+                if haskey(target_dict, "U_g")
+                    ug_true = Float64(target_dict["U_g"])
+                    param_found = true
+                end
+                if haskey(target_dict, "V_g")
+                    vg_true = Float64(target_dict["V_g"])
+                end
+                if param_found
+                    break
+                end
+            catch
+                # Fall back to next file if parsing fails.
+            end
+        end
+    end
+
+    if !param_found
+        @warn "No parameter summary JSON located. Falling back to bulk trajectory center estimation."
+        start_idx = max(1, length(U) - min(40, length(U) - 1))
+        ug_true = mean(U[start_idx:end])
+        vg_true = mean(V[start_idx:end])
+    end
+
+    return ug_true, vg_true
+end
+
 solution_csv, out_path = parse_args(ARGS)
 df = CSV.read(solution_csv, DataFrame)
 
@@ -41,47 +86,7 @@ e = df.e
 t_hours = df.t ./ 3600.0
 
 # --- Provenance Integration: Extract True Geostrophic Forcing Parameters ---
-ug_true = 0.0
-vg_true = 0.0
-param_found = false
-run_dir = dirname(solution_csv)
-
-possible_json_paths = [
-    joinpath(run_dir, "run_manifest.json"),
-    joinpath(run_dir, "provenance.json"),
-    joinpath(run_dir, "summary.json"),
-    joinpath(run_dir, "..", "summary.json")
-]
-
-for path in possible_json_paths
-    if isfile(path)
-        try
-            data = JSON.parsefile(path)
-            # Handle nested parameter summaries or flat configurations
-            target_dict = haskey(data, "parameters") ? data["parameters"] : data
-            if haskey(target_dict, "U_g")
-                ug_true = Float64(target_dict["U_g"])
-                param_found = true
-            end
-            if haskey(target_dict, "V_g")
-                vg_true = Float64(target_dict["V_g"])
-            end
-            if param_found
-                ;
-                break;
-            end
-        catch
-            # Fall back to next file if parsing fails
-        end
-    end
-end
-
-# If completely isolated from metadata, assume standard rotated forcing alignment
-if !param_found
-    @warn "No parameter summary JSON located. Falling back to bulk trajectory center estimation."
-    ug_true = mean(U[(end-min(40, length(U)-1)):end])
-    vg_true = mean(V[(end-min(40, length(V)-1)):end])
-end
+ug_true, vg_true = infer_geostrophic_forcing(solution_csv, U, V)
 
 # Panel 1: Wind Hodograph with true, parameter-locked geostrophic core
 p1 = plot(U, V, linewidth=2, color=:black, label="Trajectory", xlabel="U (m s⁻¹)", ylabel="V (m s⁻¹)", title="Wind Hodograph")

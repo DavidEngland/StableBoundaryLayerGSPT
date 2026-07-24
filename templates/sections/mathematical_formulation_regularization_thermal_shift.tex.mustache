@@ -9,20 +9,20 @@ This section formalizes the reduced Geometric Singular Perturbation Theory (GSPT
 The core four-dimensional prognostic system for the state vector $\mathbf{x} = (U, V, T_s, e)^T$ is formulated as:
 \begin{equation}
 \begin{aligned}
-\frac{dU}{dt} &= f(V - V_g) - C_D \frac{\sqrt{U^2+V^2}}{h} U \sqrt{e+\delta}, \\
-\frac{dV}{dt} &= -f(U - U_g) - C_D \frac{\sqrt{U^2+V^2}}{h} V \sqrt{e+\delta}, \\
-\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}}\left(R_{\downarrow} - \sigma_{\text{SB}}T_s^4 - \lambda\frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H\sqrt{U^2+V^2+\delta_u}\,(T_s - T_a)\right), \\
+\frac{dU}{dt} &= f(V - V_g) - C_D \frac{\sqrt{U^2+V^2}}{h} U \sqrt{e+\delta}, \
+\frac{dV}{dt} &= -f(U - U_g) - C_D \frac{\sqrt{U^2+V^2}}{h} V \sqrt{e+\delta}, \
+\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}}\left(R_{\downarrow} - \sigma_{\text{SB}}T_s^4 - \lambda\frac{T_s - T_{\text{deep}}}{d_{\text{soil}}} - \rho c_p C_H\sqrt{U^2+V^2+\delta_u},(T_s - T_a)\right), \
 \varepsilon\frac{de}{dt} &= l_0\Delta(U,V,T_s)\left(\frac{e+\delta}{\sqrt{e+\delta}+\alpha}\right)+\beta(e+\delta)-\frac{(e+\delta)^{3/2}}{l_0},
 \end{aligned}
 \label{eq:mathematical_full_system}
 \end{equation}
 with
 \begin{equation}
-\Delta(U,V,T_s)=\eta\,\gamma\,(U^2+V^2)-K\,G(T_s),
+\Delta(U,V,T_s)=\eta,\gamma,(U^2+V^2)-K,G(T_s),
 \end{equation}
 and the bounded stability response
 \begin{equation}
-G(T_s)=\tanh\!\left(\beta\,\frac{T_a-T_s}{T_a}\right).
+G(T_s)=\tanh!\left(\beta,\frac{T_a-T_s}{T_a}\right).
 \end{equation}
 
 Here, $f$ is the Coriolis frequency, $h$ is the bulk boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant acceleration scale. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The bounded tanh response prevents runaway buoyancy growth under deep inversions, and the momentum and thermal transport terms scale with $\sqrt{e+\delta}$ to maintain asymptotic consistency with classical mixing-length theory.
@@ -33,30 +33,30 @@ The activated production factor $\frac{e+\delta}{\sqrt{e+\delta}+\alpha}$ and th
 
 In the multi-layer SCM closure, the constant scale height $h$ is replaced by a hybrid effective scale height $h_{\text{eff}}$ that combines mechanical and buoyancy limits:
 \begin{equation}
-h_{\text{eff}}^{\star} = \min\left( c_1 \frac{\sqrt{u_*^2 + \delta_u^2}}{|f|},\; c_2 \frac{\sqrt{e+\delta}}{N + N_{\text{floor}}} \right),
+h_{\text{eff}}^{\star} = \min\left( c_1 \frac{\sqrt{u_*^2 + \delta_u^2}}{|f|},; c_2 \frac{\sqrt{e+\delta}}{\sqrt{N^2 + N_{\text{floor}}^2}} \right),
 \qquad
-h_{\text{eff}} = \operatorname{clamp}(h_{\text{eff}}^{\star},\, h_{\min},\, h_{\max}),
+h_{\text{eff}} = \operatorname{clamp}(h_{\text{eff}}^{\star},, h_{\min},, h_{\max}),
 \label{eq:heff_emergent}
 \end{equation}
-where $N = \sqrt{\max\left((g/\theta_0)\,\partial\theta/\partial z,\, 0\right)}$ is the local Brunt--Väisälä frequency, $\delta$ represents the background TKE floor parameter, and $\delta_u$ is a small velocity-scale regularizer ensuring well-posed mechanical limits as $u_* \to 0$. This dual-limit scale height incorporates empirical scaling regimes established during landmark SBL field campaigns, including CASES-99 \citep{Poulos2002, Sun2002} over midlatitude grasslands and SHEBA \citep{Uttal2002, Grachev2005} over Arctic sea ice.
+where $N^2 = \frac{g}{\theta_0}\frac{\partial\theta}{\partial z}$ is the local squared Brunt--Väisälä frequency, $\delta$ represents the background TKE floor parameter, and $\delta_u$ is a small velocity-scale regularizer ensuring well-posed mechanical limits as $u_* \to 0$. This dual-limit scale height incorporates empirical scaling regimes established during landmark SBL field campaigns, including CASES-99 \citep{Poulos2002, Sun2002} over midlatitude grasslands and SHEBA \citep{Uttal2002, Grachev2005} over Arctic sea ice.
 
 \subsection{Geometric Analysis: Boundary Crossings vs. Thermodynamic Folds}
 \label{subsec:geometric_consequences}
 
 GSPT allows us to formally distinguish between two distinct physical transitions that are frequently conflated in boundary-layer literature:
 \begin{itemize}
-    \item \textbf{Boundary Transcritical Recovery:} At $\Delta=0$, the laminar boundary branch $\tilde e=0$ exchanges stability with the threshold branch. For $\Delta>0$, the boundary branch becomes repelling and weak turbulence regrows; for $\Delta<0$, it is attracting and supports collapse episodes.
-    \item \textbf{Fold Catastrophe ($\mathcal{C}_{\text{fold}}$):} Fast collapse from the active branch is governed by loss of normal hyperbolicity in the fast subsystem, not by a slow-SEB injectivity condition. Fold points satisfy:
-    \begin{equation}
-    F(q,\mathbf{y})=0, \qquad \partial_q F(q,\mathbf{y})=0,
-    \end{equation}
-    where $q=\sqrt{e+\delta}$ and $F(q,\mathbf{y})=q\left[l_0\Delta(\mathbf{y})+\beta q-q^2/l_0\right]$ outside the $\mathcal{O}(\alpha)$ boundary layer. Eliminating $\Delta$ yields the fold invariants:
-    \begin{equation}
-    q_{\mathrm{fold}}=\frac{\beta l_0}{2},\qquad
-    e_{\mathrm{fold}}=\frac{\beta^2 l_0^2}{4}-\delta,\qquad
-    \Delta_{\mathrm{fold}}=-\frac{\beta^2}{4}.
-    \end{equation}
-    Crossing this locus triggers fast departure from the attracting active sheet and jump toward the laminar branch, mathematically reproducing the abrupt TKE collapse and turbulence intermittency documented in nocturnal and polar observations \citep{Banta2002, Grachev2005, VanDeWiel2012}.
+\item \textbf{Boundary Transcritical Recovery:} At $\Delta=0$, the laminar boundary branch $\tilde e=0$ exchanges stability with the threshold branch. For $\Delta>0$, the boundary branch becomes repelling and weak turbulence regrows; for $\Delta<0$, it is attracting and supports collapse episodes.
+\item \textbf{Fold Catastrophe ($\mathcal{C}\_{\text{fold}}$):} Fast collapse from the active branch is governed by loss of normal hyperbolicity in the fast subsystem, not by a slow-SEB injectivity condition. Fold points satisfy:
+\begin{equation}
+F(q,\mathbf{y})=0, \qquad \partial_q F(q,\mathbf{y})=0,
+\end{equation}
+where $q=\sqrt{e+\delta}$ and $F(q,\mathbf{y})=q\left[l_0\Delta(\mathbf{y})+\beta q-q^2/l_0\right]$ outside the $\mathcal{O}(\alpha)$ boundary layer. Eliminating $\Delta$ yields the fold invariants:
+\begin{equation}
+q_{\mathrm{fold}}=\frac{\beta l_0}{2},\qquad
+e_{\mathrm{fold}}=\frac{\beta^2 l_0^2}{4}-\delta,\qquad
+\Delta_{\mathrm{fold}}=-\frac{\beta^2}{4}.
+\end{equation}
+Crossing this locus triggers fast departure from the attracting active sheet and jump toward the laminar branch, mathematically reproducing the abrupt TKE collapse and turbulence intermittency documented in nocturnal and polar observations \citep{Banta2002, Grachev2005, VanDeWiel2012}.
 \end{itemize}
 
 \subsection{Tri-Height Observability Diagnostics}
@@ -65,9 +65,9 @@ GSPT allows us to formally distinguish between two distinct physical transitions
 To track how the emergent $h_{\text{eff}}$ modifies the continuous vertical structure of the column during these transitions, we diagnose three operational boundary heights from the SCM output arrays:
 \begin{equation}
 \begin{aligned}
-h_D &= \inf\{z : D(z) < 0.05\}, \qquad \text{where} \quad D(z)=K_m(z)/\max_z K_m(z),\\
-h_e &= \inf\{z : e(z) < \epsilon_e\},\\
-h_{\partial e} &= \operatorname*{arg\,max}_z\left(-\frac{\partial e}{\partial z}\right).
+h_D &= \inf{z : D(z) < 0.05}, \qquad \text{where} \quad D(z)=K_m(z)/\max_z K_m(z),\
+h_e &= \inf{z : e(z) < \epsilon_e},\
+h_{\partial e} &= \operatorname*{arg,max}_z\left(-\frac{\partial e}{\partial z}\right).
 \end{aligned}
 \label{eq:triheight_diagnostics}
 \end{equation}

@@ -36,10 +36,10 @@ end
 
 function latest_bifurcation_dir(dataset::String)
     base = joinpath("results", dataset)
-    isdir(base) || error("Missing results directory: $(base)")
+    isdir(base) || return nothing
     runs = filter(p -> startswith(basename(p), "bifurcation_"), readdir(base; join=true))
     if isempty(runs)
-        error("No bifurcation runs found for $(dataset). Please run 'make bifurcation-$(lowercase(dataset))' first.")
+        return nothing
     end
     sort!(runs; by=p -> stat(p).mtime, rev=true)
     return runs[1]
@@ -47,14 +47,15 @@ end
 
 function load_env_csv(dataset::String)
     run_dir = latest_bifurcation_dir(dataset)
+    isnothing(run_dir) && return nothing, nothing
     csv_path = joinpath(run_dir, "parameter_sensitivity_envelope.csv")
-    isfile(csv_path) || error("Missing sensitivity CSV for $(dataset): $(csv_path)")
+    isfile(csv_path) || return run_dir, nothing
 
     df = CSV.read(csv_path, DataFrame)
     required = ["scale", "gamma_c_min", "gamma_c_p50", "gamma_c_max"]
     present = Set(string.(names(df)))
     for col in required
-        col in present || error("CSV missing required column $(col): $(csv_path)")
+        col in present || return run_dir, nothing
     end
 
     return run_dir, df
@@ -116,22 +117,58 @@ function build_panel(dataset::String, df::DataFrame; show_ylabel::Bool)
     return p
 end
 
+function build_missing_panel(dataset::String; show_ylabel::Bool)
+    p = plot(
+        [0.0, 1.0],
+        [0.0, 1.0];
+        alpha=0.0,
+        linealpha=0.0,
+        xlabel="Scale multiplier",
+        ylabel=show_ylabel ? "Critical threshold γ_c" : "",
+        title=dataset,
+        grid=true,
+        gridalpha=0.28,
+        legend=false,
+        xlims=(0.0, 1.0),
+        ylims=(0.0, 1.0),
+    )
+    annotate!(
+        p,
+        0.5,
+        0.5,
+        text(
+            "No bifurcation envelope data\n(run make bifurcation-$(lowercase(dataset)))",
+            :center,
+            9,
+            :darkred,
+        ),
+    )
+    return p
+end
+
 function main(args::Vector{String})
     out_path = parse_args(args)
 
     datasets = ["CASES99", "FLOSS", "SHEBA"]
     run_dirs = Dict{String,String}()
     dfs = Dict{String,DataFrame}()
+    missing = String[]
 
     for ds in datasets
         run_dir, df = load_env_csv(ds)
-        run_dirs[ds] = run_dir
-        dfs[ds] = df
+        if !isnothing(run_dir)
+            run_dirs[ds] = run_dir
+        end
+        if isnothing(df)
+            push!(missing, ds)
+        else
+            dfs[ds] = df
+        end
     end
 
-    p_cases = build_panel("CASES99", dfs["CASES99"]; show_ylabel=true)
-    p_floss = build_panel("FLOSS", dfs["FLOSS"]; show_ylabel=false)
-    p_sheba = build_panel("SHEBA", dfs["SHEBA"]; show_ylabel=false)
+    p_cases = haskey(dfs, "CASES99") ? build_panel("CASES99", dfs["CASES99"]; show_ylabel=true) : build_missing_panel("CASES99"; show_ylabel=true)
+    p_floss = haskey(dfs, "FLOSS") ? build_panel("FLOSS", dfs["FLOSS"]; show_ylabel=false) : build_missing_panel("FLOSS"; show_ylabel=false)
+    p_sheba = haskey(dfs, "SHEBA") ? build_panel("SHEBA", dfs["SHEBA"]; show_ylabel=false) : build_missing_panel("SHEBA"; show_ylabel=false)
 
     fig = plot(
         p_cases,
@@ -149,8 +186,11 @@ function main(args::Vector{String})
     savefig(fig, out_path)
 
     println("saved: $(out_path)")
-    for ds in datasets
+    for ds in sort(collect(keys(run_dirs)))
         println("$(ds)_run_dir=$(run_dirs[ds])")
+    end
+    if !isempty(missing)
+        @warn "Missing bifurcation envelope inputs for $(join(missing, ", ")). Rendered placeholder panel(s) instead of failing."
     end
 end
 
