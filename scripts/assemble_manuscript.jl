@@ -699,6 +699,7 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
     end
 
     preferred_stems = [
+        "fig_gspt_manifold_tikz",
         "figure_gspt_manifold_tikz",
         "figure_bifurcation_transcritical_map",
         "figure_bifurcation_transcritical_distance_map",
