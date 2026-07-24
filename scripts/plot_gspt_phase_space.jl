@@ -1,17 +1,17 @@
 using CairoMakie
 using LaTeXStrings
 
-# Enable LaTeX math font rendering globally
+# Enable LaTeX math rendering globally
 set_theme!(theme_latexfonts())
 
-# Create figure and axis layout
-fig = Figure(size=(800, 550), fontsize=12)
+# Figure and Axis Setup
+fig = Figure(size=(800, 560), fontsize=12)
 
 ax = Axis(
       fig[2, 1],
-      xlabel=L"Net Forcing $\Delta$",
-      ylabel=L"Regularized TKE amplitude $q = \sqrt{e+\delta}$",
-      limits=((-3.5, 5.0), (-0.4, 4.5)), # Clean y-limits without wasting negative space
+      xlabel=L"Slow forcing parameter $\Delta$",
+      ylabel=L"Fast variable $q = \sqrt{e+\delta}$",
+      limits=((-3.5, 5.0), (-0.4, 4.5)),
       xgridstyle=:dash,
       ygridstyle=:dash,
       xgridcolor=(:gray, 0.4),
@@ -19,95 +19,100 @@ ax = Axis(
 )
 
 # -----------------------------------------------------------------------------
-# 1. Curve & Manifold Calculations
+# 1. Mathematically Continuous Folded Critical Manifold: \Delta(q) = -1.5 + ((q - 1.2)/0.8)^2
 # -----------------------------------------------------------------------------
-x_laminar = range(-3.5, 5.0, length=500)
-x_repeller = range(-1.5, 0.75, length=300)
-x_attractor = range(-1.5, 4.5, length=400)
+# Attracting branch S_0^+ (q >= 1.2)
+q_att = range(1.2, 3.2, length=300)
+Δ_att = @. -1.5 + ((q_att - 1.2) / 0.8)^2
 
-y_laminar = zeros(length(x_laminar))
-y_repeller = @. 1.2 - 0.8 * sqrt(x_repeller + 1.5)
-y_attractor = @. 1.2 + 0.8 * sqrt(x_attractor + 1.5)
+# Repelling branch S_0^- (0 <= q < 1.2)
+q_rep = range(0.0, 1.2, length=200)
+Δ_rep = @. -1.5 + ((q_rep - 1.2) / 0.8)^2
 
-# -----------------------------------------------------------------------------
-# 2. Plotting Manifolds & Singularities
-# -----------------------------------------------------------------------------
 # Laminar manifold S_0^lam
-l1 = lines!(ax, x_laminar, y_laminar, color=:forestgreen, linewidth=2.2,
+Δ_lam = range(-3.5, 5.0, length=500)
+q_lam = zeros(length(Δ_lam))
+
+# -----------------------------------------------------------------------------
+# 2. Plot Slow Manifolds (Primary Level: Heavy LineWidth = 3.0 pt)
+# -----------------------------------------------------------------------------
+lines!(ax, Δ_lam, q_lam, color=:forestgreen, linewidth=3.0,
       label=L"Laminar manifold $S_0^{\mathrm{lam}}$")
 
-# Repelling slow manifold S_0^-
-l2 = lines!(ax, x_repeller, y_repeller, color=:crimson, linestyle=:dash, linewidth=2.2,
+lines!(ax, Δ_rep, q_rep, color=:crimson, linestyle=:dash, linewidth=3.0,
       label=L"Repelling manifold $S_0^-$")
 
-# Attracting turbulent manifold S_0^+
-l3 = lines!(ax, x_attractor, y_attractor, color=:royalblue, linewidth=2.2,
+lines!(ax, Δ_att, q_att, color=:royalblue, linewidth=3.0,
       label=L"Attracting manifold $S_0^+$")
 
-# Fold Singularity neighborhood (shaded background circle)
+# Singularities & Fold Neighborhood
 cx, cy = -1.5, 1.2
-r = 0.35
 θ = range(0, 2π, length=100)
-poly!(ax, Point2f.(cx .+ r .* cos.(θ), cy .+ r .* sin.(θ)),
+poly!(ax, Point2f.(cx .+ 0.35 .* cos.(θ), cy .+ 0.35 .* sin.(θ)),
       color=(:orange, 0.35), label="Fold neighborhood")
 
-# Fold Singularity point
-p1 = scatter!(ax, [cx], [cy], color=:crimson, strokecolor=:black, strokewidth=1.2, markersize=10)
+scatter!(ax, [cx], [cy], color=:crimson, strokecolor=:black, strokewidth=1.2, markersize=10)
 
-# Extinction threshold point
 ext_x, ext_y = 0.75, 0.0
-p2 = scatter!(ax, [ext_x], [ext_y], color=:black, markersize=10, label="Extinction threshold")
+scatter!(ax, [ext_x], [ext_y], color=:black, markersize=10, label="Extinction threshold")
 
 # -----------------------------------------------------------------------------
-# 3. Fast Trajectories (Vertical Arrows)
+# 3. Fast Jump Trajectories (Secondary Level: Thin Lines = 1.5 pt)
 # -----------------------------------------------------------------------------
-# Downward fast trajectory (collapse) at x = -1.45
-arrows!(ax, [-1.45], [1.1], [0.0], [-1.0], color=:gray40, linewidth=1.8, arrowsize=12)
-text!(ax, -1.3, 0.6, text="Collapse\n(Fast)", color=:gray30, fontsize=10, align=(:left, :center))
+arrows!(ax, [-1.45], [1.1], [0.0], [-1.0], color=:gray40, linewidth=1.5, arrowsize=10)
+text!(ax, -1.3, 0.6, text="Collapse\n(Fast fiber)", color=:gray30, fontsize=10, align=(:left, :center))
 
-# Upward fast trajectory (re-ignition) at x = 1.8
-arrows!(ax, [1.8], [0.1], [0.0], [2.4], color=:gray40, linewidth=1.8, arrowsize=12)
-text!(ax, 1.95, 1.3, text="Re-ignition\n(Fast)", color=:gray30, fontsize=10, align=(:left, :center))
+arrows!(ax, [1.8], [0.1], [0.0], [2.4], color=:gray40, linewidth=1.5, arrowsize=10)
+text!(ax, 1.95, 1.3, text="Re-ignition\n(Fast fiber)", color=:gray30, fontsize=10, align=(:left, :center))
 
 # -----------------------------------------------------------------------------
-# 4. Callout Annotations (Rerouted into Whitespace)
+# 4. Annotation Bézier Leaders & Labels (Tertiary Level: LineWidth = 0.9 pt)
 # -----------------------------------------------------------------------------
-# Fold Singularity
-lines!(ax, [cx, -2.5], [cy, 1.8], color=:gray60, linewidth=1.0)
+# Helper function for quadratic Bézier curved connectors
+function draw_curved_leader!(ax, p0, p_control, p2)
+      t = range(0, 1, length=30)
+      pts = Point2f[(1-ti)^2 .* Point2f(p0) .+ 2*(1-ti)*ti .* Point2f(p_control) .+ ti^2 .* Point2f(p2) for ti in t]
+      lines!(ax, pts, color=:gray50, linewidth=0.9)
+end
+
+# Fold Singularity Callout
+draw_curved_leader!(ax, (cx, cy), (-2.2, 1.3), (-2.5, 1.85))
 text!(ax, -2.5, 1.85, text=L"\text{Fold Singularity}\n(-1.5, 1.2)", align=(:center, :bottom),
       bbox=(color=:white, strokecolor=:none))
 
-# Attracting Turbulent Manifold S_0^+
-y_att_target = 1.2 + 0.8 * sqrt(3.0 + 1.5)
-lines!(ax, [3.0, 2.0], [y_att_target, 3.8], color=:gray60, linewidth=1.0)
+# Attracting Manifold Callout
+q_target_att = 2.8
+Δ_target_att = -1.5 + ((q_target_att - 1.2)/0.8)^2
+draw_curved_leader!(ax, (Δ_target_att, q_target_att), (2.2, 3.2), (2.0, 3.85))
 text!(ax, 2.0, 3.85, text=L"\text{Attracting Manifold } S_0^+", align=(:center, :bottom),
       bbox=(color=:white, strokecolor=:none))
 
-# Repelling Slow Manifold S_0^-
-y_rep_target = 1.2 - 0.8 * sqrt(-0.3 + 1.5)
-lines!(ax, [-0.3, 0.1], [y_rep_target, 0.75], color=:gray60, linewidth=1.0)
+# Repelling Manifold Callout
+q_target_rep = 0.5
+Δ_target_rep = -1.5 + ((q_target_rep - 1.2)/0.8)^2
+draw_curved_leader!(ax, (Δ_target_rep, q_target_rep), (-0.1, 0.4), (0.1, 0.75))
 text!(ax, 0.1, 0.75, text=L"\text{Repelling Manifold } S_0^-", align=(:left, :bottom),
       bbox=(color=:white, strokecolor=:none))
 
-# FIXED: Laminar Manifold S_0^lam (Points into open space above y = 0)
-lines!(ax, [-2.8, -2.8], [0.0, 0.4], color=:gray60, linewidth=1.0)
+# Laminar Manifold Callout
+draw_curved_leader!(ax, (-2.8, 0.0), (-2.88, 0.22), (-2.8, 0.45))
 text!(ax, -2.8, 0.45, text=L"\text{Laminar Manifold } S_0^{\mathrm{lam}}", align=(:center, :bottom),
       bbox=(color=:white, strokecolor=:none))
 
-# FIXED: Extinction Threshold (Points into open space under S_0^+)
-lines!(ax, [ext_x, 1.1], [ext_y, 0.45], color=:gray60, linewidth=1.0)
+# Extinction Threshold Callout
+draw_curved_leader!(ax, (ext_x, ext_y), (0.85, 0.3), (1.1, 0.5))
 text!(ax, 1.1, 0.5, text=L"\text{Extinction Threshold}\n(0.75, 0)", align=(:left, :bottom),
       bbox=(color=:white, strokecolor=:none))
 
 # -----------------------------------------------------------------------------
-# 5. Dedicated "GSPT Regimes" Box (Top-Left Empty Quadrant)
+# 5. Dedicated "GSPT Regimes" Box
 # -----------------------------------------------------------------------------
 regimes_text = L"\mathbf{GSPT\ Regimes}\\[2pt]\bullet\ \Delta < -1.5\text{: Subcritical (Laminar)}\\[1pt]\bullet\ -1.5 < \Delta < 0.75\text{: Bistable}\\[1pt]\bullet\ \Delta > 0.75\text{: Fully Turbulent}"
 text!(ax, -3.3, 4.3, text=regimes_text, fontsize=10, align=(:left, :top),
       bbox=(color="#f8f9fa", strokecolor="#cccccc", corner_radius=4))
 
 # -----------------------------------------------------------------------------
-# 6. Legend Outside Axis Area (Top)
+# 6. Top External Legend
 # -----------------------------------------------------------------------------
 Legend(
       fig[1, 1],
@@ -119,7 +124,7 @@ Legend(
       framecolor="#cccccc"
 )
 
-# Export publication vector/raster outputs
+# Export publication-ready vector and high-DPI raster outputs
 out_dir = joinpath("reports", "generated", "figures")
 mkpath(out_dir)
 save(joinpath(out_dir, "gspt_phase_space.png"), fig, px_per_unit=3)
