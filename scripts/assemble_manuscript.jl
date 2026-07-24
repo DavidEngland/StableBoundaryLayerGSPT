@@ -630,8 +630,20 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
             label="fig:regularization_comparison",
         ),
         "figure_gspt_manifold_tikz" => (
-            title="Geometric Singular Perturbation Theory phase-space schematic showing the active sheet, unstable separatrix, and laminar sheet with fold-collapse and transcritical re-ignition pathways.",
+            title="Geometric Singular Perturbation Theory (GSPT) phase-space schematic illustrating nocturnal transition geometry. The active turbulent branch (\$\\mathcal{M}_0^+\$) forms an upper potential cup in state space. Progressive radiative cooling deforms the cup until the attracting equilibrium disappears at the fold curve \$\\mathcal{C}_{\\text{fold}}\$, driving a rapid vertical transition along fast fibers to the weakly turbulent manifold (\$\\mathcal{M}_0^0\$). On this lower branch, ageostrophic inertial adjustment generates the nocturnal low-level jet until accumulated vertical shear triggers turbulent re-ignition.",
             label="fig:gspt_manifold_tikz",
+        ),
+        "fig_gspt_manifold_tikz" => (
+            title="Geometric Singular Perturbation Theory (GSPT) phase-space schematic illustrating nocturnal transition geometry. The active turbulent branch (\$\\mathcal{M}_0^+\$) forms an upper potential cup in state space. Progressive radiative cooling deforms the cup until the attracting equilibrium disappears at the fold curve \$\\mathcal{C}_{\\text{fold}}\$, driving a rapid vertical transition along fast fibers to the weakly turbulent manifold (\$\\mathcal{M}_0^0\$). On this lower branch, ageostrophic inertial adjustment generates the nocturnal low-level jet until accumulated vertical shear triggers turbulent re-ignition.",
+            label="fig:gspt_manifold_tikz",
+        ),
+        "regime_map_z0m_ug" => (
+            title="Analytical regime map in \$(z_{0m}, U_g)\$ parameter space derived from surface-layer similarity scaling. The three dynamic regimes—continuous weak turbulence (Regime I), intermittent relaxation oscillations (Regime II), and runaway radiative decoupling (Regime III)—are partitioned by the critical geostrophic shear boundaries \$S_c\$. Observational field campaign markers locate typical parameter pairs for CASES99, FLOSS, and SHEBA.",
+            label="fig:regime_map_z0m_ug",
+        ),
+        "figure_regime_map_z0m_ug" => (
+            title="Analytical regime map in \$(z_{0m}, U_g)\$ parameter space derived from surface-layer similarity scaling. The three dynamic regimes—continuous weak turbulence (Regime I), intermittent relaxation oscillations (Regime II), and runaway radiative decoupling (Regime III)—are partitioned by the critical geostrophic shear boundaries \$S_c\$. Observational field campaign markers locate typical parameter pairs for CASES99, FLOSS, and SHEBA.",
+            label="fig:regime_map_z0m_ug",
         ),
     )
 
@@ -664,6 +676,10 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
                 push!(normalized, "GSPT")
             elseif lw == "nwp"
                 push!(normalized, "NWP")
+            elseif lw == "ug"
+                push!(normalized, "\$U_g\$")
+            elseif lw == "z0m"
+                push!(normalized, "\$z_{0m}\$")
             else
                 push!(normalized, uppercasefirst(lw))
             end
@@ -701,6 +717,8 @@ function build_tex_figure_includes(fig_dir::String; tex_output_dir::String=joinp
     preferred_stems = [
         "fig_gspt_manifold_tikz",
         "figure_gspt_manifold_tikz",
+        "regime_map_z0m_ug",
+        "figure_regime_map_z0m_ug",
         "figure_bifurcation_transcritical_map",
         "figure_bifurcation_transcritical_distance_map",
         "figure_bifurcation_transcritical_envelope",

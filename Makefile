@@ -1,4 +1,18 @@
-.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all generate-parameter-macros generate-parameter-macros-all check-parameter-drift check-parameter-drift-all lint-prose lint-prose-strict assemble-manuscript visual-assets figure-phase-space-hysteresis figure-blackadar-hodograph figure-triheight-hovmoller figure-triheight-hovmoller-theta figure-triheight-suite figure-regularization-smooth figure-regime-map figure-comparative-sensitivity figure-publication-suite paper-all archive-paper paper-stamped stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic scm-run scm-plot scm-report scm-all scm-verify run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd compile-scm-reports sweep-two-layer-envelope test clean
+.PHONY: bootstrap pipeline-cases99 pipeline-floss pipeline-sheba pipeline-all \
+        run-solver-cases99 run-solver-floss run-solver-sheba run-solver-all \
+        bifurcation-cases99 bifurcation-floss bifurcation-sheba bifurcation-all \
+        generate-parameter-macros generate-parameter-macros-all \
+        check-parameter-drift check-parameter-drift-all \
+        lint-prose lint-prose-strict assemble-manuscript visual-assets \
+        figure-phase-space-hysteresis figure-blackadar-hodograph \
+        figure-triheight-hovmoller figure-triheight-hovmoller-theta figure-triheight-suite \
+        figure-regularization-smooth figure-regime-map figure-comparative-sensitivity \
+        figure-publication-suite paper-all archive-paper paper-stamped \
+        stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba \
+        stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic \
+        scm-run scm-plot scm-report scm-all scm-verify \
+        run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd \
+        compile-scm-reports sweep-two-layer-envelope test clean
 
 DATASET ?= CASES99
 
@@ -45,7 +59,6 @@ pipeline-floss:
 pipeline-sheba:
 	julia --project=. scripts/run_pipeline.jl --dataset SHEBA
 
-# Optimized: Parallelization-friendly prerequisite tree
 pipeline-all: pipeline-cases99 pipeline-floss pipeline-sheba
 
 run-solver-cases99:
@@ -57,7 +70,6 @@ run-solver-floss:
 run-solver-sheba:
 	julia --project=. scripts/run_4d_solver.jl --dataset SHEBA
 
-# Optimized: Parallelization-friendly prerequisite tree
 run-solver-all: run-solver-cases99 run-solver-floss run-solver-sheba
 
 bifurcation-cases99:
@@ -105,9 +117,7 @@ bifurcation-sheba:
 	fi; \
 	echo "[bifurcation] SHEBA done"
 
-# Optimized: Parallelization-friendly prerequisite tree
 bifurcation-all: bifurcation-cases99 bifurcation-floss bifurcation-sheba
-
 
 $(PARAMETER_MACRO_BUNDLE): scripts/assemble_manuscript.jl $(PARAMETER_SUMMARIES)
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET) --write-parameter-macros-only
@@ -163,13 +173,13 @@ figure-regime-map:
 figure-comparative-sensitivity:
 	julia --project=. scripts/plot_comparative_sensitivity_envelopes.jl --out reports/generated/figures/comparative_parameter_sensitivity_envelope.png
 
-figure-publication-suite: visual-assets figure-phase-space-hysteresis figure-blackadar-hodograph figure-triheight-suite figure-regularization-smooth figure-regime-map
+figure-publication-suite: visual-assets figure-phase-space-hysteresis figure-blackadar-hodograph figure-triheight-suite figure-regularization-smooth figure-regime-map figure-comparative-sensitivity
 
 paper-all:
 	$(MAKE) clean
 	$(MAKE) run-solver-all
 	$(MAKE) generate-parameter-macros
-	julia --project=. scripts/sweep_bifurcation.jl --dataset $(DATASET)
+	$(MAKE) bifurcation-$(shell echo $(DATASET) | tr '[:upper:]' '[:lower:]')
 	julia --project=. scripts/plot_4d_diagnostics.jl --solution results/$(DATASET)/latest/solution.csv --out reports/generated/figures/4d_sbl_diagnostics.png
 	$(MAKE) figure-publication-suite
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET)
