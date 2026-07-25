@@ -82,6 +82,13 @@ function load_summary(dataset::String)
     return JSON.parsefile(path)
 end
 
+# Formatting integer exponents to Unicode superscript
+function to_superscript(n::Int)
+    superscripts = Dict('0'=>'⁰', '1'=>'¹', '2'=>'²', '3'=>'³', '4'=>'⁴',
+        '5'=>'⁵', '6'=>'⁶', '7'=>'⁷', '8'=>'⁸', '9'=>'⁹', '-'=>'⁻')
+    return join([get(superscripts, c, c) for c in string(n)])
+end
+
 # Surface-layer drag coefficient C_D evaluated at first node height z1 = 2.0m
 function closure_gamma(z0m::Float64, p::Dict{String,Any})
     kappa = Float64(get(p, "kappa", 0.4))
@@ -107,11 +114,11 @@ function regime_class(Ug::Float64, gamma::Float64, p::Dict{String,Any}, Ts_ref::
     ratio = Ug / max(Sc, 1.0e-8)
 
     if ratio >= RATIO_UPPER
-        return 1.0  # Regime I: Weak Turbulence (Green)
+        return 1.0  # Regime I: Weak Turbulence
     elseif ratio <= RATIO_LOWER
-        return 3.0  # Regime III: Runaway Decoupling (Red)
+        return 3.0  # Regime III: Runaway Decoupling
     else
-        return 2.0  # Regime II: Intermittent (Gold)
+        return 2.0  # Regime II: Intermittent
     end
 end
 
@@ -137,20 +144,20 @@ function main(args::Vector{String})
     log_z0m_vals = collect(range(log_z0m_min, log_z0m_max; length=Int(cfg["z0m_n"])))
     z0m_vals = 10.0 .^ log_z0m_vals
 
-    # 2. Vectorized pre-computation
+    # 2. Precompute drag coefficient
     gamma_vals = closure_gamma.(z0m_vals, Ref(p_ref))
 
-    # 3. Populate regime matrix
-    regime = Array{Float64}(undef, length(log_z0m_vals), length(ug_vals))
-    for (j, Ug) in enumerate(ug_vals), (i, gamma) in enumerate(gamma_vals)
-        regime[i, j] = regime_class(Ug, gamma, p_ref, Ts_ref)
-    end
+    # 3. Populate regime matrix (transposed for heatmap convention [x, y])
+    regime = [regime_class(ug, g, p_ref, Ts_ref) for g in gamma_vals, ug in ug_vals]
 
-    # 4. Color palette & bounds centered on states 1, 2, 3
+    # 4. Color palette & Categorical limits
     cmap = cgrad([:seagreen3, :goldenrod2, :firebrick2], 3; categorical=true)
 
-    xticks_pos = [-4.0, -3.0, -2.0, -1.301]
-    xticks_lbl = ["10⁻⁴", "10⁻³", "10⁻²", "0.05"]
+    # Dynamic log ticks generation
+    log_start = floor(Int, log_z0m_min)
+    log_stop = ceil(Int, log_z0m_max)
+    xticks_pos = Float64.(log_start:log_stop)
+    xticks_lbl = ["10$(to_superscript(k))" for k in log_start:log_stop]
 
     plt = heatmap(
         log_z0m_vals,
@@ -172,27 +179,36 @@ function main(args::Vector{String})
     )
 
     # 5. Transition boundary curves
-    ug_bnd_upper = Float64[]
-    ug_bnd_lower = Float64[]
     G_val = stability_response(Ts_ref, p_ref)
-
-    for gamma in gamma_vals
-        denom = eta * max(gamma, eps(Float64))
-        Sc = sqrt(max(Kb * G_val / denom, 0.0))
-        push!(ug_bnd_upper, RATIO_UPPER * Sc)
-        push!(ug_bnd_lower, RATIO_LOWER * Sc)
-    end
+    ug_bnd_upper = [RATIO_UPPER * sqrt(max(Kb * G_val / (eta * max(g, eps(Float64))), 0.0)) for g in gamma_vals]
+    ug_bnd_lower = [RATIO_LOWER * sqrt(max(Kb * G_val / (eta * max(g, eps(Float64))), 0.0)) for g in gamma_vals]
 
     plot!(plt, log_z0m_vals, ug_bnd_upper; line=(2, :dash, :black), label="Upper transition (Weak/Intermittent)")
     plot!(plt, log_z0m_vals, ug_bnd_lower; line=(2, :dot, :black), label="Lower transition (Intermittent/Collapse)")
 
-    # 6. Region text annotations positioned in each regime
-    xmin, xmax = extrema(log_z0m_vals)
-    ymin, ymax = extrema(ug_vals)
+    # 6. DYNAMIC REGIME ANNOTATIONS
+    # Evaluate analytical bounds at horizontal midpoint to dynamically center regime text
+    mid_idx = length(log_z0m_vals) ÷ 2
+    x_mid = log_z0m_vals[mid_idx]
 
-    annotate!(plt, xmin + 0.25 * (xmax - xmin), ymin + 0.82 * (ymax - ymin), text("REGIME I\nWeak Turbulence", 11, :bold, :white, :center))
-    annotate!(plt, xmin + 0.50 * (xmax - xmin), ymin + 0.38 * (ymax - ymin), text("REGIME II\nIntermittent", 11, :bold, :black, :center))
-    annotate!(plt, xmin + 0.75 * (xmax - xmin), ymin + 0.12 * (ymax - ymin), text("REGIME III\nDecoupled", 11, :bold, :white, :center))
+    ymin, ymax = extrema(ug_vals)
+    y_bnd_up_mid = clamp(ug_bnd_upper[mid_idx], ymin, ymax)
+    y_bnd_low_mid = clamp(ug_bnd_lower[mid_idx], ymin, ymax)
+
+    # Compute midpoints between limits/boundaries for each region
+    y_pos_regimeI = (ymax + y_bnd_up_mid) / 2.0
+    y_pos_regimeII = (y_bnd_up_mid + y_bnd_low_mid) / 2.0
+    y_pos_regimeIII = (y_bnd_low_mid + ymin) / 2.0
+
+    if (ymax - y_bnd_up_mid) > 0.05 * (ymax - ymin)
+        annotate!(plt, x_mid, y_pos_regimeI, text("REGIME I\nWeak Turbulence", 11, :bold, :white, :center))
+    end
+    if (y_bnd_up_mid - y_bnd_low_mid) > 0.05 * (ymax - ymin)
+        annotate!(plt, x_mid, y_pos_regimeII, text("REGIME II\nIntermittent", 11, :bold, :black, :center))
+    end
+    if (y_bnd_low_mid - ymin) > 0.05 * (ymax - ymin)
+        annotate!(plt, x_mid, y_pos_regimeIII, text("REGIME III\nDecoupled", 11, :bold, :white, :center))
+    end
 
     # 7. Campaign markers
     marker_z0m_fallback = Dict(
@@ -206,6 +222,10 @@ function main(args::Vector{String})
         ("FLOSS", Dict{String,Any}(floss["parameters"]), :utriangle),
         ("SHEBA", Dict{String,Any}(sheba["parameters"]), :star5),
     ]
+
+    xmin, xmax = extrema(log_z0m_vals)
+    dx_range = xmax - xmin
+    dy_range = ymax - ymin
 
     for (name, p, mk) in datasets
         z0m_raw = get(p, "z0m", missing)
@@ -231,9 +251,13 @@ function main(args::Vector{String})
             label=name
         )
 
-        dx = name == "FLOSS" ? 0.08 : 0.0
-        x_text = clamp(log_z0m + dx, xmin + 0.03, xmax - 0.03)
-        annotate!(plt, x_text, Ug + 0.5, text(name, 10, :bold, :black))
+        # Adaptive marker label placement
+        dx = 0.02 * dx_range
+        dy = 0.03 * dy_range
+        x_text = clamp(log_z0m + dx, xmin + 0.02 * dx_range, xmax - 0.12 * dx_range)
+        y_text = clamp(Ug + dy, ymin + 0.03 * dy_range, ymax - 0.03 * dy_range)
+
+        annotate!(plt, x_text, y_text, text(name, 10, :bold, :black, :left))
     end
 
     mkpath(dirname(String(cfg["out"])))
