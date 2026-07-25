@@ -1,4 +1,6 @@
 #!/usr/bin/env julia
+# scm/render_case_report.jl
+# Script to render a SCM case report LaTeX file from a summary JSON and a template.
 
 using Printf
 import JSON3
@@ -26,13 +28,13 @@ function parse_args(args::Vector{String})
             usage()
             exit(0)
         elseif a == "--summary" && i < length(args)
-            cfg["summary"] = args[i + 1]
+            cfg["summary"] = args[i+1]
             i += 2
         elseif a == "--template" && i < length(args)
-            cfg["template"] = args[i + 1]
+            cfg["template"] = args[i+1]
             i += 2
         elseif a == "--out" && i < length(args)
-            cfg["out"] = args[i + 1]
+            cfg["out"] = args[i+1]
             i += 2
         else
             error("Unknown or incomplete argument: $(a)")
@@ -66,6 +68,15 @@ function getnested(obj, keys::Vector{String}, default="n/a")
         end
     end
     return cur
+end
+
+"""Helper to retrieve nested property using fallback key names."""
+function getnested_fallback(obj, base_path::Vector{String}, key_candidates::Vector{String}, default="n/a")
+    for key in key_candidates
+        val = getnested(obj, vcat(base_path, [key]), nothing)
+        val !== nothing && return val
+    end
+    return default
 end
 
 function fmt_num(x)
@@ -143,7 +154,6 @@ function build_plot_blocks(plot_dir::String, report_dir::String, figure_manifest
 
         push!(blocks, "\\begin{figure}[htbp]")
         push!(blocks, "  \\centering")
-        # Use detokenize so underscores and special path chars don't break includegraphics.
         push!(blocks, "  \\includegraphics[width=0.95\\linewidth]{\\detokenize{$(rel_img_path)}}")
         push!(blocks, "  \\caption{$(cap)}")
         push!(blocks, "\\end{figure}")
@@ -191,6 +201,10 @@ function main(args)
     plot_dir = joinpath(outdir, "plots")
     plot_blocks = build_plot_blocks(plot_dir, dirname(out_path), figure_manifest)
 
+    p_base = ["parameters"]
+    fold_near = getnested(summary, ["verification", "fold_near_fraction"], 0.0)
+    fold_near_percent = fold_near isa Number ? 100.0 * Float64(fold_near) : "n/a"
+
     context = Dict{String,String}(
         "summary_path" => latex_escape(summary_path),
         "case_name" => latex_escape(case_name),
@@ -206,26 +220,44 @@ function main(args)
         "solver_rhs_evaluations" => string(getnested(summary, ["solver_summary", "rhs_evaluations"], "n/a")),
         "solver_abstol" => fmt_tex_num(getnested(summary, ["solver_summary", "abstol"], "n/a"); force_sci=true),
         "solver_reltol" => fmt_tex_num(getnested(summary, ["solver_summary", "reltol"], "n/a"); force_sci=true),
-        "param_Ug" => fmt_num(getnested(summary, ["parameters", "Ug"], "n/a")),
-        "param_Vg" => fmt_num(getnested(summary, ["parameters", "Vg"], "n/a")),
+
+        # Primary Forcing & Boundary Parameters
+        "param_Ug" => fmt_num(getnested_fallback(summary, p_base, ["Ug", "U_g"])),
+        "param_U_g" => fmt_num(getnested_fallback(summary, p_base, ["U_g", "Ug"])),
+        "param_Vg" => fmt_num(getnested_fallback(summary, p_base, ["Vg", "V_g"])),
+        "param_V_g" => fmt_num(getnested_fallback(summary, p_base, ["V_g", "Vg"])),
         "param_f" => fmt_num(getnested(summary, ["parameters", "f"], "n/a")),
         "param_z0m" => fmt_num(getnested(summary, ["parameters", "z0m"], "n/a")),
         "param_z0h" => fmt_num(getnested(summary, ["parameters", "z0h"], "n/a")),
-        "param_theta_a" => fmt_num(getnested(summary, ["parameters", "theta_a"], "n/a")),
+        "param_theta_a" => fmt_num(getnested_fallback(summary, p_base, ["theta_a", "T_a"])),
+        "param_T_a" => fmt_num(getnested_fallback(summary, p_base, ["T_a", "theta_a"])),
         "param_T_deep" => fmt_num(getnested(summary, ["parameters", "T_deep"], "n/a")),
         "param_R_down" => fmt_num(getnested(summary, ["parameters", "R_down"], "n/a")),
-        "param_lambda_s" => fmt_num(getnested(summary, ["parameters", "lambda_s"], "n/a")),
+        "param_lambda_s" => fmt_num(getnested_fallback(summary, p_base, ["lambda_s", "lambda_soil"])),
         "param_d_soil" => fmt_num(getnested(summary, ["parameters", "d_soil"], "n/a")),
         "param_k_min_surf" => fmt_num(getnested(summary, ["parameters", "k_min_surf"], "n/a")),
+
+        # GSPT Closure Parameters
+        "param_shear_production_efficiency" => fmt_num(getnested_fallback(summary, p_base, ["shear_production_efficiency", "eta"])),
+        "param_beta" => fmt_num(getnested(summary, ["parameters", "beta"], "n/a")),
+        "param_K" => fmt_num(getnested(summary, ["parameters", "K"], "n/a")),
+        "param_kappa" => fmt_num(getnested(summary, ["parameters", "kappa"], "n/a")),
+        "param_gamma_efficiency" => fmt_num(getnested_fallback(summary, p_base, ["gamma_efficiency", "gamma"])),
+
+        # Top Boundary Condition
         "param_theta_top_bc" => latex_escape(string(getnested(summary, ["parameters", "theta_top_bc"], "n/a"))),
         "param_theta_top" => fmt_num(getnested(summary, ["parameters", "theta_top"], "n/a")),
         "param_lambda_top" => fmt_num(getnested(summary, ["parameters", "lambda_top"], "n/a")),
+
+        # Numerical Verification
         "verification_max_surface_energy_closure_error" => fmt_tex_num(getnested(summary, ["verification", "max_surface_energy_closure_error"], "n/a"); force_sci=true),
-        "verification_fold_near_fraction_percent" => fmt_num(100 * Float64(getnested(summary, ["verification", "fold_near_fraction"], 0.0))),
+        "verification_fold_near_fraction_percent" => fmt_num(fold_near_percent),
         "verification_min_diffusivity" => fmt_tex_num(getnested(summary, ["verification", "min_diffusivity"], "n/a")),
         "verification_max_diffusivity" => fmt_tex_num(getnested(summary, ["verification", "max_diffusivity"], "n/a")),
         "verification_min_ri" => fmt_tex_num(getnested(summary, ["verification", "min_ri"], "n/a")),
         "verification_max_ri" => fmt_tex_num(getnested(summary, ["verification", "max_ri"], "n/a")),
+
+        # Artifacts & Manifests
         "artifact_time_series_csv" => latex_escape(string(getnested(summary, ["artifacts", "time_series_csv"], "n/a"))),
         "artifact_summary_json" => latex_escape(summary_path),
         "artifact_payload_jld2" => latex_escape(payload_path),

@@ -61,6 +61,7 @@ make lint-prose-strict DATASET=CASES99
 The manuscript build now generates `reports/generated/parameters/parameters_all.tex` from dataset summary payloads (`results/*/latest/summary.json`) so table values and in-text parameters can stay synchronized with simulation outputs.
 
 For SCM-specific workflow details and CLI options, see `scm/ReadMe.md`.
+For parameter naming layer conventions across SCM report templates, generated TeX macros, and manuscript section context keys, see `docs/parameter_conventions.md`.
 
 ## External Datasets & Local Directory Setup
 
