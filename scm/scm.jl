@@ -24,12 +24,30 @@ function _get_face_diffusivity_buffers(p, T)
         if eltype(ws.Km) === T && eltype(ws.Kh) === T
             return ws.Km, ws.Kh
         end
-        return Vector{T}(undef, length(ws.Km)), Vector{T}(undef, length(ws.Kh))
+        if hasproperty(ws, :Km_by_type) && hasproperty(ws, :Kh_by_type)
+            Km = get!(ws.Km_by_type, T) do
+                Vector{T}(undef, length(ws.Km))
+            end
+            Kh = get!(ws.Kh_by_type, T) do
+                Vector{T}(undef, length(ws.Kh))
+            end
+            return Km, Kh
+        end
+        error("Performance Error: Workspace buffers are typed as $(eltype(ws.Km)) but RHS requested $(T). Provide typed caches (workspace.Km_by_type/workspace.Kh_by_type) or preallocate AD-compatible buffers to avoid per-call allocations.")
     elseif hasproperty(p, :K_m_faces) && hasproperty(p, :K_h_faces)
         if eltype(p.K_m_faces) === T && eltype(p.K_h_faces) === T
             return p.K_m_faces, p.K_h_faces
         end
-        return Vector{T}(undef, length(p.K_m_faces)), Vector{T}(undef, length(p.K_h_faces))
+        if hasproperty(p, :K_m_faces_by_type) && hasproperty(p, :K_h_faces_by_type)
+            Km = get!(p.K_m_faces_by_type, T) do
+                Vector{T}(undef, length(p.K_m_faces))
+            end
+            Kh = get!(p.K_h_faces_by_type, T) do
+                Vector{T}(undef, length(p.K_h_faces))
+            end
+            return Km, Kh
+        end
+        error("Performance Error: Face buffers are typed as $(eltype(p.K_m_faces)) but RHS requested $(T). Provide typed caches (K_m_faces_by_type/K_h_faces_by_type) or preallocate AD-compatible buffers to avoid per-call allocations.")
     else
         error("Performance Error: No preallocated face diffusivity buffers found in parameter struct 'p'. Please initialize p.workspace.Km and p.workspace.Kh.")
     end
@@ -75,6 +93,8 @@ C^infty hyperbolic manifold embedding, and Lipschitz activation gate regularizat
 Optimized for zero-allocation and maximum SIMD vectorization.
 """
 function scm_gspt_tendencies!(dX, X, p, t)
+    T = eltype(X)
+
     # 1. Unpack Parameters & Dimensions
     N = p.N
     dz = p.dz
@@ -95,30 +115,30 @@ function scm_gspt_tendencies!(dX, X, p, t)
     ξ = p.xi                                  # Hyperbolic embedding parameter
 
     # Distinguish GSPT self-amplification (beta_gspt) from thermal stability factor (beta_stab)
-    β_gspt = hasproperty(p, :beta_gspt) ? convert(Float64, p.beta_gspt) : (hasproperty(p, :beta) ? convert(Float64, p.beta) : 1.0)
-    β_stab = hasproperty(p, :beta_stab) ? convert(Float64, p.beta_stab) : 5.0
-    alpha_gate = hasproperty(p, :alpha_gate) ? convert(Float64, p.alpha_gate) : 1.0e-3 # Activation gate scale
+    β_gspt = hasproperty(p, :beta_gspt) ? convert(T, p.beta_gspt) : (hasproperty(p, :beta) ? convert(T, p.beta) : one(T))
+    β_stab = hasproperty(p, :beta_stab) ? convert(T, p.beta_stab) : convert(T, 5.0)
+    alpha_gate = hasproperty(p, :alpha_gate) ? convert(T, p.alpha_gate) : convert(T, 1.0e-3) # Activation gate scale
 
-    kappa = 0.4
+    kappa = convert(T, 0.4)
     Pr_t_base = p.pr_t_base
     Pr_t_slope = p.pr_t_slope
     use_dynamic_pr_t = p.use_dynamic_pr_t
-    g_stability_max = hasproperty(p, :g_stability_max) ? convert(Float64, p.g_stability_max) : 1.0
+    g_stability_max = hasproperty(p, :g_stability_max) ? convert(T, p.g_stability_max) : one(T)
 
     C_skin = p.C_skin
     R_down = p.R_down
-    sigma_SB = 5.67e-8
-    rho_cp = 1200.0                            # Atmospheric air density * specific heat
+    sigma_SB = convert(T, 5.67e-8)
+    rho_cp = convert(T, 1200.0)                            # Atmospheric air density * specific heat
     lambda_s = p.lambda_s
     d_soil = p.d_soil
     K_min_surf = p.k_min_surf
-    K_exchange_min = hasproperty(p, :k_exchange_min) ? convert(Float64, p.k_exchange_min) : 0.0
+    K_exchange_min = hasproperty(p, :k_exchange_min) ? convert(T, p.k_exchange_min) : zero(T)
     ell_min_surf = p.ell_min_surf
     use_ell_floor_surf = p.use_ell_floor_surf
 
     # Global interior mixing length floor to ensure a smooth manifold everywhere
-    ell_min_interior = hasproperty(p, :ell_min_interior) ? convert(Float64, p.ell_min_interior) : 1.0e-2
-    K_min_interior = hasproperty(p, :k_min_interior) ? convert(Float64, p.k_min_interior) : 0.0
+    ell_min_interior = hasproperty(p, :ell_min_interior) ? convert(T, p.ell_min_interior) : convert(T, 1.0e-2)
+    K_min_interior = hasproperty(p, :k_min_interior) ? convert(T, p.k_min_interior) : zero(T)
 
     Ts_min = p.ts_min
     Ts_max = p.ts_max
@@ -137,8 +157,15 @@ function scm_gspt_tendencies!(dX, X, p, t)
     dV = @view dX[(N+2):(2N+1)]
     dtheta = @view dX[(2N+2):(3N+1)]
 
-    T = eltype(U)
     K_m_faces, K_h_faces = _get_face_diffusivity_buffers(p, T)
+
+    # Optional top momentum boundary condition.
+    # :noflux (default) preserves previous behavior,
+    # :dirichlet and :relaxation allow geostrophic/open damping control.
+    momentum_top_bc = hasproperty(p, :momentum_top_bc) ? p.momentum_top_bc : :noflux
+    u_top_ref = hasproperty(p, :u_top_ref) ? convert(T, p.u_top_ref) : convert(T, Ug)
+    v_top_ref = hasproperty(p, :v_top_ref) ? convert(T, p.v_top_ref) : convert(T, Vg)
+    lambda_top_momentum = hasproperty(p, :lambda_top_momentum) ? convert(T, p.lambda_top_momentum) : zero(T)
 
     # 3. Hoist Non-Local H-Scale Configurations
     use_nonlocal = hasproperty(p, :use_nonlocal_h) && p.use_nonlocal_h > 0.5
@@ -161,8 +188,8 @@ function scm_gspt_tendencies!(dX, X, p, t)
 
         h_eff = h_local
         if use_nonlocal
-            U_face = 0.5 * (U[i] + U[i+1])
-            V_face = 0.5 * (V[i] + V[i+1])
+            U_face = convert(T, 0.5) * (U[i] + U[i+1])
+            V_face = convert(T, 0.5) * (V[i] + V[i+1])
             speed = max(sqrt(U_face^2 + V_face^2), u_floor)
             h_nonlocal = clamp(speed / f_eff, h_min, h_max)
             h_eff = (one(T) - h_weight) * h_local + h_weight * h_nonlocal
@@ -172,7 +199,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
         ell_z_raw = ell_neutral * exp(-z_face / h_eff)
         ell_z = sqrt(ell_z_raw^2 + ell_min_interior^2)
 
-        stability_arg = clamp(β_stab * dth_dz * ell_z / theta_a, -40.0, 40.0)
+        stability_arg = clamp(β_stab * dth_dz * ell_z / theta_a, convert(T, -40.0), convert(T, 40.0))
         G_local = _bounded_stability_response(stability_arg, g_stability_max)
 
         # Net Forcing Δ = η * S^2 - K_buoy * G
@@ -180,10 +207,10 @@ function scm_gspt_tendencies!(dX, X, p, t)
         Δ_local = η * S2_local - K_buoy * G_local
 
         # Option 2 Fold Catastrophe Equilibrium & C^\infty Hyperbolic Embedding
-        D_local = β_gspt^2 + 4.0 * Δ_local
-        sqrt_D_reg = sqrt(0.5 * (D_local + sqrt(D_local^2 + ξ^2)))
-        H_step = 0.5 * (one(T) + D_local / sqrt(D_local^2 + ξ^2))
-        q_star = H_step * 0.5 * l_0 * (β_gspt + sqrt_D_reg)
+        D_local = β_gspt^2 + convert(T, 4.0) * Δ_local
+        sqrt_D_reg = sqrt(convert(T, 0.5) * (D_local + sqrt(D_local^2 + ξ^2)))
+        H_step = convert(T, 0.5) * (one(T) + D_local / sqrt(D_local^2 + ξ^2))
+        q_star = H_step * convert(T, 0.5) * l_0 * (β_gspt + sqrt_D_reg)
 
         # Regularized Lipschitz Activation Gate Psi(tilde_e; alpha)
         tilde_e_star = q_star^2
@@ -216,8 +243,8 @@ function scm_gspt_tendencies!(dX, X, p, t)
 
     # 6. Bottom Boundary Conditions (Fixed Half-Cell Step)
     dz_surf = z_centers[1]
-    dU_dz_surf = (U[1] - 0.0) / dz_surf
-    dV_dz_surf = (V[1] - 0.0) / dz_surf
+    dU_dz_surf = (U[1] - zero(T)) / dz_surf
+    dV_dz_surf = (V[1] - zero(T)) / dz_surf
     dth_dz_surf = (theta[1] - T_s) / dz_surf
 
     ell_surf = (kappa * dz_surf) / (one(T) + (kappa * dz_surf) / l_0)
@@ -232,17 +259,17 @@ function scm_gspt_tendencies!(dX, X, p, t)
     ell_surf *= exp(-dz_surf / h_eff_surf)
     ell_eff_surf = use_ell_floor_surf ? sqrt(ell_surf^2 + ell_min_surf^2) : ell_surf
 
-    stability_arg_surf = clamp(β_stab * dth_dz_surf * ell_eff_surf / theta_a, -40.0, 40.0)
+    stability_arg_surf = clamp(β_stab * dth_dz_surf * ell_eff_surf / theta_a, convert(T, -40.0), convert(T, 40.0))
     G_surf = _bounded_stability_response(stability_arg_surf, g_stability_max)
 
     S2_surf = dU_dz_surf^2 + dV_dz_surf^2
     Δ_surf = η * S2_surf - K_buoy * G_surf
 
     # Surface Option 2 Fold Geometry & Regularization
-    D_surf = β_gspt^2 + 4.0 * Δ_surf
-    sqrt_D_reg_surf = sqrt(0.5 * (D_surf + sqrt(D_surf^2 + ξ^2)))
-    H_step_surf = 0.5 * (one(T) + D_surf / sqrt(D_surf^2 + ξ^2))
-    q_star_surf = H_step_surf * 0.5 * l_0 * (β_gspt + sqrt_D_reg_surf)
+    D_surf = β_gspt^2 + convert(T, 4.0) * Δ_surf
+    sqrt_D_reg_surf = sqrt(convert(T, 0.5) * (D_surf + sqrt(D_surf^2 + ξ^2)))
+    H_step_surf = convert(T, 0.5) * (one(T) + D_surf / sqrt(D_surf^2 + ξ^2))
+    q_star_surf = H_step_surf * convert(T, 0.5) * l_0 * (β_gspt + sqrt_D_reg_surf)
 
     tilde_e_surf = q_star_surf^2
     psi_gate_surf = sqrt(tilde_e_surf) / (sqrt(tilde_e_surf) + alpha_gate)
@@ -292,11 +319,26 @@ function scm_gspt_tendencies!(dX, X, p, t)
         elseif theta_top_bc === :relaxation
             -lambda_top * (theta[N] - theta_top_ref)
         else
-            0.0
+            zero(T)
         end
 
-        dU[N] = f * (V[N] - Vg) + (0.0 - K_m_faces[N-1] * (U[N] - U[N-1]) / dz) / dz
-        dV[N] = -f * (U[N] - Ug) + (0.0 - K_m_faces[N-1] * (V[N] - V[N-1]) / dz) / dz
+        flux_U_topN = if momentum_top_bc === :dirichlet
+            K_m_faces[N-1] * (u_top_ref - U[N]) / dz_top
+        elseif momentum_top_bc === :relaxation
+            -lambda_top_momentum * (U[N] - u_top_ref)
+        else
+            zero(T)
+        end
+        flux_V_topN = if momentum_top_bc === :dirichlet
+            K_m_faces[N-1] * (v_top_ref - V[N]) / dz_top
+        elseif momentum_top_bc === :relaxation
+            -lambda_top_momentum * (V[N] - v_top_ref)
+        else
+            zero(T)
+        end
+
+        dU[N] = f * (V[N] - Vg) + (flux_U_topN - K_m_faces[N-1] * (U[N] - U[N-1]) / dz) / dz
+        dV[N] = -f * (U[N] - Ug) + (flux_V_topN - K_m_faces[N-1] * (V[N] - V[N-1]) / dz) / dz
         dtheta[N] = (flux_H_topN - K_h_faces[N-1] * (theta[N] - theta[N-1]) / dz) / dz
 
         # 8. Surface Energy Balance

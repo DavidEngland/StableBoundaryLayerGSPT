@@ -26,27 +26,34 @@ end
 mixing_length(z::Real, l0::Real; kappa::Real=0.4) = (kappa * z) / (1.0 + (kappa * z) / l0)
 
 @inline function bounded_stability_response(stability_arg::Real, g_stability_max::Real)
-    g_cap = max(Float64(g_stability_max), eps(Float64))
-    return g_cap * tanh(Float64(stability_arg) / g_cap)
+    T = promote_type(typeof(stability_arg), typeof(g_stability_max))
+    arg = convert(T, stability_arg)
+    g_cap = max(convert(T, g_stability_max), convert(T, 1.0e-12))
+    return g_cap * tanh(arg)
 end
 
 function effective_h_scale(p, U_ref::Real, V_ref::Real)
-    h_local = hasproperty(p, :h) ? Float64(p.h) : 100.0
-    use_nonlocal = hasproperty(p, :use_nonlocal_h) && Float64(p.use_nonlocal_h) > 0.5
+    T = promote_type(typeof(U_ref), typeof(V_ref), typeof(p.f))
+    h_local = hasproperty(p, :h) ? convert(T, p.h) : convert(T, 100.0)
+    use_nonlocal = hasproperty(p, :use_nonlocal_h) && p.use_nonlocal_h > 0.5
     if !use_nonlocal
         return h_local
     end
 
-    weight = clamp(hasproperty(p, :nonlocal_h_weight) ? Float64(p.nonlocal_h_weight) : 0.5, 0.0, 1.0)
-    h_min = hasproperty(p, :nonlocal_h_min) ? Float64(p.nonlocal_h_min) : 20.0
-    h_max = hasproperty(p, :nonlocal_h_max) ? Float64(p.nonlocal_h_max) : 400.0
-    u_floor = hasproperty(p, :nonlocal_velocity_floor) ? Float64(p.nonlocal_velocity_floor) : 0.1
-    f_floor = hasproperty(p, :nonlocal_f_floor) ? Float64(p.nonlocal_f_floor) : 1.0e-5
+    weight = clamp(
+        hasproperty(p, :nonlocal_h_weight) ? convert(T, p.nonlocal_h_weight) : convert(T, 0.5),
+        zero(T),
+        one(T),
+    )
+    h_min = hasproperty(p, :nonlocal_h_min) ? convert(T, p.nonlocal_h_min) : convert(T, 20.0)
+    h_max = hasproperty(p, :nonlocal_h_max) ? convert(T, p.nonlocal_h_max) : convert(T, 400.0)
+    u_floor = hasproperty(p, :nonlocal_velocity_floor) ? convert(T, p.nonlocal_velocity_floor) : convert(T, 0.1)
+    f_floor = hasproperty(p, :nonlocal_f_floor) ? convert(T, p.nonlocal_f_floor) : convert(T, 1.0e-5)
 
-    speed = max(hypot(Float64(U_ref), Float64(V_ref)), u_floor)
-    f_eff = max(abs(Float64(p.f)), f_floor)
+    speed = max(hypot(convert(T, U_ref), convert(T, V_ref)), u_floor)
+    f_eff = max(abs(convert(T, p.f)), f_floor)
     h_nonlocal = clamp(speed / f_eff, h_min, h_max)
-    return (1.0 - weight) * h_local + weight * h_nonlocal
+    return (one(T) - weight) * h_local + weight * h_nonlocal
 end
 
 """Return face heights associated with interior closure vectors."""
@@ -70,20 +77,25 @@ function max_negative_gradient_height(values::AbstractVector, heights::AbstractV
         return (height=heights[1], max_negative_gradient=0.0)
     end
 
-    d_dz = zeros(Float64, n)
+    max_neg = -Inf
+    max_idx = 1
     @inbounds for i in 1:n
+        local grad
         if i == 1
-            d_dz[i] = (values[2] - values[1]) / (heights[2] - heights[1])
+            grad = (values[2] - values[1]) / (heights[2] - heights[1])
         elseif i == n
-            d_dz[i] = (values[n] - values[n - 1]) / (heights[n] - heights[n - 1])
+            grad = (values[n] - values[n - 1]) / (heights[n] - heights[n - 1])
         else
-            d_dz[i] = (values[i + 1] - values[i - 1]) / (heights[i + 1] - heights[i - 1])
+            grad = (values[i + 1] - values[i - 1]) / (heights[i + 1] - heights[i - 1])
+        end
+        neg = -grad
+        if neg > max_neg
+            max_neg = neg
+            max_idx = i
         end
     end
 
-    neg_grad = -d_dz
-    idx = argmax(neg_grad)
-    return (height=heights[idx], max_negative_gradient=neg_grad[idx])
+    return (height=heights[max_idx], max_negative_gradient=max_neg)
 end
 
 """
@@ -99,7 +111,9 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
     theta_a = p.theta_a
     delta = p.delta
     K_buoy = p.K_buoy
-    beta = p.beta
+    beta_gspt = hasproperty(p, :beta_gspt) ? p.beta_gspt : (hasproperty(p, :beta) ? p.beta : one(eltype(U)))
+    beta_stab = hasproperty(p, :beta_stab) ? p.beta_stab : 5.0
+    alpha_gate = hasproperty(p, :alpha_gate) ? p.alpha_gate : 1.0e-3
     l0 = p.l_0
     eta = p.eta
     xi = p.xi
@@ -107,6 +121,8 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
     Pr_t_slope = p.pr_t_slope
     use_dynamic_pr_t = p.use_dynamic_pr_t
     g_stability_max = hasproperty(p, :g_stability_max) ? p.g_stability_max : 1.0
+    ell_min_interior = hasproperty(p, :ell_min_interior) ? p.ell_min_interior : 1.0e-2
+    K_min_interior = hasproperty(p, :k_min_interior) ? p.k_min_interior : 0.0
 
     Km = zeros(eltype(U), N - 1)
     Kh = zeros(eltype(U), N - 1)
@@ -127,13 +143,21 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
         V_face = 0.5 * (V[i] + V[i + 1])
         h_eff = effective_h_scale(p, U_face, V_face)
         ell *= exp(-zf / h_eff)
+        ell = hypot(ell, ell_min_interior)
+
         s2 = dU_dz^2 + dV_dz^2
-        arg = clamp(beta * dth_dz * ell / theta_a, -40.0, 40.0)
+        arg = clamp(beta_stab * dth_dz * ell / theta_a, -40.0, 40.0)
         G = bounded_stability_response(arg, g_stability_max)
 
-        delta_local = eta * (ell^2) * s2 - K_buoy * ell * G
-        Q = (l0 * delta_local)^2 - delta
-        e_star = 0.5 * (Q + hypot(Q, xi))
+        delta_local = eta * s2 - K_buoy * G
+
+        D_local = beta_gspt^2 + 4.0 * delta_local
+        sqrt_D_reg = sqrt(0.5 * (D_local + sqrt(D_local^2 + xi^2)))
+        H_step = 0.5 * (1.0 + D_local / sqrt(D_local^2 + xi^2))
+        q_star = H_step * 0.5 * l0 * (beta_gspt + sqrt_D_reg)
+
+        e_star = q_star^2
+        psi_gate = sqrt(e_star) / (sqrt(e_star) + alpha_gate)
 
         Pr_t_local = if use_dynamic_pr_t
             Pr_t_base + Pr_t_slope * tanh(max(zero(eltype(U)), G))
@@ -141,7 +165,7 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
             Pr_t_base
         end
 
-        Km[i] = ell * sqrt(e_star + delta)
+        Km[i] = K_min_interior + ell * sqrt(psi_gate * e_star + delta)
         Kh[i] = Km[i] / max(Pr_t_local, eps(Pr_t_local))
         Delta[i] = delta_local
         e_xi[i] = e_star
@@ -162,7 +186,6 @@ Compute publication-grade diagnostics for a single SCM snapshot.
 """
 function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     N = p.N
-    dz = p.dz
     z_centers = p.z_centers
     T_s = X[1]
     U = @view X[2:(N + 1)]
@@ -173,7 +196,9 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
 
     delta = p.delta
     l0 = p.l_0
-    beta = p.beta
+    beta_gspt = hasproperty(p, :beta_gspt) ? p.beta_gspt : (hasproperty(p, :beta) ? p.beta : one(eltype(U)))
+    beta_stab = hasproperty(p, :beta_stab) ? p.beta_stab : 5.0
+    alpha_gate = hasproperty(p, :alpha_gate) ? p.alpha_gate : 1.0e-3
     theta_a = p.theta_a
     eta = p.eta
     K_buoy = p.K_buoy
@@ -182,23 +207,36 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     use_dynamic_pr_t = p.use_dynamic_pr_t
     g_stability_max = hasproperty(p, :g_stability_max) ? p.g_stability_max : 1.0
     k_exchange_min = hasproperty(p, :k_exchange_min) ? p.k_exchange_min : 0.0
+    k_min_surf = p.k_min_surf
     ell_min_surf = p.ell_min_surf
     use_ell_floor_surf = p.use_ell_floor_surf
+    xi = p.xi
+    kappa = cfg.kappa
+    sigma_sb = cfg.sigma_sb
+    rho_cp = cfg.rho_cp
+
+    dz_surf = z_centers[1]
 
     # Surface closure uses the same manifold relation as interior faces.
-    dU_dz_surf = (U[1] - 0.0) / dz
-    dV_dz_surf = (V[1] - 0.0) / dz
-    dth_dz_surf = (theta[1] - T_s) / dz
-    ell_surf = mixing_length(z_centers[1], l0; kappa=cfg.kappa)
+    dU_dz_surf = (U[1] - 0.0) / dz_surf
+    dV_dz_surf = (V[1] - 0.0) / dz_surf
+    dth_dz_surf = (theta[1] - T_s) / dz_surf
+    ell_surf = mixing_length(dz_surf, l0; kappa=kappa)
     h_eff_surf = effective_h_scale(p, U[1], V[1])
-    ell_surf *= exp(-z_centers[1] / h_eff_surf)
+    ell_surf *= exp(-dz_surf / h_eff_surf)
     ell_eff_surf = use_ell_floor_surf ? hypot(ell_surf, ell_min_surf) : ell_surf
-    G_surf = bounded_stability_response(clamp(beta * dth_dz_surf * ell_eff_surf / theta_a, -40.0, 40.0), g_stability_max)
-    Delta_surf = eta * (ell_eff_surf^2) * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * ell_eff_surf * G_surf
-    Q_surf = (l0 * Delta_surf)^2 - delta
-    e_surf = 0.5 * (Q_surf + hypot(Q_surf, p.xi))
+    G_surf = bounded_stability_response(clamp(beta_stab * dth_dz_surf * ell_eff_surf / theta_a, -40.0, 40.0), g_stability_max)
+    Delta_surf = eta * (dU_dz_surf^2 + dV_dz_surf^2) - K_buoy * G_surf
+
+    D_surf = beta_gspt^2 + 4.0 * Delta_surf
+    sqrt_D_reg_surf = sqrt(0.5 * (D_surf + sqrt(D_surf^2 + xi^2)))
+    H_step_surf = 0.5 * (1.0 + D_surf / sqrt(D_surf^2 + xi^2))
+    q_star_surf = H_step_surf * 0.5 * l0 * (beta_gspt + sqrt_D_reg_surf)
+
+    e_surf = q_star_surf^2
+    psi_gate_surf = sqrt(e_surf) / (sqrt(e_surf) + alpha_gate)
     # Maintain a smooth background floor in surface exchange coefficients.
-    K_m_surf = cfg.k_min_surf + ell_eff_surf * sqrt(e_surf + delta)
+    K_m_surf = k_min_surf + ell_eff_surf * sqrt(psi_gate_surf * e_surf + delta)
     Pr_t_surf = if use_dynamic_pr_t
         Pr_t_base + Pr_t_slope * tanh(max(0.0, G_surf))
     else
@@ -207,20 +245,29 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     K_h_surf_raw = K_m_surf / max(Pr_t_surf, eps(Pr_t_surf))
     K_h_surf = hypot(K_h_surf_raw, k_exchange_min)
 
-    flux_H_surf = K_h_surf * (theta[1] - T_s) / dz
-    flux_U_surf = K_m_surf * (U[1] - 0.0) / dz
-    flux_V_surf = K_m_surf * (V[1] - 0.0) / dz
+    # Bulk-transfer sensible heat operator aligned with scm.jl.
+    z0m = max(p.z0m, eps(Float64))
+    z0h = max(p.z0h, eps(Float64))
+    ratio_floor = 1.05
+    h_ref_surf = max(h_eff_surf, max(z0m, z0h) * ratio_floor)
+    log_m = log(max(h_ref_surf / z0m, ratio_floor))
+    log_h = log(max(h_ref_surf / z0h, ratio_floor))
+    C_H_surf = (kappa * kappa) / max(log_m * log_h, eps(Float64))
+    flux_H_surf = C_H_surf * hypot(U[1], V[1]) * (theta[1] - T_s)
+
+    flux_U_surf = K_m_surf * (U[1] - 0.0) / dz_surf
+    flux_V_surf = K_m_surf * (V[1] - 0.0) / dz_surf
     tau_mag = sqrt(flux_U_surf^2 + flux_V_surf^2)
     u_star = sqrt(max(tau_mag, 0.0))
 
     # Surface energy components.
-    R_net = p.R_down - cfg.sigma_sb * (T_s^4)
-    H = cfg.rho_cp * flux_H_surf
+    R_net = p.R_down - sigma_sb * (T_s^4)
+    H = rho_cp * flux_H_surf
     G = p.lambda_s * (T_s - p.T_deep) / p.d_soil
     # H is positive downward toward the surface in this SCM, so it contributes
     # to warming the skin layer alongside positive net radiation.
     storage = R_net + H - G
-    T_rad = (p.R_down / cfg.sigma_sb)^0.25
+    T_rad = (p.R_down / sigma_sb)^0.25
     below_radiative_floor = T_s < (T_rad - cfg.radiative_floor_margin_k)
 
     # Stability diagnostics.
@@ -229,7 +276,7 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     speed_geo = sqrt(p.Ug^2 + p.Vg^2)
     max_shear = sqrt(maximum(closure.shear2))
 
-    monin_L = -(theta_a * u_star^3) / (cfg.kappa * cfg.g * (flux_H_surf + cfg.monin_eps))
+    monin_L = -(theta_a * u_star^3) / (kappa * cfg.g * (flux_H_surf + cfg.monin_eps))
     ri_min = minimum(closure.Ri_g)
     ri_max = maximum(closure.Ri_g)
 
