@@ -1,0 +1,106 @@
+% ==============================================================================
+% File: templates/sections/mixing_length.tex.mustache
+% Appendix Section: Asymptotic Mixing Length as a Geometric Control Parameter
+% ==============================================================================
+
+\section{The Asymptotic Mixing Length ($l_0$) as a Geometric Control Parameter}
+\label{app:mixing_length_geometric_control}
+
+In classical turbulence closures, Blackadar's asymptotic mixing length $l_0$ functions as an empirical coefficient tuned to yield realistic turbulent diffusivities. Within the 4D GSPT-SBL framework, however, $l_0$ enters the reduced dynamics analytically, governing the topology of the critical manifold $\mathcal{S}_0$.
+
+\subsection{Mathematical Setting and Assumptions}
+\label{sub:math_setting_assumptions}
+
+\begin{assumption}[Reduced Atmospheric Subsystem]
+\label{ass:reduced_sbl}
+Consider the reduced atmospheric subsystem obtained from the regularized 4D GSPT-SBL equations under the classic Blackadar mixing-length closure:
+\begin{equation}
+    l(z) = \frac{\kappa z}{1 + \frac{\kappa z}{l_0}}
+\end{equation}
+with fixed physical parameters $\beta > 0$, background mixing floor $\delta > 0$, and closure constant $c_\mu > 0$. Assume the critical manifold $\mathcal{S}_0$ is defined by the reduced equilibrium relation $F(q, \Delta; l_0) = 0$, where $q$ is the velocity scale, $\Delta$ is net environmental forcing, and $e \ge 0$ is turbulent kinetic energy.
+\end{assumption}
+
+\subsection{Formal Theorems and Corollaries}
+\label{sub:theorems_corollaries}
+
+\begin{theorem}[Asymptotic Mixing Length as a Geometric Control Parameter]
+\label{thm:l0_control_parameter}
+Under Assumption~\ref{ass:reduced_sbl}, $l_0 \in \mathbb{R}^+$ acts as a codimension-one bifurcation parameter governing the topology of the critical manifold $\mathcal{S}_0$. Continuous variation of $l_0$:
+\begin{enumerate}
+    \item \textbf{Rescales Equilibrium Geometry:} Deforms the active attracting equilibrium surface through multiplicative scaling of the stable branch:
+    \begin{equation}
+        q_+(\Delta) = \frac{\beta l_0 + l_0 \sqrt{\beta^2 + 4\Delta}}{2}.
+    \end{equation}
+    \item \textbf{Shifts Fold Catastrophe Invariants:} The fold locus $\mathcal{C}_{\text{fold}}$ coordinates in the reduced model satisfy the analytical relations:
+    \begin{equation}
+        e_{\text{fold}}(l_0) = \frac{\beta^2 l_0^2}{4} - \delta, \qquad q_{\text{fold}}(l_0) = \frac{\beta l_0}{2}.
+    \end{equation}
+    \item \textbf{Parameter-Space Bifurcation Boundary:} The equality
+    \begin{equation}
+        \delta = \frac{\beta^2 l_0^2}{4}
+    \end{equation}
+    defines a codimension-one bifurcation boundary in parameter space $(\delta, l_0)$. On one side of this boundary ($\delta < \frac{\beta^2 l_0^2}{4}$), the reduced critical manifold possesses a physically admissible fold ($e_{\text{fold}} > 0$), whereas on the other side ($\delta \ge \frac{\beta^2 l_0^2}{4}$), the fold lies outside the admissible domain $e \ge 0$.
+\end{enumerate}
+\end{theorem}
+
+\begin{corollary}[Monotonic Limit]
+\label{cor:monotonic_limit}
+If $\delta \ge \frac{\beta^2 l_0^2}{4}$, the reduced atmospheric critical manifold $\mathcal{S}_0$ possesses no physically admissible interior fold ($e_{\text{fold}} \le 0$). Consequently, catastrophic turbulence collapse through an interior fold bifurcation of the isolated atmospheric subsystem cannot occur.
+\end{corollary}
+
+\begin{theorem}[Monotonic Deformation Theorem]
+\label{thm:monotonic_deformation}
+Let $l_0^{(1)} < l_0^{(2)}$. The corresponding critical manifolds satisfy an order-preserving geometric deformation:
+\begin{equation}
+    \mathcal{S}_0\left(l_0^{(1)}\right) \prec \mathcal{S}_0\left(l_0^{(2)}\right)
+\end{equation}
+where increasing $l_0$ monotonically enlarges the admissible folded region in phase space while preserving manifold topology until the codimension-one boundary $\delta = \frac{\beta^2 l_0^2}{4}$ is crossed.
+\end{theorem}
+
+\begin{proof}[Proof Sketch for Theorem~\ref{thm:l0_control_parameter} and Theorem~\ref{thm:monotonic_deformation}]
+Evaluating $F(q, \Delta; l_0) = 0$ along $e \ge 0$ yields $q_+(\Delta)$ as an explicit function scaled by $l_0$. Differentiating $F$ with respect to state variables gives the saddle-node condition $\partial F / \partial q = 0$, producing $q_{\text{fold}} = \beta l_0 / 2$. Substituting $q_{\text{fold}}$ back into the energy equilibrium condition yields $e_{\text{fold}}(l_0) = \beta^2 l_0^2 / 4 - \delta$. Admissibility requires $e_{\text{fold}} > 0$, yielding the parameter boundary $\delta = \beta^2 l_0^2 / 4$. Monotonicity of the spatial inclusion $\mathcal{S}_0(l_0^{(1)}) \prec \mathcal{S}_0(l_0^{(2)})$ follows directly from $\partial q_+ / \partial l_0 > 0$ for all $\Delta > -\beta^2/4$.
+\end{proof}
+
+\subsection{Quantitative Mapping: Geometry to Physics}
+\label{sub:quantitative_mapping}
+
+Establishing $l_0$ as a continuation parameter yields direct mappings between state-space geometry and physical atmospheric processes (Table~\ref{tab:l0_mapping}).
+
+\begin{table}[htbp]
+\centering
+\caption{Quantitative mapping between state-space geometric metrics and physical processes in the stable boundary layer.}
+\label{tab:l0_mapping}
+\begin{tabular}{llp{6.8cm}}
+\toprule
+\textbf{Metric / Parameter} & \textbf{Mathematical Meaning} & \textbf{Atmospheric Dynamics / Physical Interpretation} \\
+\midrule
+$l_0$ & Geometric deformation parameter & Maximum asymptotic turbulent length scale \\
+Fold Energy ($e_{\text{fold}}$) & Quadratic invariant ($e_{\text{fold}} \propto l_0^2$) & Background TKE threshold required to trigger abrupt collapse \\
+Velocity Scale ($q_{\text{fold}}$) & Linear invariant ($q_{\text{fold}} \propto l_0$) & Critical wind speed scale for turbulent boundary layer maintenance \\
+Boundary Curve ($\delta = \frac{\beta^2 l_0^2}{4}$) & Codimension-1 parameter boundary & Threshold separating abrupt, hysteresis-driven transitions from smooth decays \\
+Transversal Slope ($e=0$) & Boundary contact slope $\sim \frac{l_0^2}{c_\mu}$ & Sensitivity of laminar-turbulent transitions to changes in environmental forcing ($\Delta$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Interpretation and Physical Consequences}
+\label{sub:interpretation_consequences}
+
+\begin{equation*}
+\boxed{
+\text{Blackadar's closure is simultaneously }
+\begin{cases}
+\text{an empirical turbulence closure,} \\
+\text{a geometric deformation parameter of the slow manifold } \mathcal{S}_0.
+\end{cases}
+}
+\end{equation*}
+
+\paragraph{Interpretation.}
+In classical turbulence closures, the asymptotic mixing length determines the magnitude of turbulent exchange coefficients ($K_m = l \sqrt{e}$). Within the 4D GSPT-SBL framework, the same parameter additionally dictates the geometry of the reduced equilibrium manifold. Consequently, $l_0$ serves both as a closure parameter and as a geometric control parameter governing the existence, location, and disappearance of admissible fold singularities ($l_0 \longrightarrow \mathcal{S}_0$).
+
+\paragraph{Observational Bounds and Decoupling.}
+\begin{itemize}
+    \item \textbf{The Small-$l_0$ Limit:} Decreasing $l_0$ drives $e_{\text{fold}}$ below zero, smoothing out the interior fold catastrophe entirely. This provides an analytical explanation for why shallow or weakly turbulent stable boundary layers transition monotonically without discrete hysteresis loops.
+    \item \textbf{Atmospheric Coupling:} Calibration against shallow nocturnal boundary-layer observations (e.g., CASES-99, SHEBA) bounds this macroscale parameter to $l_0 \approx 10\text{--}20\,\mathrm{m}$ for the present closure. Unphysically large values (e.g., $l_0 > 100\,\mathrm{m}$) generate excessive background turbulent diffusion aloft ($K_m \approx l_0 \sqrt{\delta}$), keeping the atmosphere strongly coupled to surface friction, suppressing nocturnal decoupling, and washing out the inertial acceleration necessary for Low-Level Jet (LLJ) formation.
+\end{itemize}

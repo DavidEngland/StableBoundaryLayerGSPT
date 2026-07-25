@@ -125,7 +125,10 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
     wrapper_name = "section_theory.tex.mustache"
     front_matter_templates = Set(["abstract.tex.mustache"])
     # Keep the canonical comparison section and skip the legacy duplicate template.
-    excluded_templates = Set(["numerical_verification_physical_interpretation.tex.mustache"])
+    excluded_templates = Set([
+        "numerical_verification_physical_interpretation.tex.mustache",
+        "mixing_length.tex.mustache",
+    ])
     content_templates = filter(name -> (name != wrapper_name) && !(name in front_matter_templates) && !(name in excluded_templates), all_tex_templates)
 
     preferred_order = [
@@ -1125,6 +1128,11 @@ function assemble_manuscript(args::Vector{String}=ARGS)
     merge!(section_context, read_scm_summary_context())
     merge!(section_context, parameter_context)
     template_sections_tex = build_tex_template_sections("templates/sections", section_context)
+    appendix_tex = build_optional_tex_template(
+        "templates/sections/mixing_length.tex.mustache",
+        section_context;
+        fallback="",
+    )
     abstract_tex = build_optional_tex_template(
         "templates/sections/abstract.tex.mustache",
         section_context;
@@ -1137,6 +1145,7 @@ function assemble_manuscript(args::Vector{String}=ARGS)
         "generated_date_human" => generated_date_human,
         "abstract_tex" => abstract_tex,
         "template_sections_tex" => template_sections_tex,
+        "appendix_tex" => appendix_tex,
         "figure_tex_includes" => figure_tex_includes,
         "active_parameter_macros_path" => parameter_context["active_parameter_macros_path"],
     )
