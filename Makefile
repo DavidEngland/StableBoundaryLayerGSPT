@@ -12,9 +12,11 @@
         stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic \
         scm-run scm-plot scm-report scm-all scm-verify \
         run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd \
-        compile-scm-reports sweep-two-layer-envelope test clean
+		compile-scm-reports sweep-two-layer-envelope check-all ci test clean
 
 DATASET ?= CASES99
+LATEXMK ?= latexmk
+LATEXMKFLAGS ?= -pdf -interaction=nonstopmode -halt-on-error -file-line-error
 
 SCM_CASE ?= gabls1
 SCM_DURATION ?= 9.0
@@ -41,11 +43,23 @@ SCM_WRAPPER_PDF_PATH ?= $(SCM_OUTDIR)/$(SCM_WRAPPER_PDF_NAME)
 SCM_WRITE_COMPAT_WRAPPER ?= 0
 BIFURCATION_VERBOSE ?= 0
 BIFURCATION_LOG_DIR ?= results/_logs
-PARAMETER_SUMMARIES := results/CASES99/latest/summary.json results/FLOSS/latest/summary.json results/SHEBA/latest/summary.json
+CASES99_SUMMARY := results/CASES99/latest/summary.json
+FLOSS_SUMMARY := results/FLOSS/latest/summary.json
+SHEBA_SUMMARY := results/SHEBA/latest/summary.json
+PARAMETER_SUMMARIES := $(CASES99_SUMMARY) $(FLOSS_SUMMARY) $(SHEBA_SUMMARY)
 PARAMETER_MACRO_BUNDLE := reports/generated/parameters/parameters_all.tex
 PROSE_LINT_ALLOWLIST := config/prose_lint_allowlist.txt
 STAMP := $(shell date +%d%b%Y-%H%M)
 ARCHIVE_DIR := reports/generated/archive
+
+$(CASES99_SUMMARY):
+	$(MAKE) run-solver-cases99
+
+$(FLOSS_SUMMARY):
+	$(MAKE) run-solver-floss
+
+$(SHEBA_SUMMARY):
+	$(MAKE) run-solver-sheba
 
 bootstrap:
 	julia --project=. -e 'using Pkg; Pkg.instantiate()'
@@ -181,7 +195,7 @@ figure-publication-suite: visual-assets figure-phase-space-hysteresis figure-bla
 
 paper-appendix-check: generate-parameter-macros
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET)
-	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
+	$(LATEXMK) $(LATEXMKFLAGS) -bibtex- -outdir=reports/generated reports/generated/paper.tex
 
 paper-all:
 # 	$(MAKE) clean
@@ -191,10 +205,7 @@ paper-all:
 	julia --project=. scripts/plot_4d_diagnostics.jl --solution results/$(DATASET)/latest/solution.csv --out reports/generated/figures/4d_sbl_diagnostics.png
 	$(MAKE) figure-publication-suite
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET)
-	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
-	-bibtex reports/generated/paper
-	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
-	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated reports/generated/paper.tex
+	$(LATEXMK) $(LATEXMKFLAGS) -f -outdir=reports/generated reports/generated/paper.tex
 
 archive-paper: reports/generated/paper.pdf
 	@mkdir -p $(ARCHIVE_DIR)
@@ -237,7 +248,7 @@ scm-report:
 	@echo "Rendering semantic report: $(SCM_REPORT_PATH)"
 	julia --project=. scm/render_case_report.jl --summary $(SCM_OUTDIR)/summary.json --template $(SCM_REPORT_TEMPLATE) --out $(SCM_REPORT_PATH)
 	@printf '%s\n' '\documentclass{article}' '\usepackage[T1]{fontenc}' '\usepackage{lmodern}' '\usepackage{graphicx}' '\usepackage{booktabs}' '\usepackage{amsmath}' '\begin{document}' '\input{$(SCM_REPORT_NAME)}' '\end{document}' > $(SCM_WRAPPER_TEX_PATH)
-	@pdflatex -interaction=nonstopmode -halt-on-error -output-directory $(SCM_OUTDIR) $(SCM_WRAPPER_TEX_PATH) >/dev/null
+	@$(LATEXMK) $(LATEXMKFLAGS) -outdir=$(SCM_OUTDIR) $(SCM_WRAPPER_TEX_PATH) >/dev/null
 	@cp $(SCM_REPORT_PATH) $(SCM_OUTDIR)/scm_case_report.tex
 	@echo "Updated compatibility copy: $(SCM_OUTDIR)/scm_case_report.tex"
 	@if [ "$(SCM_WRITE_COMPAT_WRAPPER)" = "1" ]; then cp $(SCM_WRAPPER_TEX_PATH) $(SCM_OUTDIR)/scm_case_report_wrapper.tex; cp $(SCM_WRAPPER_PDF_PATH) $(SCM_OUTDIR)/scm_case_report_wrapper.pdf; echo "Updated compatibility wrapper copies in $(SCM_OUTDIR)"; fi
@@ -373,9 +384,12 @@ compile-scm-reports:
 		done; \
 		printf '%s\n' '\end{document}'; \
 	} > compile_reports.tex
-	pdflatex -interaction=nonstopmode -halt-on-error compile_reports.tex
-	pdflatex -interaction=nonstopmode -halt-on-error compile_reports.tex
+	$(LATEXMK) $(LATEXMKFLAGS) compile_reports.tex
 	@echo "Success! Combined portfolio available at compile_reports.pdf"
+
+check-all: test check-parameter-drift-all lint-prose-strict scm-verify
+
+ci: check-all
 
 test:
 	julia --project=. -e 'using Pkg; Pkg.test()'

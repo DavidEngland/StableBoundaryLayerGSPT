@@ -14,6 +14,7 @@ const DEFAULT_DATASET = "CASES99"
 const DEFAULT_GENERATED_DATE_HUMAN = "July 13, 2026"
 const SUPPORTED_DATASETS = ["CASES99", "FLOSS", "SHEBA"]
 const DEFAULT_PROSE_LINT_ALLOWLIST_PATH = "config/prose_lint_allowlist.txt"
+const RAW_TEMPLATE_SUFFIXES = ("_tex", "_includes", "_blocks")
 const PROVENANCE_PARAM_KEYS = [
     "epsilon",
     "delta",
@@ -95,11 +96,16 @@ function read_text(path::String; fallback::String="")
     return isfile(path) ? read(path, String) : fallback
 end
 
-function render_template(template::String, context::Dict{String,String})
+function should_render_raw(key::String)
+    return any(suffix -> endswith(key, suffix), RAW_TEMPLATE_SUFFIXES)
+end
+
+function render_template(template::String, context::Dict{String,String}; escape_values::Bool=true)
     rendered = template
     for (k, v) in context
+        escaped = escape_values ? latex_escape(v) : v
         rendered = replace(rendered, "{{{$(k)}}}" => v)
-        rendered = replace(rendered, "{{$(k)}}" => v)
+        rendered = replace(rendered, "{{$(k)}}" => (should_render_raw(k) ? v : escaped))
     end
     return rendered
 end
@@ -300,6 +306,35 @@ function parameter_to_code_context_key(param_key::String)
     return "param_" * lowercase(param_key) * "_code"
 end
 
+function run_cmd_text(cmd::Cmd; fallback::String="unknown")
+    try
+        return chomp(read(cmd, String))
+    catch
+        return fallback
+    end
+end
+
+function git_provenance_context()
+    short_sha = run_cmd_text(`git rev-parse --short HEAD`; fallback="unknown")
+    full_sha = run_cmd_text(`git rev-parse HEAD`; fallback="unknown")
+    worktree_state = begin
+        try
+            status = read(`git status --porcelain`, String)
+            isempty(strip(status)) ? "clean" : "dirty"
+        catch
+            "unknown"
+        end
+    end
+    build_timestamp_iso = Dates.format(Dates.now(), dateformat"yyyy-mm-ddTHH:MM:SS")
+
+    return Dict(
+        "git_commit_short" => short_sha,
+        "git_commit_full" => full_sha,
+        "git_worktree_state" => worktree_state,
+        "build_timestamp_iso" => build_timestamp_iso,
+    )
+end
+
 function codeify_number(value::Float64)
     return lowercase(string(value))
 end
@@ -323,9 +358,14 @@ function write_parameter_macro_bundle(active_dataset::String)
     haskey(datasets_data, active_dataset) || error("Cannot render manuscript parameters: active dataset $(active_dataset) has no summary payload.")
 
     active_params = datasets_data[active_dataset]["parameters"]::Dict{String,Float64}
+    provenance = git_provenance_context()
     context = Dict{String,String}(
         "active_dataset" => active_dataset,
         "active_parameter_macros_path" => "parameters/parameters_all.tex",
+        "git_commit_short" => provenance["git_commit_short"],
+        "git_commit_full" => provenance["git_commit_full"],
+        "git_worktree_state" => provenance["git_worktree_state"],
+        "build_timestamp_iso" => provenance["build_timestamp_iso"],
     )
 
     for (k, v) in active_params
@@ -355,6 +395,10 @@ function write_parameter_macro_bundle(active_dataset::String)
     push!(macro_lines, "% Active dataset: $(active_dataset)")
     push!(macro_lines, "\\providecommand{\\SBLActiveDataset}{$(latex_escape(active_dataset))}")
     push!(macro_lines, "\\providecommand{\\ActiveDataset}{\\SBLActiveDataset}")
+    push!(macro_lines, "\\providecommand{\\SBLGitCommitShort}{$(latex_escape(provenance["git_commit_short"]))}")
+    push!(macro_lines, "\\providecommand{\\SBLGitCommitFull}{$(latex_escape(provenance["git_commit_full"]))}")
+    push!(macro_lines, "\\providecommand{\\SBLGitWorktreeState}{$(latex_escape(provenance["git_worktree_state"]))}")
+    push!(macro_lines, "\\providecommand{\\SBLBuildTimestampIso}{$(latex_escape(provenance["build_timestamp_iso"]))}")
     push!(macro_lines, "")
 
     for ds in sort(collect(keys(datasets_data)))
@@ -1160,7 +1204,7 @@ function assemble_manuscript(args::Vector{String}=ARGS)
     )
 
     rendered_tex = render_template(tex_template, tex_context)
-    rendered_md = render_template(md_template, md_context)
+    rendered_md = render_template(md_template, md_context; escape_values=false)
 
     write(tex_out, rendered_tex)
     write(md_out, rendered_md)

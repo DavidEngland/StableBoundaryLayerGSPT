@@ -75,13 +75,13 @@ To maintain strict programmatic reproducibility in single-column code generation
 
 \paragraph{Mathematical-to-Code Identifier Mapping.}
 State variables map directly to internal identifiers within the spatial differential operator loop:
-\begin{* }
+\begin{itemize}
     \item Zonal momentum $U$ maps to \texttt{U},
     \item Meridional momentum $V$ maps to \texttt{V},
     \item Potential temperature $\theta$ maps to \texttt{theta},
     \item Surface skin temperature $T_s$ maps to \texttt{Ts},
     \item Fast TKE coordinate $e$ maps to closure diagnostics used to compute face diffusivities.
-\end{* }
+\end{itemize}
 
 \paragraph{Interleaved Block State Layout.}
 To optimize matrix coloring and vector cache alignment, the multi-layer SCM state vector is stored in a block-interleaved layout:
