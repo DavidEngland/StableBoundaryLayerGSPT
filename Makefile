@@ -7,7 +7,7 @@
         figure-phase-space-hysteresis figure-blackadar-hodograph \
         figure-triheight-hovmoller figure-triheight-hovmoller-theta figure-triheight-suite \
         figure-regularization-smooth figure-regime-map figure-comparative-sensitivity \
-        figure-publication-suite paper-all archive-paper paper-stamped \
+		figure-fold-illusion figure-publication-suite paper-all archive-paper paper-stamped \
         stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba \
         stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic \
         scm-run scm-plot scm-report scm-all scm-verify \
@@ -174,7 +174,10 @@ figure-regime-map:
 figure-comparative-sensitivity:
 	julia --project=. scripts/plot_comparative_sensitivity_envelopes.jl --out reports/generated/figures/comparative_parameter_sensitivity_envelope.png
 
-figure-publication-suite: visual-assets figure-phase-space-hysteresis figure-blackadar-hodograph figure-triheight-suite figure-regularization-smooth figure-regime-map figure-comparative-sensitivity
+figure-fold-illusion:
+	julia --project=. scripts/plot_fold_illusion.jl
+
+figure-publication-suite: visual-assets figure-phase-space-hysteresis figure-blackadar-hodograph figure-triheight-suite figure-regularization-smooth figure-regime-map figure-comparative-sensitivity figure-fold-illusion
 
 paper-all:
 # 	$(MAKE) clean

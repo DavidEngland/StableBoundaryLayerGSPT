@@ -728,7 +728,9 @@ function build_tex_figure_includes(fig_dir::String;
             continue
         end
         img_path = joinpath(fig_dir, file)
-        candidate_paths[stem] = img_path
+        if !haskey(candidate_paths, stem) || endswith(lowercase(img_path), ".pdf")
+            candidate_paths[stem] = img_path
+        end
     end
 
     preferred_stems = isempty(preferred_stems_cfg) ? [
