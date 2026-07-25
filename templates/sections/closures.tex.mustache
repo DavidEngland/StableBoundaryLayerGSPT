@@ -1,54 +1,51 @@
 \subsection{Aerodynamic Closures and Physical Turbulent Diffusivities}
 \label{subsec:micro_closures}
 
-To close the governing system, the macroscopic momentum and sensible heat exchange coefficients must be resolved. In traditional local frameworks, these are governed by Monin-Obukhov Similarity Theory (MOST) via the dimensionless gradients $\phi_m(\zeta), \phi_h(\zeta)$ where $\zeta = z/L$ is the stability parameter, or through empirical stability functions $f_m(Ri_g), f_h(Ri_g)$ parameterized by the gradient Richardson number:
+To close the governing multi-layer momentum and thermodynamic equations, the macroscopic surface momentum exchange coefficient $\gamma$ and sensible heat exchange coefficient $C_H$ must be determined. In traditional local boundary-layer closures, these parameters are diagnosed through Monin--Obukhov Similarity Theory (MOST) via empirical stability functions $\phi_m(\zeta), \phi_h(\zeta)$ (where $\zeta = z/L$ is the dimensionless Monin--Obukhov stability parameter) or via functions of the gradient Richardson number $Ri_g$:
 
 \begin{equation}
 K_m = \frac{\kappa z u_*}{\phi_m(\zeta)}, \qquad K_h = \frac{\kappa z u_*}{\phi_h(\zeta)}.
 \end{equation}
 
-In our dynamical system formulation, however, the stabilization, scaling, and ultimate collapse of the boundary layer are handled explicitly through the prognostic fast TKE coordinate $e$. Consequently, we can bypass empirical algebraic stability curves entirely. This is not a standard Mellor--Yamada-style 1.5-order closure: the model evolves $e$ on an explicit fast timescale and derives reduced slow dynamics from the equilibrium TKE manifold only in the singular limit $\varepsilon \to 0$. The momentum exchange coefficient $\gamma$ and bulk thermal transfer coefficient $C_H$ are defined strictly by their neutral geometric values based on logarithmic wind profile theory where $\phi_m(0) = \phi_h(0) = 1$:
+In our dynamical singular perturbation formulation, however, the stabilization, scaling, and fast quenching of the boundary layer are handled explicitly through the prognostic fast TKE coordinate $e$. Consequently, the framework bypasses empirical algebraic stability functions entirely. This is distinct from standard Mellor--Yamada-style $1.5$-order closures: the model evolves $e$ on an explicit fast timescale $\mathcal{O}(\varepsilon)$ and recovers reduced slow dynamics from the equilibrium manifold only in the singular limit $\varepsilon \to 0$. The momentum drag scale $\gamma$ and bulk thermal exchange coefficient $C_H$ are defined strictly by their neutral geometric values based on logarithmic wind profile theory, where $\phi_m(0) = \phi_h(0) = 1$:
 
 \begin{align}
-\gamma &= \frac{\kappa^2}{\left[ \ln(h_{\mathrm{eff}} / z_{0m}) \right]^2}, \\
-C_H &= \frac{\kappa^2}{\ln(h_{\mathrm{eff}} / z_{0m}) \ln(h_{\mathrm{eff}} / z_{0h})},
+\gamma &= \frac{\kappa^2}{\left[ \ln(h_{\mathrm{eff}} / z_{0m}) \right]^2}, \label{eq:gamma_neutral_def} \\
+C_H &= \frac{\kappa^2}{\ln(h_{\mathrm{eff}} / z_{0m}) \ln(h_{\mathrm{eff}} / z_{0h})}, \label{eq:ch_neutral_def}
 \end{align}
-where $\kappa \approx 0.4$ is the von Kármán constant, $h_{\mathrm{eff}}$ is the bounded non-local boundary layer height, and $z_{0m}, z_{0h}$ are the momentum and thermal roughness lengths, respectively.
+where $\kappa \approx 0.4$ is the von Kármán constant, $h_{\mathrm{eff}}$ is the bounded, state-dependent effective scale height, and $z_{0m}, z_{0h}$ denote the momentum and thermal roughness lengths, respectively.
 
-For implementation reproducibility and code-generation determinism, we use a hybrid mechanical-buoyancy scale for the effective boundary-layer height before computing log-law coefficients or derived diffusivities:
+For implementation reproducibility and computational determinism, $h_{\mathrm{eff}}$ combines mechanical and buoyancy scaling limits before evaluating log-law coefficients or vertical diffusivities:
 \begin{equation}
-h_{\mathrm{eff}}^{\star} = \min\left(c_1\frac{u_*}{|f|},\; c_2\frac{\sqrt{e+\delta}}{N + N_{\mathrm{floor}}}\right),
+h_{\mathrm{eff}}^{\star} = \min\left(c_1\frac{\sqrt{u_*^2 + \delta_u^2}}{|f|},\; c_2\frac{\sqrt{e+\delta}}{\sqrt{N^2 + N_{\mathrm{floor}}^2}}\right),
 \label{eq:closure_h_hybrid}
 \end{equation}
-with operational bounds applied as
+with operational runtime clamps applied as:
 \begin{equation}
-h_{\mathrm{eff}} = \max\left(h_{\min},\, \min\left(h_{\mathrm{eff}}^{\star},\, h_{\max}\right)\right),
+h_{\mathrm{eff}} = \operatorname{clamp}\left(h_{\mathrm{eff}}^{\star},\, h_{\min},\, h_{\max}\right),
 \label{eq:closure_h_clamp}
 \end{equation}
-where
-\begin{equation}
-N = \sqrt{\max\left(\frac{g}{\theta_0}\frac{\partial \theta}{\partial z},\,0\right)}.
-\end{equation}
+where $N^2 = \frac{g}{\theta_0}\frac{\partial \theta}{\partial z}$ is the local squared Brunt--Väisälä frequency.
 
 \paragraph{Physical Derivation of Structural Constants.}
-Bypassing diagnostic functions requires that the structural parameters $l_0$ and $\eta$ carry the asymptotic physical scaling of MOST into neutral limits:
+Bypassing empirical diagnostic curves requires that structural parameters $l_0$ and $\eta$ carry the correct asymptotic physical scaling into neutral surface-layer limits:
 \begin{itemize}
-    \item \textbf{Shear Efficiency ($\eta$):} In a neutral surface layer, balancing TKE shear production with viscous dissipation requires tracking the steady-state ratio of TKE to friction velocity, $e = c_0 u_*^2$ (where observationally $c_0 \approx 3.8$). This matches the analytical requirement $\eta = 1 / (\kappa \sqrt{c_0}) \approx 1.28$. To capture the deep vertical shear structure observed across the Arctic pack ice during the SHEBA campaign, we adopt the tuned bulk efficiency parameter $\eta = 1.5$ (coded as \texttt{eta}).
-    \item \textbf{Master Length Scale ($l_0$):} Following classical Blackadar-type interpolation, the local mixing length $\ell$ is limited by an asymptotic master scale $l_0$ via $\ell^{-1} = (\kappa z)^{-1} + l_0^{-1}$. In highly stratified nocturnal layers, buoyancy forces cap the maximum vertical eddy size. Long-term validation runs over the deep $H = 500\,\mathrm{m}$ SHEBA domain bind this bulk structural macroscale to $l_0 = 15.0\,\mathrm{m}$ (coded as \texttt{l0}) to ensure structural stability during rapid radiative cooling.
+    \item \textbf{Shear Production Efficiency ($\eta$):} In a neutral surface layer, balancing TKE shear production with viscous dissipation requires matching the equilibrium ratio of TKE to friction velocity, $e = c_0 u_*^2$ (where observationally $c_0 \approx 3.8$). This yields the exact analytical constraint $\eta = 1 / (\kappa \sqrt{c_0}) \approx 1.28$. To capture the deep vertical shear structure observed across Arctic pack ice during the SHEBA campaign, we adopt the tuned bulk efficiency parameter $\eta = 1.5$ (coded as \texttt{eta}).
+    \item \textbf{Master Mixing Length ($l_0$):} Following classical Blackadar-type vertical interpolation, the local mixing length $\ell$ is bounded by an asymptotic master scale $l_0$ via $\ell^{-1} = (\kappa z)^{-1} + l_0^{-1}$. In highly stratified nocturnal layers, buoyancy forces cap maximum vertical eddy dimensions. Across the deep $H = 500\,\mathrm{m}$ SHEBA column domain, binding this macroscale parameter to $l_0 = 15.0\,\mathrm{m}$ (coded as \texttt{l0}) maintains structural stability and prevents artificial runaway cooling.
 \end{itemize}
 
-Bypassing non-differentiable algebraic switching gates yields a smooth, regularized $C^\infty$ embedding formulation. Under a baseline unity turbulent Prandtl number assumption ($Pr_t = 1$), the physical vertical eddy diffusivities are evaluated across the interior grid nodes as:
+Bypassing non-differentiable algebraic switching gates yields a smooth $C^\infty$ regularized embedding formulation. Assuming a baseline unity turbulent Prandtl number ($Pr_t = 1$), vertical eddy diffusivities across interior grid interfaces evaluate to:
 \begin{equation}
-K_m = l_0 \sqrt{e + \delta}, \quad K_h = l_0 \sqrt{e + \delta}.
+K_m = l_0 \sqrt{e + \delta}, \qquad K_h = l_0 \sqrt{e + \delta}.
 \label{eq:embedded_diffusivities}
 \end{equation}
 
-The sensible heat flux is evaluated in bulk aerodynamic form with a smooth wind-speed floor:
+The bulk sensible heat flux $H$ is computed with a smooth velocity-scale regularizer $\delta_u$:
 \begin{equation}
-H = \rho c_p C_H \sqrt{U^2 + V^2 + \delta_u}\,(T_a - T_s).
+H = \rho c_p C_H \sqrt{U^2 + V^2 + \delta_u}\,(T_s - T_a).
 \label{eq:bulk_heat_flux}
 \end{equation}
 
-\begin{remark}
-Because the background safety floor parameter $\delta = 1.0 \times 10^{-4}\,\mathrm{m}^2\mathrm{s}^{-2}$ is strictly positive, the radicand in Eq.~\eqref{eq:embedded_diffusivities} remains strictly bounded away from zero across all physically accessible states down to the laminar floor ($e \to -\delta$). This completely eliminates the need for non-differentiable numerical truncation gates (e.g., hard $\max$ or conditional branching statements). The resulting formulation remains infinitely differentiable, preserving a continuous and bounded closure Jacobian $J_K$ while maintaining complete generic type-compatibility with forward-mode automatic differentiation pipelines.
+\begin{remark}[$C^\infty$ Automatic Differentiation Compatibility]
+Because the background safety floor parameter $\delta = 1.0 \times 10^{-4}\,\mathrm{m}^2\,\mathrm{s}^{-2}$ is strictly positive ($\delta > 0$), the radicand in Eq.~\eqref{eq:embedded_diffusivities} remains bounded away from zero across all physically accessible state-space trajectories down to the laminar floor ($e \to -\delta$). This completely eliminates non-differentiable numerical truncation switches (such as hard $\max(e,0)$ conditionals). The formulation remains infinitely differentiable everywhere in phase space, preserving continuous, bounded closure Jacobians $J_K$ while supporting type-generic forward-mode Automatic Differentiation (AD) via \texttt{ForwardDiff.jl}.
 \end{remark}

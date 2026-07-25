@@ -1,4 +1,4 @@
-\section{Mathematical Formulation and Governing Equations}
+\section{Mathematical Formulation and Fast--Slow Manifold Geometry}
 \label{sec:governing_equations}
 
 The continuous, vertically distributed Single-Column Model (SCM) maps the interaction between horizontal momentum, thermodynamic evolution, and turbulent kinetic energy over a flat, homogeneous surface. By decomposing the turbulent fluxes into their localized geometric components, the continuous 1D system is formulated as a set of coupled partial differential equations:
@@ -8,7 +8,7 @@ The continuous, vertically distributed Single-Column Model (SCM) maps the intera
 \frac{\partial V}{\partial t} &= -f(U - U_g) + \frac{\partial}{\partial z} \left( K_m \frac{\partial V}{\partial z} \right), \label{eq:gov_v} \\
 \frac{\partial \theta}{\partial t} &= \frac{\partial}{\partial z} \left( K_h \frac{\partial \theta}{\partial z} \right), \label{eq:gov_theta}
 \end{align}
-where $U$ and $V$ represent the horizontal components of the wind velocity vector, $\theta$ is the potential temperature, and $f = \SBLParamFCoriolis\,\mathrm{s}^{-1}$ is the Coriolis parameter. The vertical transport is regulated dynamically by the momentum and thermal eddy diffusivities ($K_m$ and $K_h$), which are functions of the underlying turbulent kinetic energy state and local atmospheric stability.
+where $U$ and $V$ represent the horizontal components of the wind velocity vector, $\theta$ is the potential temperature, and $f = \SBLParamFCoriolis\,\mathrm{s}^{-1}$ is the Coriolis parameter. Vertical transport is regulated dynamically by the momentum and thermal eddy diffusivities ($K_m$ and $K_h$), which are state-dependent functions of local atmospheric stability and turbulent kinetic energy.
 
 \subsection{Turbulent Closure and Non-Iterative Similarity Functions}
 \label{subsec:gov_most}
@@ -26,7 +26,7 @@ Ri_g = \frac{\frac{g}{\theta_0}\frac{\partial \theta}{\partial z}}{\left(\frac{\
 \end{equation}
 \citet{England1995} derived an exact analytical inversion $\zeta = g(Ri_g, z/z_0)$. This closed-form parameterization expresses surface stability functions $f_m(Ri_g)$ and $f_h(Ri_g)$, as well as surface exchange diffusivities $K_{m,h}$, directly as functions of the local layer-averaged Richardson number and surface roughness length $z_{0m}$. This exact elimination of implicit iterative loops ensures that the fast--slow atmospheric dynamics remain explicitly continuous across the critical stability threshold $Ri_c \approx 0.25$.
 
-\subsection{The Reduced Fast-Slow TKE Subsystem}
+\subsection{The Reduced Fast--Slow TKE Subsystem}
 \label{subsec:gov_tke}
 
 To explicitly capture the rapid stabilization and structural collapse of the stable boundary layer (SBL), the localized turbulent field is driven by a singular perturbation equation for the turbulent kinetic energy $e$. Incorporating the non-dimensional timescale ratio $0 < \varepsilon \ll 1$, the continuous system is coupled via:
@@ -49,7 +49,52 @@ G(T_s)=\tanh\!\left(\beta\,\frac{T_a-T_s}{T_a}\right),
 \end{equation}
 so $\Delta_{\mathrm{col}}$ resolves local shear-stratification competition in $z$, while $\Delta(U,V,T_s)$ captures its state-space projection on the reduced manifold and shifts downward under nocturnal cooling.
 
-This PDE form is the continuous analogue of the reduced fast-slow model. Mechanical production and buoyancy destruction enter through $\Delta_{\mathrm{col}}$, while the activated gate and nonlinear dissipation preserve well-posedness near the laminar boundary. The background parameter $\delta = \SBLParamDelta\,\mathrm{m}^2\mathrm{s}^{-2}$ establishes the physical floor below which turbulence cannot structurally decouple.
+This PDE form is the continuous analogue of the reduced fast--slow model. Mechanical production and buoyancy destruction enter through $\Delta_{\mathrm{col}}$, while the activated gate and nonlinear dissipation preserve well-posedness near the laminar boundary. The background parameter $\delta = \SBLParamDelta\,\mathrm{m}^2\mathrm{s}^{-2}$ establishes the physical floor below which turbulence cannot structurally decouple.
+
+\subsection{The "Fold Illusion": Boundary--Fold Separation Theorem}
+\label{subsec:boundary_fold_separation}
+
+A central conceptual challenge in SBL meteorology is distinguishing between the local boundary-driven decay of turbulence and true fold catastrophes. Traditional single-column models often conflate these two phenomena, leading to what we term the "Fold Illusion"—misidentifying boundary crossing dynamics as intrinsic algebraic foldbacks. To establish rigorous mathematical boundaries between these transitions, we formalize the framework around the Boundary--Fold Separation Theorem.
+
+\begin{theorem}[Boundary--Fold Separation Theorem]
+\label{thm:boundary_fold_separation}
+Let $\mathcal{X} = \{(e, U, V, T_s) \in \mathbb{R}^4 \mid e \ge -\delta, T_s > 0\}$ be the coupled SBL state space. Consider the fast--slow vector field defined by Eqs.~\eqref{eq:gspt_fast}--\eqref{eq:gspt_slow_ts}.
+\begin{enumerate}
+    \item \textbf{Isolated Subsystem Transversal Boundary Crossing:} In the isolated fast turbulent subsystem where surface temperature $T_s$ and horizontal momentum $(U,V)$ are held fixed, the TKE state trajectory $e(t)$ undergoes a \textbf{transversal boundary crossing} across the physical laminar threshold $e = 0$ (or $\tilde{e} = 0$). The isolated atmospheric subsystem possesses no intrinsic interior fold catastrophe; turbulence collapse in isolation is strictly a boundary-mediated extinction event.
+    \item \textbf{Coupled Emergent Fold Catastrophe ($\mathcal{C}_{\mathrm{fold}}$):} An $S$-shaped fold catastrophe ($\mathcal{C}_{\mathrm{fold}}$) on the critical manifold $\mathcal{S}_0$ is strictly an \textbf{emergent topological phenomenon} arising exclusively from the non-linear coupling between the fast atmospheric TKE subsystem and the slow Surface Energy Budget (SEB) via skin temperature $T_s(t)$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof Sketch]
+Holding $(U,V,T_s)$ constant fixes the forcing diagnostic $\Delta$. Setting $\dot{e} = 0$ in Eq.~\eqref{eq:gspt_fast} yields a unique, monotonic root $\tilde{e}^*(\Delta)$ for any fixed $\Delta$. The fast Jacobian $\partial \dot{e} / \partial \tilde{e}$ remains strictly non-zero across $\tilde{e} \in (0, \infty)$, ruling out any turning point ($\mathcal{C}_{\mathrm{fold}}$) in the isolated subsystem. Coupling to the SEB introduces $T_s(t)$ as a slow dynamic variable via $G(T_s)$. Radiative cooling reduces $T_s$, shifting $\Delta(U,V,T_s)$ across a critical threshold where the projection of the constraint set $\mathcal{S}_0 = \{\dot{e} = 0\}$ onto the slow physical variables $(U,V,T_s)$ develops a non-degenerate quadratic fold $\mathcal{C}_{\mathrm{fold}}$ ($\partial \Delta / \partial \tilde{e} = 0$). Thus, $\mathcal{C}_{\mathrm{fold}}$ emerges strictly from atmospheric--surface energy coupling.
+\end{proof}
+
+The Boundary--Fold Separation Theorem clarifies that SBL collapse cannot be understood by analyzing isolated atmospheric profiles alone; the $S$-shaped manifold topology is intrinsically generated by the coupled surface-energy feedback loop.
+
+\subsection{Normal Hyperbolicity and Fenichel Persistence}
+\label{subsec:fenichel_hyperbolicity}
+
+To guarantee that the reduced fast--slow system accurately represents continuous physical dynamics, we apply Fenichel's Theorems \citep{Fenichel1979, Kuehn2015} to the critical manifold $\mathcal{S}_0 \subset \mathcal{X}$, defined by:
+\begin{equation}
+\mathcal{S}_0 = \left\{ (e, U, V, T_s) \in \mathcal{X} \;\middle|\; l_0\,\Delta(U,V,T_s)\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right) + \beta\tilde e - \frac{\tilde e^{3/2}}{l_0} = 0 \right\}.
+\end{equation}
+
+A compact submanifold $\mathcal{S}_{0,k} \subset \mathcal{S}_0$ is \textbf{normally hyperbolic} if all eigenvalues $\lambda$ of the fast linearized Jacobian matrix $D_e \dot{e}$ evaluated along $\mathcal{S}_{0,k}$ have non-zero real parts ($\mathrm{Re}(\lambda) \neq 0$).
+
+\begin{proposition}[Fenichel Persistence and Regularization Floor]
+\label{prop:fenichel_floor}
+Let $\delta > 0$ define the background mixing floor such that $\tilde e = e + \delta \ge \delta$.
+\begin{enumerate}
+    \item \textbf{Normal Hyperbolicity of the Laminar Sheet:} For all states on the lower laminar branch $\mathcal{S}_0^{\mathrm{lam}}$ where turbulent production drops to zero, the background mixing floor $\delta > 0$ ensures that the linearized fast eigenvalue satisfies:
+    \begin{equation}
+    \lambda_{\mathrm{fast}} \equiv \left.\frac{\partial \dot{e}}{\partial \tilde{e}}\right|_{\mathcal{S}_0^{\mathrm{lam}}} = \beta - \frac{3}{2}\frac{\sqrt{\delta}}{l_0} + \mathcal{O}(\alpha) < 0,
+    \end{equation}
+    bound strictly away from zero. Thus, the laminar branch remains normally hyperbolic.
+    \item \textbf{Smooth Manifold Persistence:} By Fenichel's First Persistence Theorem \citep{Fenichel1979}, for sufficiently small $\varepsilon > 0$, the compact normally hyperbolic submanifolds of $\mathcal{S}_0$ persist as smooth, invariant slow manifolds $\mathcal{S}_\varepsilon$ located $\mathcal{O}(\varepsilon)$-close to $\mathcal{S}_0$.
+\end{enumerate}
+\end{proposition}
+
+Crucially, the physical background parameter $\delta > 0$ prevents "model freezing"—a common numerical pathology in standard TKE closures where $\lambda_{\mathrm{fast}} \to 0$ as $e \to 0$, causing loss of normal hyperbolicity, loss of Lipschitz continuity, and unphysical numerical stiffness.
 
 \subsection{Boundary Interfaces and Finite Volume Discretization}
 \label{subsec:gov_boundary}

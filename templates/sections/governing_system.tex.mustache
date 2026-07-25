@@ -1,31 +1,44 @@
-\subsection{Governing System}
+\subsection{Governing System and Parameter Anchoring}
 \label{subsec:governing_system_unified}
 
-We model the nocturnal stable boundary layer as a four-dimensional fast-slow system on
+We model the nocturnal stable boundary layer as a four-dimensional ($4\text{D}$) fast--slow dynamical system defined on the physical state space
 \begin{equation}
-\mathcal{X} = \left\{(e,U,V,T_s) \in \mathbb{R}^4 \mid e \ge -\delta,\; T_s > 0\right\}.
+\mathcal{X} = \left\{(e,U,V,T_s) \in \mathbb{R}^4 \mid e \ge -\delta,\; T_s > 0\right\},
 \end{equation}
-The state variables are turbulent kinetic energy coordinate $e$, horizontal wind components $(U,V)$, and skin temperature $T_s$.
+where $e$ represents the turbulent kinetic energy (TKE) coordinate, $(U,V)$ denote the horizontal velocity components of the nocturnal boundary layer, and $T_s$ is the skin (surface) temperature.
 
-Define the shifted coordinate $\tilde e \coloneqq e+\delta \ge 0$ and the forcing diagnostic
+To ensure non-singular behavior near the laminar limit $e \to 0$, we introduce the shifted TKE coordinate $\tilde e \coloneqq e + \delta \ge 0$, where $\delta > 0$ defines a physical background mixing floor that guarantees normal hyperbolicity across laminar regimes. The competition between mechanical shear production and thermodynamic buoyant destruction is summarized by the forcing diagnostic
 \begin{equation}
-\Delta(U,V,T_s) \coloneqq \eta\,\gamma\,(U^2+V^2)-K\,G(T_s).
+\Delta(U,V,T_s) \coloneqq \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
 \end{equation}
-We bound the thermodynamic stability response with
+Here, the thermodynamic stability response function is bounded via
 \begin{equation}
-G(T_s) \coloneqq \tanh\!\left(\beta\,\frac{T_a-T_s}{T_a}\right),
+G(T_s) \coloneqq \tanh\!\left(\beta_T\,\frac{T_a-T_s}{T_a}\right),
 \end{equation}
-so nocturnal cooling translates the critical paraboloid downward along the TKE axis instead of generating an unbounded interior turning point.
-To bridge the reduced ODE representation with the distributed SCM closure, we identify the effective drag coefficient as
+ensuring that strong nocturnal surface cooling shifts the fast critical surface downward along the TKE axis without producing unphysical interior singularities. To link the reduced state vector to vertical atmospheric structure, the effective surface drag parameter is specified as
 \begin{equation}
-\gamma \equiv \frac{C_D\sqrt{U^2+V^2}}{h_{\mathrm{eff}}}.
+\gamma \equiv \frac{C_D\sqrt{U^2+V^2}}{h_{\mathrm{eff}}},
 \end{equation}
-The governing ODEs are
+where $h_{\mathrm{eff}}$ is the state-dependent emergent boundary layer scale height.
+
+The coupled fast--slow governing equations are given by:
 \begin{align}
-\varepsilon \frac{de}{dt} &= l_0\,\Delta(U,V,T_s)\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right) + \beta\tilde e - \frac{\tilde e^{3/2}}{l_0}, \label{eq:gspt_fast}\\
+\varepsilon \frac{de}{dt} &= l_0\,\Delta(U,V,T_s)\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right) + \sigma_e\tilde e - \frac{\tilde e^{3/2}}{l_0}, \label{eq:gspt_fast}\\
 \frac{dU}{dt} &= f(V-V_g) - \gamma\sqrt{\tilde e}\,U, \label{eq:gspt_slow_u}\\
 \frac{dV}{dt} &= -f(U-U_g) - \gamma\sqrt{\tilde e}\,V, \label{eq:gspt_slow_v}\\
 \frac{dT_s}{dt} &= \frac{1}{C_s}\left[R_{\downarrow} - \sigma T_s^4 - \rho c_p C_H\sqrt{U^2+V^2+\delta_u}\,(T_s-T_a) - \frac{K_g}{d_g}(T_s-T_g)\right]. \label{eq:gspt_slow_ts}
 \end{align}
 
-Here $\varepsilon \ll 1$ separates fast turbulence relaxation from slow momentum and thermodynamic evolution, $\delta>0$ sets the admissible lower boundary, $\alpha>0$ is the smooth activation scale near $\tilde e=0$, and $\beta$ controls nonlinear turbulence self-amplification in the fast subsystem.
+Here $\varepsilon \ll 1$ is the time-scale separation parameter, $\alpha > 0$ is a smooth $C^\infty$ activation length scale controlling the onset of turbulent transport near $\tilde e = 0$, and $\sigma_e$ parameterizes linear self-amplification within the fast subsystem.
+
+\begin{remark}[Physical Anchoring of Parameter $K$]
+To maintain dimensional consistency across the mechanical and thermodynamic forcing terms, $K$ is defined strictly as a \textbf{buoyant destruction acceleration scale} with physical units of $\si{\meter\per\second\squared}$ ($\text{m s}^{-2}$). This definition resolves prior dimensional ambiguities by aligning $K$ directly with the buoyant acceleration scale $g \Delta \theta / \theta_0$ in turbulent flux equations.
+\end{remark}
+
+\begin{remark}[$l_0$ as a Codimension-One Bifurcation Parameter]
+The master mixing length $l_0 > 0$ does not merely scale the magnitude of eddy diffusivity. In this GSPT framework, $l_0$ acts as a \textbf{codimension-one bifurcation parameter}. Deforming $l_0$ alters the topology of the fast critical manifold $\mathcal{S}_0$, shifting the quadratic fold point $e_{\mathrm{fold}}$ and dictating the precise critical TKE threshold at which shear production can no longer sustain turbulence against buoyancy loss.
+\end{remark}
+
+\begin{remark}[Structural Necessity of Kolmogorov Dissipation]
+The formulation of non-linear turbulent dissipation as a Kolmogorov scale term ($\tilde e^{3/2}/l_0$) in Eq.~\eqref{eq:gspt_fast} is a fundamental structural requirement. Linearized dissipation mechanisms ($\sim \tilde e$) yield purely monotonic equilibrium manifolds, whereas the non-linear $\tilde e^{3/2}$ scaling introduces the essential quadratic-cubic balance required to form a genuine turning point (fold catastrophe $\mathcal{C}_{\mathrm{fold}}$) on the fast critical surface.
+\end{remark}

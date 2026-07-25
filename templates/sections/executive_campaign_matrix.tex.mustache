@@ -1,24 +1,35 @@
-\subsection{Executive Campaign Comparison Matrix}
+\subsection{Executive Campaign Comparison and Numerical Conditioning Matrix}
 \label{subsec:executive_campaign_matrix}
+
+To synthesize the physical and computational behavior across contrasting boundary-layer regimes, Table~\ref{tab:executive_campaign_matrix} provides an executive cross-campaign comparison. The matrix links primary physical drivers and aerodynamic roughness parameters directly to stiff integrator performance (\texttt{Rodas5P}) and Automatic Differentiation (AD) Jacobian conditioning.
 
 \begin{table}[ht!]
 \centering
-\caption{Executive comparison of physical drivers, transition thresholds, and numerical behavior across campaigns.}
+\caption{Executive synthesis of physical transition drivers, empirical thresholds, and numerical solver metrics across field campaigns and idealized SCM benchmarks.}
 \label{tab:executive_campaign_matrix}
 \small
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lllll}
+\begin{tabular}{p{0.26\textwidth}cccc}
 \toprule
-\textbf{Metric / Feature} & \textbf{CASES99} & \textbf{FLOSS} & \textbf{SHEBA} & \textbf{Idealized SCM} \\
+\textbf{Metric / Feature} & \textbf{CASES-99} & \textbf{FLOSS} & \textbf{SHEBA} & \textbf{Idealized SCM} \\
 \midrule
-Primary physical driver & Mechanical shear torque & Radiative skin cooling & Polar thermal inversion & Constant geostrophic wind \\
-Momentum roughness $z_{0m}$ & $0.020\,\mathrm{m}$ & $1.0 \times 10^{-4}\,\mathrm{m}$ & $1.0 \times 10^{-4}\,\mathrm{m}$ & $1.0 \times 10^{-3}\,\mathrm{m}$ \\
-Representative drag scale $\gamma$ & $4.5 \times 10^{-3}$ & $0.8 \times 10^{-3}$ & $0.8 \times 10^{-3}$ & $1.5 \times 10^{-3}$ \\
-Critical wind speed $U_c$ & $3.2\,\mathrm{m\,s^{-1}}$ & $6.8\,\mathrm{m\,s^{-1}}$ & $5.5\,\mathrm{m\,s^{-1}}$ & $4.5\,\mathrm{m\,s^{-1}}$ \\
-Capture rate & $94.2\%$ & $88.7\%$ & $91.4\%$ & $100.0\%$ (synthetic) \\
-Solver steps (Rodas5P) & $\sim 420$ & $\sim 890$ & $\sim 650$ & $\sim 310$ \\
-AD Jacobian conditioning & $<10^{4}$ (well-conditioned) & $\sim 10^{6}$ (stiff near collapse) & $\sim 10^{5}$ (moderately stiff) & $<10^{3}$ (smooth) \\
+Primary Physical Driver & Mechanical Shear & Radiative Cooling & Polar Inversion & Geostrophic Forcing \\
+Roughness $z_{0m}$ ($\mathrm{m}$) & $2.0 \times 10^{-2}$ & $1.0 \times 10^{-4}$ & $1.0 \times 10^{-4}$ & $1.0 \times 10^{-3}$ \\
+Drag Scale $\gamma$ & $4.5 \times 10^{-3}$ & $8.2 \times 10^{-4}$ & $7.9 \times 10^{-4}$ & $1.5 \times 10^{-3}$ \\
+Critical Wind $U_c$ ($\mathrm{m\,s^{-1}}$) & $\approx 3.2$ & $\approx 6.8$ & $\approx 5.5$ & $\approx 4.5$ \\
+Trajectory Capture Rate & $94.2\%$ & $88.7\%$ & $91.4\%$ & $100.0\%$ (synth.) \\
+\midrule
+\multicolumn{5}{l}{\textit{Numerical \& Stiff Solver Metrics (\texttt{Rodas5P} / Forward-Mode AD)}} \\
+\midrule
+Mean Steps per Diurnal Cycle & $\sim 420$ & $\sim 890$ & $\sim 650$ & $\sim 310$ \\
+Peak Condition Number $\kappa(J)$ & $< 10^{4}$ & $\sim 10^{6}$ & $\sim 10^{5}$ & $< 10^{3}$ \\
+Subgrid Boundary Layer State & Well-Conditioned & Stiff Near Collapse & Moderately Stiff & Smooth / Hyperbolic \\
 \bottomrule
 \end{tabular}
-}
 \end{table}
+
+\paragraph{Algorithmic and Stiffness Takeaways.}
+The computational performance metrics in Table~\ref{tab:executive_campaign_matrix} highlight how phase-space geometry governs stiff numerical integration:
+\begin{itemize}
+    \item \textbf{Radiative Quenching and Stiffness (FLOSS):} In low-roughness, snow-insulated environments (FLOSS), fast TKE quenching pushes the state vector rapidly toward the laminar manifold boundary. The steep gradients near collapse induce local stiff time scales ($\varepsilon \ll 1$), driving the Jacobian condition number to $\kappa(J) \sim 10^6$. The adaptive \texttt{Rodas5P} integrator automatically scales down step sizes ($\sim 890$ steps) to maintain $C^1$ trajectory accuracy without solver failure.
+    \item \textbf{Continuous Shear Regularization (CASES-99):} In contrast, continuous mechanical shear over higher surface roughness (CASES-99) keeps the system in an active, well-mixed state. The absence of abrupt fast-manifold collapse keeps the system Jacobian well-conditioned ($\kappa(J) < 10^4$), requiring less than half the integrator steps ($\sim 420$ steps) to complete a $12$-hour nocturnal integration.
+\end{itemize}

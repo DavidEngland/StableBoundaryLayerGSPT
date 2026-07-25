@@ -1,38 +1,38 @@
-\section{Mathematical Formulation, Regularization, and Thermal Shift}
+\section{Mathematical Formulation, Regularization, and Fast--Slow Geometry}
 \label{sec:mathematical_formulation}
 
 This section formalizes the reduced Geometric Singular Perturbation Theory (GSPT) description of the Stable Boundary Layer (SBL). The formulation separates the rapid subgrid-scale turbulent adjustment from the slower surface-energy and rotational evolution, establishing a low-dimensional geometric framework before extending the analysis to the fully distributed multi-layer column model.
 
-\subsection{Fast-Slow Structure and Dimensional Scaling}
+\subsection{Fast--Slow Structure and Dimensional Scaling}
 \label{subsec:mathematical_fast_slow}
 
-The core four-dimensional prognostic system for the state vector $\mathbf{x} = (U, V, T_s, e)^T$ is formulated as:
+The core four-dimensional ($4\text{D}$) prognostic system for the state vector $\mathbf{x} = (U, V, T_s, e)^T \in \mathcal{X}$ is formulated as:
 \begin{equation}
 \begin{aligned}
-\frac{dU}{dt} &= f(V - V_g) - C_D \frac{\sqrt{U^2+V^2}}{h} U \sqrt{e+\delta}, \\
-\frac{dV}{dt} &= -f(U - U_g) - C_D \frac{\sqrt{U^2+V^2}}{h} V \sqrt{e+\delta}, \\
-\frac{dT_s}{dt} &= \frac{1}{C_{\text{skin}}}\left(R_{\downarrow} - \sigma_{\text{SB}}T_s^4 - \lambda\frac{T_s - T_{\text{deep}}}{d_{\text{soil}}}
+\frac{\mathrm{d}U}{\mathrm{d}t} &= f(V - V_g) - C_D \frac{\sqrt{U^2+V^2}}{h} U \sqrt{e+\delta}, \\
+\frac{\mathrm{d}V}{\mathrm{d}t} &= -f(U - U_g) - C_D \frac{\sqrt{U^2+V^2}}{h} V \sqrt{e+\delta}, \\
+\frac{\mathrm{d}T_s}{\mathrm{d}t} &= \frac{1}{C_{\text{skin}}}\left(R_{\downarrow} - \sigma_{\text{SB}}T_s^4 - \lambda\frac{T_s - T_{\text{deep}}}{d_{\text{soil}}}
  - \rho c_p C_H\sqrt{U^2+V^2+\delta_u}\,(T_s - T_a)\right), \\
-\varepsilon\frac{de}{dt} &= l_0\Delta(U,V,T_s)\left(\frac{e+\delta}{\sqrt{e+\delta}+\alpha}\right) + \beta(e+\delta) - \frac{(e+\delta)^{3/2}}{l_0},
+\varepsilon\frac{\mathrm{d}e}{\mathrm{d}t} &= l_0\Delta(U,V,T_s)\left(\frac{e+\delta}{\sqrt{e+\delta}+\alpha}\right) + \beta(e+\delta) - \frac{(e+\delta)^{3/2}}{l_0},
 \end{aligned}
 \label{eq:mathematical_full_system}
 \end{equation}
-with
+with the forcing diagnostic
 \begin{equation}
-\Delta(U,V,T_s)=\eta\gamma\left(U^2+V^2\right)-K\,G(T_s),
+\Delta(U,V,T_s) = \eta\gamma\left(U^2+V^2\right) - K\,G(T_s),
 \end{equation}
-and the bounded stability response
+and the bounded thermodynamic response
 \begin{equation}
-G(T_s)=\tanh\!\left(\beta\frac{T_a-T_s}{T_a}\right).
+G(T_s) = \tanh\!\left(\beta_T\frac{T_a-T_s}{T_a}\right).
 \end{equation}
 
-Here, $f$ is the Coriolis frequency, $h$ is the bulk boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant acceleration scale. The background minimum TKE floor is represented by $\delta > 0$, ensuring the fast subsystem possesses a physical boundary limit at $e = -\delta$. The bounded hyperbolic tangent response prevents runaway buoyancy amplification under strong surface inversions, and the momentum and thermal transport terms scale with $\sqrt{e+\delta}$ to maintain asymptotic consistency with classical mixing-length theory.
+Here, $f$ is the Coriolis frequency, $h$ is the boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant destruction acceleration scale, strictly anchored with units of $\si{\meter\per\second\squared}$ ($\text{m s}^{-2}$). The background mixing floor parameter $\delta > 0$ guarantees that the fast subsystem maintains normal hyperbolicity and Lipschitz regularity across the physical boundary limit $e = -\delta$.
 
-\begin{remark}
-The activated production factor $\frac{e+\delta}{\sqrt{e+\delta}+\alpha}$ and the Kolmogorov-type dissipation term $-(e+\delta)^{3/2}/l_0$ remove the non-Lipschitz behavior at the laminar boundary while preserving the fast-slow geometric structure responsible for the folded critical manifold. In the singular limit, the reduced branch structure is organized by fold and transcritical sets rather than by a single linear threshold.
+\begin{remark}[Mixing Length $l_0$ as a Codimension-One Bifurcation Parameter]
+The master mixing length $l_0 > 0$ acts as a \textbf{codimension-one bifurcation parameter}. Deforming $l_0$ alters the ambient topology of the critical manifold $\mathcal{S}_0$, directly dictating the energy level $e_{\mathrm{fold}} = \frac{1}{4}\beta^2 l_0^2 - \delta$ where fast turbulent collapse occurs. Furthermore, the Kolmogorov non-linear dissipation term ($-(e+\delta)^{3/2}/l_0$) is a structural requirement that introduces the necessary quadratic-cubic balance to generate a genuine turning point ($\mathcal{C}_{\mathrm{fold}}$) in the fast subsystem.
 \end{remark}
 
-In the multi-layer SCM closure, the constant scale height $h$ is replaced by a hybrid effective scale height $h_{\text{eff}}$ that combines mechanical and buoyancy limits:
+In the multi-layer single-column model (SCM) closure, the static scale height $h$ is replaced by an adaptive emergent scale height $h_{\text{eff}}$ that combines mechanical and buoyancy limits:
 \begin{equation}
 h_{\text{eff}}^{\star} = \min\!\left(
  c_1 \frac{\sqrt{u_*^2 + \delta_u^2}}{|f|},
@@ -42,42 +42,40 @@ h_{\text{eff}}^{\star} = \min\!\left(
 h_{\text{eff}} = \operatorname{clamp}\!\left(h_{\mathrm{eff}}^{\star}, h_{\min}, h_{\max}\right),
 \label{eq:heff_emergent}
 \end{equation}
-where $N^2 = \frac{g}{\theta_0}\frac{\partial\theta}{\partial z}$ is the local squared Brunt--Väisälä frequency, $\delta$ represents the background TKE floor parameter, and $\delta_u$ is a small velocity-scale regularizer ensuring well-posed mechanical limits as $u_* \to 0$. This dual-limit scale height incorporates empirical mechanical and buoyancy scaling regimes documented during landmark SBL field campaigns, including CASES-99 \citep{Poulos2002, Sun2002} over midlatitude grasslands and SHEBA \citep{Uttal2002, Grachev2005} over Arctic sea ice.
+where $N^2 = \frac{g}{\theta_0}\frac{\partial\theta}{\partial z}$ is the local squared Brunt--Väisälä frequency, and $\delta_u$ is a small velocity-scale regularizer ensuring well-posed mechanical limits as $u_* \to 0$. By adapting dynamically to local state space, $h_{\text{eff}}$ prevents the runaway surface cooling typical of static local closures under strongly stable conditions \citep{Derbyshire1990, holtslag1993}. This dual-limit scale height incorporates empirical mechanical and buoyancy scaling documented during landmark SBL field campaigns, including CASES-99 \citep{poulos2002cases99} over midlatitude grasslands and SHEBA \citep{grachev2005} over Arctic sea ice.
 
-\subsection{Geometric Analysis: Boundary Crossings vs. Thermodynamic Folds}
+\subsection{Geometric Separation: Boundary Crossings vs. Thermodynamic Folds}
 \label{subsec:geometric_consequences}
 
-GSPT distinguishes two physically distinct transition mechanisms that are frequently conflated in the boundary-layer literature:
+GSPT formally distinguishes two physically distinct transition mechanisms that are frequently conflated in boundary-layer meteorology:
 \begin{itemize}
-\item \textbf{Boundary Transcritical Recovery:} At $\Delta=0$, the laminar boundary branch $\tilde e=0$ exchanges stability with the threshold branch. For $\Delta>0$, the boundary branch becomes repelling and weak turbulence is regenerated; for $\Delta<0$, it is attracting and supports collapse episodes.
-\item \textbf{Fold Catastrophe ($\mathcal{C}_{\text{fold}}$):} Fast collapse from the active branch is governed by loss of normal hyperbolicity in the fast subsystem, not by a slow surface-energy-budget (SEB) injectivity condition. Fold points satisfy:
+\item \textbf{Isolated Subsystem Transversal Boundary Crossing:} In the isolated fast atmospheric subsystem (holding $U, V, T_s$ fixed), the TKE state trajectory undergoes a deterministic \textbf{transversal boundary crossing} near $e = 0$. The isolated atmospheric subsystem possesses no interior fold catastrophe; collapse in isolation is strictly a boundary-mediated extinction event.
+\item \textbf{Emergent Fold Catastrophe ($\mathcal{C}_{\text{fold}}$):} Fast collapse from the active attracting sheet is an emergent phenomenon arising strictly when the fast atmospheric system is coupled to the non-linear Surface Energy Budget (SEB). Fold points on the coupled manifold satisfy:
 \begin{equation}
-F(q,\mathbf{y})=0, \qquad \partial_q F(q,\mathbf{y})=0,
+F(q,\mathbf{y}) = 0, \qquad \frac{\partial F}{\partial q}(q,\mathbf{y}) = 0,
 \end{equation}
-Here $\mathbf{y}=(U,V,T_s)$ denotes the slow-variable vector. With $q=\sqrt{e+\delta}$, the reduced fast operator is
+where $\mathbf{y} = (U,V,T_s)$ denotes the slow state vector. Expressed in shifted coordinates $q = \sqrt{e+\delta}$, eliminating $\Delta$ yields the topological fold invariants:
 \begin{equation}
-F(q,\mathbf{y})=q\left[l_0\Delta(\mathbf{y})+\beta q-q^2/l_0\right].
+q_{\mathrm{fold}} = \frac{\beta l_0}{2},\qquad
+e_{\mathrm{fold}} = \frac{\beta^2 l_0^2}{4} - \delta,\qquad
+\Delta_{\mathrm{fold}} = -\frac{\beta^2}{4}.
 \end{equation}
-Outside the $\mathcal{O}(\alpha)$ boundary layer, eliminating $\Delta$ yields the fold invariants:
-\begin{equation}
-q_{\mathrm{fold}}=\frac{\beta l_0}{2},\qquad
-e_{\mathrm{fold}}=\frac{\beta^2 l_0^2}{4}-\delta,\qquad
-\Delta_{\mathrm{fold}}=-\frac{\beta^2}{4}.
-\end{equation}
-Crossing this fold locus triggers rapid departure from the attracting active sheet and a jump to the laminar branch, mathematically reproducing the abrupt collapse of turbulent kinetic energy and the onset of turbulence intermittency documented in nocturnal and polar observations \citep{Banta2002, Grachev2005, VanDeWiel2012}.
+Crossing this fold locus triggers a rapid, $\mathcal{O}(\varepsilon^{-1})$ departure from the active sheet down to the laminar floor, mathematically capturing the abrupt collapse of TKE and the onset of turbulence intermittency observed in nocturnal and polar field campaigns \citep{grachev2005, vanDeWiel2017}.
 \end{itemize}
 
-\subsection{Tri-Height Observability Diagnostics}
+\subsection{Tri-Height Observability Diagnostics and Interface Convergence}
 \label{subsec:triheight_observability}
 
-To quantify how the emergent $h_{\text{eff}}$ modifies the vertical structure of the atmospheric column during these transitions, we diagnose three operational boundary heights from the SCM output:
+To quantify how the emergent scale height $h_{\text{eff}}$ modifies column vertical structure during regime transitions, we diagnose three operational boundary heights:
 \begin{equation}
 \begin{aligned}
-h_D &= \inf\left\{ z : D(z) < 0.05 \right\}, \\
-D(z) &= \frac{K_m(z)}{\max_{z} K_m(z)}, \\
-h_e &= \inf\left\{ z : e(z) < \epsilon_e \right\}, \\
+h_D &= \inf\left\{ z : \frac{K_m(z)}{\max_{z} K_m(z)} < 0.05 \right\}, \\
+h_e &= \inf\left\{ z : e(z) < \delta \right\}, \\
 h_{\partial e} &= \operatorname*{arg\,max}_{z}\left(-\frac{\partial e}{\partial z}\right).
 \end{aligned}
 \label{eq:triheight_diagnostics}
 \end{equation}
-These diagnostics identify the geometric decoupling interface, the energetic turbulent limit, and the inversion layer of maximum curvature, thereby providing complementary observables for comparison with multi-sensor profiling analyses from CASES-99 and SHEBA \citep{Poulos2002, Grachev2013}.
+
+These three heights track distinct physical mechanisms: $h_D$ identifies the geometric decoupling interface, $h_e$ marks the physical boundary of active turbulent mixing, and $h_{\partial e}$ pinpoints the layer of maximum shear-stratification curvature.
+
+During stable nocturnal transitions, tracking the joint evolution of $(h_D, h_e, h_{\partial e})$ reveals a key diagnostic property: as the system approaches collapse, these three independent heights collapse onto a single altitude, establishing a \textbf{triple-point interface convergence} ($h_D \approx h_e \approx h_{\partial e}$). This triple-point convergence serves as definitive physical and observational evidence of an emergent geometric capping inversion interface.
