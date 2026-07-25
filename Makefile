@@ -10,7 +10,7 @@
 		figure-fold-illusion figure-publication-suite paper-appendix-check paper-all archive-paper paper-stamped \
         stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba \
         stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic \
-        scm-run scm-plot scm-report scm-all scm-verify \
+		scm-run scm-plot scm-report scm-all scm-verify scm-verity \
         run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd \
 		compile-scm-reports sweep-two-layer-envelope check-all ci test clean
 
@@ -139,9 +139,10 @@ $(PARAMETER_MACRO_BUNDLE): scripts/assemble_manuscript.jl $(PARAMETER_SUMMARIES)
 generate-parameter-macros: $(PARAMETER_MACRO_BUNDLE)
 
 generate-parameter-macros-all:
-	$(MAKE) generate-parameter-macros DATASET=CASES99
-	$(MAKE) generate-parameter-macros DATASET=FLOSS
-	$(MAKE) generate-parameter-macros DATASET=SHEBA
+	$(MAKE) $(PARAMETER_SUMMARIES)
+	julia --project=. scripts/assemble_manuscript.jl --dataset CASES99 --write-parameter-macros-only
+	julia --project=. scripts/assemble_manuscript.jl --dataset FLOSS --write-parameter-macros-only
+	julia --project=. scripts/assemble_manuscript.jl --dataset SHEBA --write-parameter-macros-only
 
 check-parameter-drift: scripts/assemble_manuscript.jl $(PARAMETER_SUMMARIES)
 	julia --project=. scripts/assemble_manuscript.jl --dataset $(DATASET) --write-parameter-macros-only --check-parameter-drift

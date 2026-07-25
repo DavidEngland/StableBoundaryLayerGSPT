@@ -6,6 +6,7 @@ using Printf
 using Statistics
 import JLD2
 import Plots
+using Plots.PlotMeasures
 
 function usage()
     println("Usage: julia scripts/plot_triheight_hovmoller.jl --input <payload.jld2> [options]")
@@ -32,16 +33,16 @@ function parse_args(args::Vector{String})
             usage()
             exit(0)
         elseif a == "--input" && i < length(args)
-            cfg["input"] = args[i + 1]
+            cfg["input"] = args[i+1]
             i += 2
         elseif a == "--out" && i < length(args)
-            cfg["out"] = args[i + 1]
+            cfg["out"] = args[i+1]
             i += 2
         elseif a == "--field" && i < length(args)
-            cfg["field"] = lowercase(args[i + 1])
+            cfg["field"] = lowercase(args[i+1])
             i += 2
         elseif a == "--dpi" && i < length(args)
-            cfg["dpi"] = parse(Int, args[i + 1])
+            cfg["dpi"] = parse(Int, args[i+1])
             i += 2
         else
             error("Unknown or incomplete argument: $(a)")
@@ -72,11 +73,7 @@ end
 
 function sanitize_finite(arr; fallback::Float64=0.0)
     out = Float64.(arr)
-    @inbounds for i in eachindex(out)
-        if !isfinite(out[i])
-            out[i] = fallback
-        end
-    end
+    replace!(x -> isfinite(x) ? x : fallback, out)
     return out
 end
 
@@ -84,18 +81,16 @@ function clims_safe(arr; pad::Float64=1e-12)
     flat = vec(Float64.(arr))
     vals = filter(isfinite, flat)
     isempty(vals) && return (0.0, 1.0)
-    lo = minimum(vals)
-    hi = maximum(vals)
+    lo, hi = extrema(vals)
     hi <= lo && return (lo - pad, hi + pad)
     return (lo, hi)
 end
 
-function clims_percentile(arr; p_lo::Float64=0.01, p_hi::Float64=0.995, pad::Float64=1e-12)
+function clims_percentile(arr; p_lo::Float64=0.001, p_hi::Float64=0.999, pad::Float64=1e-12)
     flat = vec(Float64.(arr))
     vals = filter(isfinite, flat)
     isempty(vals) && return (0.0, 1.0)
-    lo = quantile(vals, p_lo)
-    hi = quantile(vals, p_hi)
+    lo, hi = quantile(vals, (p_lo, p_hi))
     if hi <= lo
         return clims_safe(vals; pad=pad)
     end
@@ -113,9 +108,9 @@ function align_time_z(raw_mat::AbstractMatrix{<:Real}, z_len::Int)
 end
 
 function overlay_triheight!(plt, t_hours, hD, hE, hG)
-    Plots.plot!(plt, t_hours, hD; linewidth=2.3, linestyle=:dash, color=:gold3, alpha=0.95, label="h_D")
-    Plots.plot!(plt, t_hours, hE; linewidth=2.3, linestyle=:dash, color=:deepskyblue3, alpha=0.95, label="h_e")
-    Plots.plot!(plt, t_hours, hG; linewidth=2.3, linestyle=:dash, color=:orangered3, alpha=0.95, label="h_∂e")
+    Plots.plot!(plt, t_hours, hD; linewidth=2.2, linestyle=:dash, color=:gold3, alpha=0.95, label="h_D (Decoupling)")
+    Plots.plot!(plt, t_hours, hE; linewidth=2.2, linestyle=:dash, color=:deepskyblue3, alpha=0.95, label="h_e (Energy Floor)")
+    Plots.plot!(plt, t_hours, hG; linewidth=2.2, linestyle=:dash, color=:orangered3, alpha=0.95, label="h_∂e (Max Grad)")
 end
 
 function main(args::Vector{String})
@@ -124,6 +119,8 @@ function main(args::Vector{String})
     data = JLD2.load(cfg["input"])
     ts = data["time_series"]
     hov = data["hovmoller"]
+
+    isempty(ts) && error("`time_series` dataset in payload is empty")
 
     hD = maybe_getkey(ts[1], :h_decoupling)
     hE = maybe_getkey(ts[1], :h_energy_floor)
@@ -149,9 +146,10 @@ function main(args::Vector{String})
         zf = collect(Float64, getkey(hov, :z_faces))
         raw_mat = sanitize_finite(getkey(hov, :e_xi))
 
-        # Prefer face-centered heights when dimensions match; otherwise fall back to centers.
-        z_faces_mid = zf[2:(end - 1)]
+        # e_xi is stored on interior faces (N-1), matching z_faces[2:end-1].
+        z_faces_mid = zf[2:(end-1)]
         zc = collect(Float64, getkey(hov, :z_centers))
+
         if (length(z_faces_mid) == size(raw_mat, 1)) || (length(z_faces_mid) == size(raw_mat, 2))
             z = z_faces_mid
             mat = align_time_z(raw_mat, length(z))
@@ -164,22 +162,22 @@ function main(args::Vector{String})
 
         # Plot velocity-scale proxy q=sqrt(e_xi) to compress multi-order dynamic range.
         mat = sqrt.(max.(mat, 1.0e-12))
-        title = "Tri-Height Diagnostic Hovmoller: q = sqrt(e_xi)"
-        cbar = "q (m s^-1)"
+        title = "Tri-Height Diagnostic Hovmoller: q = √(e_ξ)"
+        cbar = "q (m s⁻¹)"
         cmap = Plots.cgrad([:midnightblue, :royalblue3, :deepskyblue2, :gold1])
     elseif field == "theta"
         z = collect(Float64, getkey(hov, :z_centers))
         raw_mat = sanitize_finite(getkey(hov, :theta))
         mat = align_time_z(raw_mat, length(z))
-        title = "Tri-Height Diagnostic Hovmoller: theta(z,t)"
-        cbar = "theta (K)"
+        title = "Tri-Height Diagnostic Hovmoller: θ(z,t)"
+        cbar = "θ (K)"
         cmap = :thermal
     else
         z = collect(Float64, getkey(hov, :z_centers))
         raw_mat = sanitize_finite(getkey(hov, :wind))
         mat = align_time_z(raw_mat, length(z))
         title = "Tri-Height Diagnostic Hovmoller: |V|(z,t)"
-        cbar = "|V| (m s^-1)"
+        cbar = "|V| (m s⁻¹)"
         cmap = :viridis
     end
 
@@ -188,7 +186,7 @@ function main(args::Vector{String})
     plt = Plots.heatmap(
         hov_t,
         z,
-        permutedims(mat),
+        permutedims(mat);
         xlabel="Time (h)",
         ylabel="z (m)",
         title=title,
@@ -198,14 +196,16 @@ function main(args::Vector{String})
         legend=:topright,
         dpi=Int(cfg["dpi"]),
         size=(1200, 700),
-        right_margin=7Plots.mm,
+        right_margin=10mm,
+        left_margin=8mm,
+        bottom_margin=6mm,
     )
 
     overlay_triheight!(plt, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient)
 
     mkpath(dirname(String(cfg["out"])))
     Plots.savefig(plt, String(cfg["out"]))
-    println("saved: $(cfg["out"])")
+    println("Saved Hovmoller plot to: $(cfg["out"])")
 end
 
 main(ARGS)

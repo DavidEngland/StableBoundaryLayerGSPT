@@ -33,7 +33,9 @@ function _get_face_diffusivity_buffers(p, T)
             end
             return Km, Kh
         end
-        error("Performance Error: Workspace buffers are typed as $(eltype(ws.Km)) but RHS requested $(T). Provide typed caches (workspace.Km_by_type/workspace.Kh_by_type) or preallocate AD-compatible buffers to avoid per-call allocations.")
+        # Backward-compatible fallback for legacy workspace structs that do not
+        # expose typed caches. This preserves correctness for AD Jacobians.
+        return Vector{T}(undef, length(ws.Km)), Vector{T}(undef, length(ws.Kh))
     elseif hasproperty(p, :K_m_faces) && hasproperty(p, :K_h_faces)
         if eltype(p.K_m_faces) === T && eltype(p.K_h_faces) === T
             return p.K_m_faces, p.K_h_faces
@@ -47,7 +49,8 @@ function _get_face_diffusivity_buffers(p, T)
             end
             return Km, Kh
         end
-        error("Performance Error: Face buffers are typed as $(eltype(p.K_m_faces)) but RHS requested $(T). Provide typed caches (K_m_faces_by_type/K_h_faces_by_type) or preallocate AD-compatible buffers to avoid per-call allocations.")
+        # Backward-compatible fallback for legacy parameter structs.
+        return Vector{T}(undef, length(p.K_m_faces)), Vector{T}(undef, length(p.K_h_faces))
     else
         error("Performance Error: No preallocated face diffusivity buffers found in parameter struct 'p'. Please initialize p.workspace.Km and p.workspace.Kh.")
     end
