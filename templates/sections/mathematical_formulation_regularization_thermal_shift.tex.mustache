@@ -6,25 +6,12 @@ This section formalizes the reduced Geometric Singular Perturbation Theory (GSPT
 \subsection{Fast--Slow Structure and Dimensional Scaling}
 \label{subsec:mathematical_fast_slow}
 
-The core four-dimensional ($4\text{D}$) prognostic system for the state vector $\mathbf{x} = (U, V, T_s, e)^T \in \mathcal{X}$ is formulated as:
+The core four-dimensional ($4\text{D}$) prognostic system for the state vector $\mathbf{x} = (U, V, T_s, e)^T \in \mathcal{X}$ is taken from the canonical governing formulation in Subsection~\ref{subsec:governing_system_unified}. For compactness, we denote it in vector form as
 \begin{equation}
-\begin{aligned}
-\frac{\mathrm{d}U}{\mathrm{d}t} &= f(V - V_g) - C_D \frac{\sqrt{U^2+V^2}}{h} U \sqrt{e+\delta}, \\
-\frac{\mathrm{d}V}{\mathrm{d}t} &= -f(U - U_g) - C_D \frac{\sqrt{U^2+V^2}}{h} V \sqrt{e+\delta}, \\
-\frac{\mathrm{d}T_s}{\mathrm{d}t} &= \frac{1}{C_{\text{skin}}}\left(R_{\downarrow} - \sigma_{\text{SB}}T_s^4 - \lambda\frac{T_s - T_{\text{deep}}}{d_{\text{soil}}}
- - \rho c_p C_H\sqrt{U^2+V^2+\delta_u}\,(T_s - T_a)\right), \\
-\varepsilon\frac{\mathrm{d}e}{\mathrm{d}t} &= l_0\Delta(U,V,T_s)\left(\frac{e+\delta}{\sqrt{e+\delta}+\alpha}\right) + \beta(e+\delta) - \frac{(e+\delta)^{3/2}}{l_0},
-\end{aligned}
+\dot{\mathbf{x}} = \mathbf{F}_{\varepsilon}(\mathbf{x}),
 \label{eq:mathematical_full_system}
 \end{equation}
-with the forcing diagnostic
-\begin{equation}
-\Delta(U,V,T_s) = \eta\gamma\left(U^2+V^2\right) - K\,G(T_s),
-\end{equation}
-and the bounded thermodynamic response
-\begin{equation}
-G(T_s) = \tanh\!\left(\beta_T\frac{T_a-T_s}{T_a}\right).
-\end{equation}
+where components are given explicitly by Eqs.~\eqref{eq:gspt_fast}--\eqref{eq:gspt_slow_ts}, with forcing diagnostic $\Delta(U,V,T_s)$ from Eq.~\eqref{eq:forcing_diagnostic} and bounded thermodynamic response $G(T_s)$ from Eq.~\eqref{eq:thermal_response}.
 
 Here, $f$ is the Coriolis frequency, $h$ is the boundary layer depth, $C_{\text{skin}}$ is the surface thermal capacity, and $K$ is the kinematic buoyant destruction acceleration scale, strictly anchored with units of $\si{\meter\per\second\squared}$ ($\text{m s}^{-2}$). The background mixing floor parameter $\delta > 0$ guarantees that the fast subsystem maintains normal hyperbolicity and Lipschitz regularity across the physical boundary limit $e = -\delta$.
 

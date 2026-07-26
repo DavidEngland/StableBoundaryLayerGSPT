@@ -10,10 +10,12 @@ where $e$ represents the turbulent kinetic energy (TKE) coordinate, $(U,V)$ deno
 To ensure non-singular behavior near the laminar limit $e \to 0$, we introduce the shifted TKE coordinate $\tilde e \coloneqq e + \delta \ge 0$, where $\delta > 0$ defines a physical background mixing floor that guarantees normal hyperbolicity across laminar regimes. The competition between mechanical shear production and thermodynamic buoyant destruction is summarized by the forcing diagnostic
 \begin{equation}
 \Delta(U,V,T_s) \coloneqq \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
+\label{eq:forcing_diagnostic}
 \end{equation}
 Here, the thermodynamic stability response function is bounded via
 \begin{equation}
 G(T_s) \coloneqq \tanh\!\left(\beta_T\,\frac{T_a-T_s}{T_a}\right),
+\label{eq:thermal_response}
 \end{equation}
 ensuring that strong nocturnal surface cooling shifts the fast critical surface downward along the TKE axis without producing unphysical interior singularities. To link the reduced state vector to vertical atmospheric structure, the effective surface drag parameter is specified as
 \begin{equation}
