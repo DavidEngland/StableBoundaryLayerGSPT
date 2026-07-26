@@ -1,94 +1,100 @@
-\documentclass[tikz,border=8pt]{standalone}
+\documentclass[tikz,border=14pt]{standalone}
 \usepackage{amsmath,amssymb}
 \usetikzlibrary{arrows.meta,decorations.markings,calc,backgrounds,matrix}
 
 \begin{document}
-\begin{tikzpicture}[scale=1.1, >=Stealth]
+\begin{tikzpicture}[x=1.9cm,y=1.9cm,>=Stealth,font=\scriptsize]
 
-    % --- Key Coordinates ---
-    \coordinate (Fold) at (-1.5, 1.2);
-    \coordinate (Extinction) at (0.75, 0);
+    % --- Key coordinates ---
+    \coordinate (Fold) at (-1.35, 1.08);
+    \coordinate (Extinction) at (0.65, 0.00);
 
-    % --- 1. Transition Layer / Loss of Normal Hyperbolicity (Background Layer) ---
+    % --- White canvas to avoid transparent/black preview backgrounds ---
+    \fill[white] (-3.45,-0.85) rectangle (5.75,4.10);
+
+    % --- Axes ---
+    \draw[->, thick, gray!70!black] (-3.05,0.00) -- (4.45,0.00);
+    \node[anchor=west, black] at (4.52,0.03) {Net Forcing $\Delta$};
+    \draw[->, thick, gray!70!black] (0.00,-0.55) -- (0.00,3.60)
+        node[above, align=center, black, font=\normalsize] {Regularized TKE amplitude\\[-1pt]$q=\sqrt{e+\delta}$};
+
+    % --- Fold neighborhood ---
     \begin{scope}[on background layer]
-        \filldraw[fill=gray!15, draw=gray!40, dashed] (Fold) circle (0.5);
-        \node[gray!80!black, font=\scriptsize, align=center, above=12pt] at (Fold)
-            {Fold neighborhood\\[-1pt]\textit{(Loss of normal hyperbolicity)}};
+        \filldraw[fill=gray!14, draw=gray!50, dashed] (Fold) circle (0.42);
     \end{scope}
+    \node[gray!70!black, font=\scriptsize, align=center] at (-1.25,1.72)
+        {Fold neighborhood\\[-1pt]\textit{(Loss of normal hyperbolicity)}};
 
-    % --- 2. Axes ---
-    \draw[->, thick, gray!60!black] (-2.8, 0) -- (4.6, 0) node[right, black] {Net Forcing $\Delta$};
-    \draw[->, thick, gray!60!black] (0, -0.6) -- (0, 3.6) node[above, align=center, black] {Regularized TKE amplitude\\[-2pt]$q = \sqrt{e+\delta}$};
+    % --- Legend (manual 2x2 layout for reliable text rendering) ---
+    \draw[rounded corners=4pt, draw=gray!30, fill=white] (-3.00,2.98) rectangle (-0.85,3.30);
+    \draw[thick, blue!85!black] (-2.92,3.20) -- (-2.72,3.20);
+    \node[anchor=west] at (-2.66,3.20) {Attracting $\mathcal{S}_0^+$};
+    \draw[thick, dashed, red!80!black] (-1.95,3.20) -- (-1.75,3.20);
+    \node[anchor=west] at (-1.69,3.20) {Repelling $\mathcal{S}_0^-$};
+    \draw[thick, green!55!black] (-2.92,3.05) -- (-2.72,3.05);
+    \node[anchor=west] at (-2.66,3.05) {Laminar $\mathcal{S}_0^{\mathrm{lam}}$};
+    \draw[->, thick, violet] (-1.95,3.05) -- (-1.75,3.05);
+    \node[anchor=west] at (-1.69,3.05) {Fast jump};
 
-    % --- 3. Figure Legend ---
-    \matrix [
-        draw=gray!30, fill=white, fill opacity=0.95, text opacity=1,
-        rounded corners=3pt, inner sep=4pt, font=\scriptsize,
-        anchor=north west, row sep=3pt, column 1/.style={nodes={min width=8mm, anchor=center}}
-    ] at (-2.7, 3.5) {
-        \draw[very thick, blue!80!black] (-0.35,0) -- (0.35,0); & \node[right]{Attracting turbulent manifold ($\mathcal{S}_0^+$)}; \\
-        \draw[thick, dashed, red!80!black] (-0.35,0) -- (0.35,0); & \node[right]{Repelling slow manifold ($\mathcal{S}_0^-$)}; \\
-        \draw[very thick, green!50!black] (-0.35,0) -- (0.35,0); & \node[right]{Laminar equilibrium manifold ($\mathcal{S}_0^{\mathrm{lam}}$)}; \\
-        \draw[->, ultra thick, violet] (-0.35,0) -- (0.35,0); & \node[right]{Fast subsystem trajectories}; \\
-    };
-
-    % --- 4. Laminar Equilibrium Manifold S_0^lam (q = 0) ---
-    \draw[very thick, green!50!black] (-2.8, 0) -- (4.2, 0);
-    \node[green!50!black, font=\scriptsize, anchor=north east, align=right] at (4.2, -0.15)
+    % --- Manifolds ---
+    \draw[thick, green!55!black] (-2.95,0.00) -- (4.55,0.00);
+    \node[green!50!black, anchor=north west, font=\small] at (-3.00,-0.16)
         {$\mathcal{S}_0^{\mathrm{lam}}$: Laminar manifold ($q=0$)};
 
-    % --- 5. Repelling Slow Manifold S_0^- (Dashed Red, Fold to Extinction) ---
-    \draw[thick, dashed, red!80!black, domain=-1.5:0.75, samples=60]
-        plot ({\x}, {1.2 - 0.8*sqrt(\x + 1.5)});
-    \node[red!80!black, font=\scriptsize, below left] at (-0.2, 0.45)
+    \draw[thick, dashed, red!80!black, domain=-1.35:0.65, samples=150]
+        plot ({\x}, {1.08 - 0.76*sqrt(\x + 1.35)});
+    \node[red!80!black, font=\small] at (-0.82,0.20)
         {$\mathcal{S}_0^-$ (Repelling)};
 
-    % --- 6. Attracting Turbulent Manifold S_0^+ (Solid Blue) ---
-    \draw[very thick, blue!80!black, domain=-1.5:4.2, samples=100]
-        plot ({\x}, {1.2 + 0.8*sqrt(\x + 1.5)});
-    \node[blue!80!black, font=\small, right, align=left] at (3.1, 3.1)
-        {$\mathcal{S}_0^+$ (or $\mathcal{S}_0^{\mathrm{turb}}$)\\[-1pt]Attracting turbulent manifold};
+    \draw[thick, blue!85!black, domain=-1.35:4.35, samples=170]
+        plot ({\x}, {1.08 + 0.68*sqrt(\x + 1.35)});
+    \node[blue!85!black, font=\small, anchor=west] at (2.30,2.78)
+        {$\mathcal{S}_0^+$ (Attracting)};
+    \node[blue!85!black, font=\small, anchor=west] at (1.45,2.45)
+        {Attracting turbulent manifold};
 
-    % --- 7. Slow Flow Dynamics (Tangent Drift along Attracting Sheets) ---
-    % Primary slow cooling drift leftward along S_0^+ towards fold
-    \draw[->, thick, blue!90!black] (2.8, 2.53) -- (2.0, 2.30)
-        node[midway, above, sloped, font=\footnotesize] {Slow drift $\dot{\Delta} < 0$};
-    % Reinforcing slow drift vector approaching fold
-    \draw[->, thick, blue!90!black] (-0.2, 2.11) -- (-0.9, 1.82);
+    % --- Slow drift arrows ---
+    \draw[->, thick, blue!90!black] (3.45,2.65) -- (2.55,2.55);
+    \draw[->, thick, blue!90!black] (2.55,2.22) -- (1.95,2.16)
+        node[midway, above, sloped, font=\small] {Slow drift $\dot{\Delta}<0$};
+    \draw[->, thick, green!45!black] (-2.20,0.00) -- (-1.00,0.00)
+        node[midway, above, font=\small] {Slow drift};
 
-    % Slow momentum recovery drift rightward along S_0^lam
-    \draw[->, thick, green!40!black] (-2.2, 0) -- (-1.0, 0)
-        node[midway, above, font=\footnotesize] {Slow drift};
+    % --- Fast jumps ---
+    \pgfmathsetmacro{\qcollapse}{1.08 + 0.68*sqrt(-1.20 + 1.35)}
+    \draw[->, thick, violet] (-1.20,\qcollapse) -- (-1.20,0.06)
+        node[midway, right=2pt, align=left, font=\small] {Fast collapse\\[-1pt]$\mathcal{O}(1/\varepsilon)$};
 
-    % --- 8. Fast Subsystem Dynamics (Exact Vertical Jumps) ---
-    % Fast Collapse past the fold
-    \pgfmathsetmacro{\qcollapse}{1.2 + 0.8*sqrt(-1.41 + 1.5)}
-    \draw[->, ultra thick, violet] (-1.41, \qcollapse) -- (-1.41, 0.05)
-        node[midway, left=2pt, align=right, font=\scriptsize] {Fast collapse\\[-1pt]$\mathcal{O}(1/\varepsilon)$};
+    \pgfmathsetmacro{\qreignite}{1.08 + 0.68*sqrt(2.0 + 1.35)}
+    \draw[->, thick, violet] (1.95,0.06) -- (1.95,\qreignite)
+        node[midway, left=5pt, align=right, font=\small] {Fast re-ignition\\[-1pt]$\mathcal{O}(1/\varepsilon)$};
 
-    % Fast Re-ignition past the separatrix
-    \pgfmathsetmacro{\qreignite}{1.2 + 0.8*sqrt(1.8 + 1.5)}
-    \draw[->, ultra thick, violet] (1.8, 0.05) -- (1.8, \qreignite)
-        node[midway, right=2pt, align=left, font=\scriptsize] {Fast re-ignition\\[-1pt]$\mathcal{O}(1/\varepsilon)$};
+    % --- Threshold points and labels ---
+    \filldraw[red!85!black] (Fold) circle (2.6pt);
+    \node[red!85!black, font=\normalsize, align=right] at (-1.95,1.15)
+        {\textbf{Fold singularity}};
+    \node[red!85!black, font=\normalsize, align=right] at (-1.95,0.92)
+        {$\Delta_{\mathrm{fold}}=-\beta^2/4$};
 
-    % --- 9. Critical Points (Singularities & Thresholds) ---
-    % Fold Singularity
-    \filldraw[red!80!black] (Fold) circle (2.5pt)
-        node[below left=2pt, align=right, font=\scriptsize]
-        {\textbf{Fold singularity}\\[-1pt]$\Delta_{\mathrm{fold}} = -\beta^2/4$};
+    \filldraw[orange!90!black] (Extinction) circle (2.6pt);
+    \node[orange!90!black, font=\normalsize, align=left] at (0.85,-0.25)
+        {\textbf{Extinction threshold}};
+    \node[orange!90!black, font=\normalsize, align=left] at (0.85,-0.47)
+        {$\Delta_{\mathrm{ext}}=0.75$};
 
-    % Extinction Threshold
-    \filldraw[orange!90!black] (Extinction) circle (2.5pt)
-        node[below=12pt, align=center, font=\scriptsize]
-        {\textbf{Turbulence extinction threshold}\\[-1pt]$\Delta_{\mathrm{ext}} = 0.75$};
-
-    % --- 10. Timescale Box ---
-    \node[draw=gray!30, fill=white, fill opacity=0.95, text opacity=1, rounded corners=3pt, inner sep=4pt, align=left, font=\scriptsize]
-        at (3.1, 0.9) {
-            \textbf{GSPT Regimes:}\\[1pt]
-            Reduced flow: $\dot{\Delta} = \mathcal{O}(1)$\\[1pt]
-            Layer flow: $\dot{q} = \mathcal{O}(1/\varepsilon)$
-        };
+    % --- Regime box ---
+    \node[
+        draw=gray!30,
+        fill=white,
+        rounded corners=6pt,
+        inner sep=4pt,
+        align=left,
+        font=\normalsize
+    ] at (2.85,0.83) {
+        \textbf{GSPT Regimes:}\\
+        Reduced flow: $\dot{\Delta}=\mathcal{O}(1)$\\
+        Layer flow: $\dot{q}=\mathcal{O}(1/\varepsilon)$
+    };
 
 \end{tikzpicture}
 \end{document}
