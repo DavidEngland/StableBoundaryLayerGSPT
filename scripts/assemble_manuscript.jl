@@ -148,6 +148,7 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
         "executive_campaign_matrix.tex.mustache",
         "numerical_implementation_solver_strategy.tex.mustache",
         "closures.tex.mustache",
+        "gspt_closure_manifold.tex.mustache",
         "parameters_table.tex.mustache",
         "parameters_geometry.tex.mustache",
     ]
@@ -955,6 +956,7 @@ function read_scm_summary_context(; config_path::String=joinpath("config", "manu
             "scm_km_max" => "n/a",
             "scm_fold_fraction_percent" => "n/a",
             "scm_phase_figure_block" => "% SCM phase portrait figure unavailable",
+            "scm_closure_manifold_figure_block" => "% SCM closure manifold figure unavailable",
             "scm_all_figures_block" => "% SCM figures unavailable",
         )
     end
@@ -1000,8 +1002,8 @@ function read_scm_summary_context(; config_path::String=joinpath("config", "manu
             label="fig:scm_phase_delta_exi",
         ),
         "fig07" => (
-            caption="Momentum and heat eddy diffusivities (\\(K_m, K_h\\)) displayed against the local gradient Richardson stability metric (\\(Ri\\)).",
-            label="fig:scm_diffusivity",
+            caption="The GSPT closure manifold. (a) Momentum diffusivity \\(K_m\\) vs. gradient Richardson number \\((\\mathrm{Ri}_g)\\) color-coded by shear \\(S\\). (b) \\(K_m\\) vs. \\((\\mathrm{Ri}_g)\\) color-coded by height \\(z\\). (c) Collapse of \\(K_m\\) onto the fold invariant \\(\\Delta\\). (d) Dynamic Prandtl number \\(\\mathrm{Pr}_t\\) vs. \\((\\mathrm{Ri}_g)\\).",
+            label="fig:closure_manifold",
         ),
         "fig08" => (
             caption="Temporal evolution of the surface fold-proximity metric, showing the proximity of the surface state relative to the regularized manifold transition boundary.",
@@ -1011,6 +1013,7 @@ function read_scm_summary_context(; config_path::String=joinpath("config", "manu
 
     phase_fig_path = joinpath(outdir, "plots", "fig06_phase_delta_exi.png")
     phase_fig_block = "% SCM phase portrait figure unavailable"
+    closure_manifold_fig_block = "% SCM closure manifold figure unavailable"
 
     scm_plots_dir = joinpath(outdir, "plots")
     all_scm_blocks = String[]
@@ -1018,6 +1021,12 @@ function read_scm_summary_context(; config_path::String=joinpath("config", "manu
         scm_image_files = sort(filter(name -> (
                 endswith(name, ".png") || endswith(name, ".jpg") || endswith(name, ".jpeg") || endswith(name, ".pdf")
             ), readdir(scm_plots_dir)))
+
+        # Avoid duplicate Figure 7 labels when both legacy and manifold variants exist.
+        has_manifold_fig07 = any(name -> replace(name, r"\.[^.]+$" => "") == "fig07_closure_manifold", scm_image_files)
+        if has_manifold_fig07
+            scm_image_files = filter(name -> replace(name, r"\.[^.]+$" => "") != "fig07_diffusivity_vs_ri", scm_image_files)
+        end
 
         for file in scm_image_files
             stem = replace(file, r"\.[^.]+$" => "")
@@ -1044,6 +1053,8 @@ function read_scm_summary_context(; config_path::String=joinpath("config", "manu
 
             if prefix == "fig06"
                 phase_fig_block = fig_latex
+            elseif prefix == "fig07"
+                closure_manifold_fig_block = fig_latex
             end
         end
     end
@@ -1059,6 +1070,7 @@ function read_scm_summary_context(; config_path::String=joinpath("config", "manu
         "scm_km_max" => format_float_digits(km_max, 2),
         "scm_fold_fraction_percent" => format_percent(fold_fraction; digits=0),
         "scm_phase_figure_block" => phase_fig_block,
+        "scm_closure_manifold_figure_block" => closure_manifold_fig_block,
         "scm_all_figures_block" => scm_all_figures_block,
     )
 end

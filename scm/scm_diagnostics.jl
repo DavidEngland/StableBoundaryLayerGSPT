@@ -102,7 +102,7 @@ end
     compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
 
 Compute face-resolved closure diagnostics from a single state snapshot.
-Returns `Km`, `Kh`, `Delta`, `e_xi`, `shear2`, and `Ri_g` on interior faces.
+Returns `Km`, `Kh`, `Delta`, `e_xi`, `shear2`, `shear`, `N2`, and `Ri_g` on interior faces.
 """
 function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
     N = p.N
@@ -129,6 +129,8 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
     Delta = zeros(eltype(U), N - 1)
     e_xi = zeros(eltype(U), N - 1)
     shear2 = zeros(eltype(U), N - 1)
+    shear = zeros(eltype(U), N - 1)
+    N2 = zeros(eltype(U), N - 1)
     Ri_g = zeros(eltype(U), N - 1)
     Pr_t_faces = zeros(eltype(U), N - 1)
 
@@ -169,13 +171,15 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
         Delta[i] = delta_local
         e_xi[i] = e_star
         shear2[i] = s2
+        shear[i] = sqrt(max(s2, zero(eltype(U))))
         Pr_t_faces[i] = Pr_t_local
 
         buoy = cfg.g * dth_dz / theta_a
+        N2[i] = buoy
         Ri_g[i] = buoy / max(s2, cfg.ri_eps)
     end
 
-    return (Km=Km, Kh=Kh, Delta=Delta, e_xi=e_xi, shear2=shear2, Ri_g=Ri_g, Pr_t=Pr_t_faces)
+    return (Km=Km, Kh=Kh, Delta=Delta, e_xi=e_xi, shear2=shear2, shear=shear, N2=N2, Ri_g=Ri_g, Pr_t=Pr_t_faces)
 end
 
 """
@@ -229,8 +233,7 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
 
     D_surf = beta_gspt^2 + 4.0 * Delta_surf
     sqrt_D_reg_surf = sqrt(0.5 * (D_surf + sqrt(D_surf^2 + xi^2)))
-    H_step_surf = 0.5 * (1.0 + D_surf / sqrt(D_surf^2 + xi^2))
-    q_star_surf = H_step_surf * 0.5 * l0 * (beta_gspt + sqrt_D_reg_surf)
+    q_star_surf = 0.5 * l0 * (beta_gspt + sqrt_D_reg_surf)
 
     e_surf = q_star_surf^2
     psi_gate_surf = sqrt(e_surf) / (sqrt(e_surf) + alpha_gate)
@@ -330,7 +333,9 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
         Pr_t_faces=closure.Pr_t,
         Delta_faces=closure.Delta,
         e_xi_faces=closure.e_xi,
+        shear_faces=closure.shear,
         shear2_faces=closure.shear2,
+        N2_faces=closure.N2,
         Ri_faces=closure.Ri_g,
     )
 end
@@ -398,7 +403,8 @@ function build_hovmoller_payload(time_series, p)
         theta[i, :] .= row.theta
         Km[i, :] .= row.Km_faces
         Kh[i, :] .= row.Kh_faces
-        shear[i, :] .= sqrt.(max.(row.shear2_faces, 0.0))
+        shear_field = hasproperty(row, :shear_faces) ? row.shear_faces : sqrt.(max.(row.shear2_faces, 0.0))
+        shear[i, :] .= shear_field
         Ri[i, :] .= row.Ri_faces
         Delta[i, :] .= row.Delta_faces
         e_xi[i, :] .= row.e_xi_faces
@@ -479,7 +485,7 @@ function publication_figure_manifest()
         "Vertical profiles of U, theta, and Km at representative times",
         "Surface energy budget components (R_n, H, G, storage)",
         "Phase portrait on regularized manifold (Delta vs e_xi)",
-        "Eddy diffusivity response (Km, Kh) versus stability/Richardson number",
+        "Closure manifold diagnostics (Km vs Ri_g and Km vs Delta)",
         "Fold proximity diagnostics versus time",
     ]
 end

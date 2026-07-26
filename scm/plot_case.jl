@@ -178,15 +178,19 @@ function _savefig(Plots, fig, outdir::String, stem::String, ext::String)
     return path
 end
 
-function _overlay_triheight_tracks!(Plots, plt, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend::Bool=true)
+function _overlay_triheight_tracks!(Plots, plt, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend::Bool=true, z_cap=nothing)
     d_label = with_legend ? "h_D" : ""
     e_label = with_legend ? "h_e" : ""
     g_label = with_legend ? "h_∂e" : ""
 
+    h_decoupling_plot = z_cap === nothing ? h_decoupling : clamp.(h_decoupling, 0.0, z_cap)
+    h_energy_floor_plot = z_cap === nothing ? h_energy_floor : clamp.(h_energy_floor, 0.0, z_cap)
+    h_max_energy_gradient_plot = z_cap === nothing ? h_max_energy_gradient : clamp.(h_max_energy_gradient, 0.0, z_cap)
+
     Plots.plot!(
         plt,
         t_hours,
-        h_decoupling;
+        h_decoupling_plot;
         linewidth=2.2,
         linestyle=:dash,
         color=:gold3,
@@ -196,7 +200,7 @@ function _overlay_triheight_tracks!(Plots, plt, t_hours, h_decoupling, h_energy_
     Plots.plot!(
         plt,
         t_hours,
-        h_energy_floor;
+        h_energy_floor_plot;
         linewidth=2.2,
         linestyle=:dash,
         color=:deepskyblue3,
@@ -206,7 +210,7 @@ function _overlay_triheight_tracks!(Plots, plt, t_hours, h_decoupling, h_energy_
     Plots.plot!(
         plt,
         t_hours,
-        h_max_energy_gradient;
+        h_max_energy_gradient_plot;
         linewidth=2.2,
         linestyle=:dash,
         color=:orangered3,
@@ -256,6 +260,14 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     hov_km = _sanitize_finite(_getkey(hov, :Km))
     hov_exi = _sanitize_finite(_getkey(hov, :e_xi))
     zf_mid = zf[2:(end-1)]
+
+    # Use a fixed manuscript scale for cross-case figure comparability.
+    z_max = 200.0
+    tick_step = z_max <= 150.0 ? 25.0 : 50.0
+    z_ticks = 0:tick_step:z_max
+    active_sbl_top = triheight_available ? clamp(median(h_decoupling), 0.0, z_max) : min(100.0, z_max)
+    left_pad = 12Plots.mm
+    bottom_pad = 8Plots.mm
 
     # =========================================================================
     # Figure 1: Time series (T_s, H, u_*)
@@ -318,11 +330,17 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         colorbar_title="|V| (m s^-1)",
         legend=:topright,
         clims=_percentile_clims(hov_wind; p_lo=0.005, p_hi=0.995),
+        ylims=(0, z_max),
+        yticks=z_ticks,
+        left_margin=left_pad,
+        bottom_margin=bottom_pad,
         dpi=dpi,
-        right_margin=6Plots.mm,
+        right_margin=8Plots.mm,
+        size=(1500, 520),
     )
+    Plots.hspan!(p2, [0.0, active_sbl_top]; alpha=0.08, color=:gray65, label="")
     if triheight_available
-        _overlay_triheight_tracks!(Plots, p2, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=true)
+        _overlay_triheight_tracks!(Plots, p2, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=true, z_cap=z_max)
     end
     _savefig(Plots, p2, outdir, "fig02_hovmoller_wind", fmt)
 
@@ -337,12 +355,15 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         colorbar_title="theta (K)",
         legend=:topright,
         clims=_percentile_clims(hov_theta; p_lo=0.005, p_hi=0.995),
+        ylims=(0, z_max),
+        yticks=z_ticks,
+        left_margin=left_pad,
+        bottom_margin=bottom_pad,
         dpi=dpi,
-        right_margin=6Plots.mm,
+        right_margin=8Plots.mm,
+        size=(1500, 520),
     )
-    if triheight_available
-        _overlay_triheight_tracks!(Plots, p3, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=false)
-    end
+    Plots.hspan!(p3, [0.0, active_sbl_top]; alpha=0.08, color=:gray65, label="")
     _savefig(Plots, p3, outdir, "fig03_hovmoller_theta", fmt)
 
     # Figure 3b: Time-height closure diagnostics (K_m and e_xi)
@@ -362,6 +383,10 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         c=:viridis,
         clims=_percentile_clims(km_plot; p_lo=0.005, p_hi=0.995),
         legend=:topright,
+        ylims=(0, z_max),
+        yticks=z_ticks,
+        left_margin=left_pad,
+        bottom_margin=bottom_pad,
         dpi=dpi,
     )
     p3b_b = Plots.heatmap(
@@ -375,14 +400,42 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         c=Plots.cgrad([:midnightblue, :royalblue3, :deepskyblue2, :gold1]),
         clims=_percentile_clims(q_norm; p_lo=0.005, p_hi=0.995),
         legend=:topright,
+        ylims=(0, z_max),
+        yticks=z_ticks,
+        left_margin=left_pad,
+        bottom_margin=bottom_pad,
         dpi=dpi,
     )
-    if triheight_available
-        _overlay_triheight_tracks!(Plots, p3b_a, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=true)
-        _overlay_triheight_tracks!(Plots, p3b_b, t_hours, h_decoupling, h_energy_floor, h_max_energy_gradient; with_legend=false)
-    end
-    p3b = Plots.plot(p3b_a, p3b_b; layout=(1, 2), size=(1500, 480), margin=5Plots.mm)
+    p3b = Plots.plot(p3b_a, p3b_b; layout=(1, 2), size=(1500, 480), margin=8Plots.mm)
     _savefig(Plots, p3b, outdir, "fig03b_hovmoller_km_exi", fmt)
+
+    # Figure 3d: Triheight diagnostic time series (declutters overlays on heatmaps)
+    if triheight_available
+        h_decoupling_plot = clamp.(h_decoupling, 0.0, z_max)
+        h_energy_floor_plot = clamp.(h_energy_floor, 0.0, z_max)
+        h_max_energy_gradient_plot = clamp.(h_max_energy_gradient, 0.0, z_max)
+
+        p3d = Plots.plot(
+            t_hours,
+            h_decoupling_plot;
+            linewidth=2.4,
+            color=:gold3,
+            xlabel="Time (h)",
+            ylabel="Height (m)",
+            title="Figure 3d: Triheight Diagnostics",
+            label="h_D",
+            legend=:topright,
+            ylims=(0, z_max),
+            yticks=z_ticks,
+            left_margin=left_pad,
+            bottom_margin=bottom_pad,
+            dpi=dpi,
+            size=(1300, 420),
+        )
+        Plots.plot!(p3d, t_hours, h_energy_floor_plot; linewidth=2.4, color=:deepskyblue3, label="h_e")
+        Plots.plot!(p3d, t_hours, h_max_energy_gradient_plot; linewidth=2.4, color=:orangered3, label="h_∂e")
+        _savefig(Plots, p3d, outdir, "fig03d_triheight_timeseries", fmt)
+    end
 
     # Figure 3c: Startup zoom for Hovmoller diagnostics (captures rapid initial adjustment)
     zoom_h = min(0.30, maximum(hov_t))
@@ -407,6 +460,10 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         c=:inferno,
         clims=_percentile_clims(hov_wind; p_lo=0.005, p_hi=0.995),
         legend=:none,
+        ylims=(0, z_max),
+        yticks=z_ticks,
+        left_margin=left_pad,
+        bottom_margin=bottom_pad,
         dpi=dpi,
     )
     p3_zoom = Plots.heatmap(
@@ -420,6 +477,10 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         c=:thermal,
         clims=_percentile_clims(hov_theta; p_lo=0.005, p_hi=0.995),
         legend=:none,
+        ylims=(0, z_max),
+        yticks=z_ticks,
+        left_margin=left_pad,
+        bottom_margin=bottom_pad,
         dpi=dpi,
     )
     pkm_zoom = Plots.heatmap(
@@ -433,6 +494,10 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         c=:viridis,
         clims=_percentile_clims(km_plot; p_lo=0.005, p_hi=0.995),
         legend=:none,
+        ylims=(0, z_max),
+        yticks=z_ticks,
+        left_margin=left_pad,
+        bottom_margin=bottom_pad,
         dpi=dpi,
     )
     pq_zoom = Plots.heatmap(
@@ -446,6 +511,10 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         c=Plots.cgrad([:midnightblue, :royalblue3, :deepskyblue2, :gold1]),
         clims=_percentile_clims(q_norm; p_lo=0.005, p_hi=0.995),
         legend=:none,
+        ylims=(0, z_max),
+        yticks=z_ticks,
+        left_margin=left_pad,
+        bottom_margin=bottom_pad,
         dpi=dpi,
     )
     _savefig(Plots, p2_zoom, outdir, "fig03c_wind_startup_zoom", fmt)
@@ -460,9 +529,9 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     t_idx = [_nearest_index(t_hours, th) for th in target_hours]
     line_colors = [:royalblue, :darkorange, :seagreen, :crimson]
 
-    p4a = Plots.plot(xlabel="U (m s^-1)", ylabel="z (m)", title="U(z)", dpi=dpi, legend=:topleft)
-    p4b = Plots.plot(xlabel="theta (K)", ylabel="z (m)", title="theta(z)", dpi=dpi, legend=:none)
-    p4c = Plots.plot(xlabel="K_m (m^2 s^-1)", ylabel="z_face (m)", title="K_m(z)", dpi=dpi, legend=:none)
+    p4a = Plots.plot(xlabel="U (m s^-1)", ylabel="z (m)", title="U(z)", dpi=dpi, legend=:topleft, ylims=(0, z_max), yticks=z_ticks, left_margin=left_pad, bottom_margin=bottom_pad)
+    p4b = Plots.plot(xlabel="theta (K)", ylabel="z (m)", title="theta(z)", dpi=dpi, legend=:none, ylims=(0, z_max), yticks=z_ticks, left_margin=left_pad, bottom_margin=bottom_pad)
+    p4c = Plots.plot(xlabel="K_m (m^2 s^-1)", ylabel="z_face (m)", title="K_m(z)", dpi=dpi, legend=:none, ylims=(0, z_max), yticks=z_ticks, left_margin=left_pad, bottom_margin=bottom_pad)
     p4d = Plots.plot(
         xlabel="Ri_g",
         ylabel="z_face (m)",
@@ -470,6 +539,10 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         dpi=dpi,
         xscale=:asinh,
         xguidefontsize=9,
+        ylims=(0, z_max),
+        yticks=z_ticks,
+        left_margin=left_pad,
+        bottom_margin=bottom_pad,
         legend=:topright,
     )
 
@@ -492,7 +565,7 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
 
     Plots.vline!(p4d, [0.25]; color=:black, linestyle=:dash, linewidth=2, label="Ri_crit = 0.25")
 
-    p4 = Plots.plot(p4a, p4b, p4c, p4d; layout=(1, 4), size=(1760, 420), margin=6Plots.mm)
+    p4 = Plots.plot(p4a, p4b, p4c, p4d; layout=(1, 4), size=(1800, 450), margin=8Plots.mm)
     _savefig(Plots, p4, outdir, "fig04_profiles_u_theta_km", fmt)
 
     # =========================================================================
@@ -602,69 +675,127 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     _savefig(Plots, p6, outdir, "fig06_phase_delta_exi", fmt)
 
     # =========================================================================
-    # Figure 7: Diffusivity response vs Ri
+    # Figure 7: The GSPT Closure Manifold (4-Panel Geometry Analysis)
     # =========================================================================
-    ri_all = _flatten_field(ts, :Ri_faces)
-    km_all = _flatten_field(ts, :Km_faces)
-    kh_all = _flatten_field(ts, :Kh_faces)
-
-    # Reconstruct the face-height coordinate so height can be used as a visual
-    # separator from the stability response.
-    z_face_mid = zf[2:(end-1)]
+    ri_all = Float64[]
+    km_all = Float64[]
+    kh_all = Float64[]
+    delta_all = Float64[]
+    shear_all = Float64[]
     z_all = Float64[]
-    for _ in ts
-        append!(z_all, z_face_mid)
+
+    for row in ts
+        ri_f = _sanitize_finite(_getkey(row, :Ri_faces))
+        km_f = _sanitize_finite(_getkey(row, :Km_faces))
+        kh_f = _sanitize_finite(_getkey(row, :Kh_faces))
+        delta_f = _sanitize_finite(_getkey(row, :Delta_faces))
+
+        shear_f = let s = _maybe_getkey(row, :shear_faces)
+            s === nothing ? sqrt.(max.(_sanitize_finite(_getkey(row, :shear2_faces)), 0.0)) : _sanitize_finite(s)
+        end
+
+        zf_faces = zf[2:(end-1)]
+
+        append!(ri_all, ri_f)
+        append!(km_all, km_f)
+        append!(kh_all, kh_f)
+        append!(delta_all, delta_f)
+        append!(shear_all, shear_f)
+        append!(z_all, zf_faces)
     end
 
-    ri_max_display = 2.0
-    ri_min_display = max(minimum(ri_all), -0.5)
-    keep = [
-        isfinite(ri_all[i]) && isfinite(km_all[i]) && isfinite(kh_all[i]) &&
-        (ri_all[i] >= ri_min_display) && (ri_all[i] <= ri_max_display)
-        for i in eachindex(ri_all)
-    ]
+    valid_idx = findall(i -> isfinite(ri_all[i]) && isfinite(km_all[i]) && isfinite(kh_all[i]) && isfinite(delta_all[i]) && isfinite(shear_all[i]) && (ri_all[i] > 0.0), eachindex(ri_all))
 
-    km_plot_vals = max.(km_all[keep], 1.0e-6)
-    kh_plot_vals = max.(kh_all[keep], 1.0e-6)
+    ri_v = ri_all[valid_idx]
+    km_v = max.(km_all[valid_idx], 1.0e-6)
+    kh_v = max.(kh_all[valid_idx], 1.0e-6)
+    delta_v = delta_all[valid_idx]
+    shear_v = max.(shear_all[valid_idx], 0.0)
+    z_v = z_all[valid_idx]
 
     p7a = Plots.scatter(
-        ri_all[keep],
-        km_plot_vals;
-        zcolor=z_all[keep],
-        c=:viridis,
-        yscale=:log10,
-        markersize=2,
-        markerstrokewidth=0,
-        alpha=0.5,
+        ri_v,
+        km_v;
+        zcolor=shear_v,
+        c=:cividis,
+        colorbar_title="Shear S (s^-1)",
         xlabel="Ri_g",
         ylabel="K_m (m^2 s^-1)",
-        title="K_m vs Ri_g (Color = z)",
-        colorbar_title="z (m)",
-        xlims=(ri_min_display, ri_max_display),
-        label="",
-        legend=:none,
-        dpi=dpi,
-    )
-    p7b = Plots.scatter(
-        ri_all[keep],
-        kh_plot_vals;
-        zcolor=z_all[keep],
-        c=:viridis,
+        title="(a) K_m vs Ri_g (Color = Shear)",
+        xscale=:asinh,
         yscale=:log10,
-        markersize=2,
+        alpha=0.6,
+        markersize=3,
         markerstrokewidth=0,
-        alpha=0.5,
-        xlabel="Ri_g",
-        ylabel="K_h (m^2 s^-1)",
-        title="K_h vs Ri_g (Color = z)",
-        colorbar_title="z (m)",
-        xlims=(ri_min_display, ri_max_display),
-        label="",
-        legend=:none,
+        legend=:topright,
+        left_margin=10Plots.mm,
+        bottom_margin=8Plots.mm,
         dpi=dpi,
     )
-    p7 = Plots.plot(p7a, p7b; layout=(1, 2), size=(1280, 460), margin=6Plots.mm)
-    _savefig(Plots, p7, outdir, "fig07_diffusivity_vs_ri", fmt)
+    Plots.vline!(p7a, [0.25]; color=:red, linestyle=:dash, linewidth=1.5, label="Schematic Ri_crit = 0.25")
+
+    p7b = Plots.scatter(
+        ri_v,
+        km_v;
+        zcolor=z_v,
+        c=:turbo,
+        colorbar_title="Height z (m)",
+        xlabel="Ri_g",
+        ylabel="K_m (m^2 s^-1)",
+        title="(b) K_m vs Ri_g (Color = Height)",
+        xscale=:asinh,
+        yscale=:log10,
+        alpha=0.6,
+        markersize=3,
+        markerstrokewidth=0,
+        legend=:none,
+        left_margin=10Plots.mm,
+        bottom_margin=8Plots.mm,
+        dpi=dpi,
+    )
+
+    p7c = Plots.scatter(
+        delta_v,
+        km_v;
+        zcolor=shear_v,
+        c=:cividis,
+        colorbar_title="Shear S (s^-1)",
+        xlabel="Fold Invariant Delta",
+        ylabel="K_m (m^2 s^-1)",
+        title="(c) Manifold Collapse: K_m vs Delta",
+        yscale=:log10,
+        alpha=0.6,
+        markersize=3,
+        markerstrokewidth=0,
+        legend=:topleft,
+        left_margin=10Plots.mm,
+        bottom_margin=8Plots.mm,
+        dpi=dpi,
+    )
+    Plots.vline!(p7c, [0.0]; color=:black, linestyle=:solid, linewidth=1.5, label="Fold Threshold (Delta = 0)")
+
+    pr_t_eff = km_v ./ max.(kh_v, 1.0e-12)
+    p7d = Plots.scatter(
+        ri_v,
+        pr_t_eff;
+        zcolor=shear_v,
+        c=:cividis,
+        colorbar_title="Shear S (s^-1)",
+        xlabel="Ri_g",
+        ylabel="Pr_t = K_m / K_h",
+        title="(d) Dynamic Prandtl Number vs Ri_g",
+        xscale=:asinh,
+        alpha=0.6,
+        markersize=3,
+        markerstrokewidth=0,
+        legend=:none,
+        left_margin=10Plots.mm,
+        bottom_margin=8Plots.mm,
+        dpi=dpi,
+    )
+
+    p7 = Plots.plot(p7a, p7b, p7c, p7d; layout=(2, 2), size=(1400, 1000), margin=8Plots.mm, dpi=dpi)
+    _savefig(Plots, p7, outdir, "fig07_closure_manifold", fmt)
 
     # =========================================================================
     # Figure 8: Quadratic fold-distance diagnostic vs time
@@ -692,8 +823,11 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         println(io, "Generated figures from payload: $(payload_path)")
         for fig in ("fig01_timeseries_ts_h_ustar", "fig02_hovmoller_wind", "fig03_hovmoller_theta",
             "fig03b_hovmoller_km_exi", "fig03c_wind_startup_zoom", "fig03c_theta_startup_zoom", "fig03c_km_startup_zoom", "fig03c_qnorm_startup_zoom", "fig04_profiles_u_theta_km", "fig05_surface_energy_budget",
-            "fig06_phase_delta_exi", "fig07_diffusivity_vs_ri", "fig08_fold_proximity")
+            "fig06_phase_delta_exi", "fig07_closure_manifold", "fig08_fold_proximity")
             println(io, "- $(fig).$(fmt)")
+        end
+        if triheight_available
+            println(io, "- fig03d_triheight_timeseries.$(fmt)")
         end
     end
 

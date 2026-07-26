@@ -49,8 +49,8 @@
       "label": "fig:scm_phase_delta_exi"
     },
     "fig07": {
-      "caption": "Momentum and heat eddy diffusivities (\\(K_m, K_h\\)) displayed against the local gradient Richardson stability metric (\\(Ri\\)).",
-      "label": "fig:scm_diffusivity"
+      "caption": "The GSPT closure manifold. (a) Momentum diffusivity \\(K_m\\) vs. gradient Richardson number \\((\\mathrm{Ri}_g)\\) color-coded by shear \\(S\\). (b) \\(K_m\\) vs. \\((\\mathrm{Ri}_g)\\) color-coded by height \\(z\\). (c) Collapse of \\(K_m\\) onto the fold invariant \\(\\Delta\\). (d) Dynamic Prandtl number \\(\\mathrm{Pr}_t\\) vs. \\((\\mathrm{Ri}_g)\\).",
+      "label": "fig:closure_manifold"
     },
     "fig08": {
       "caption": "Temporal evolution of the surface fold-proximity metric, showing the proximity of the surface state relative to the regularized manifold transition boundary.",

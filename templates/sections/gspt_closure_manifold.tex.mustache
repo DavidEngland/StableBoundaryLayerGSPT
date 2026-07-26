@@ -1,0 +1,62 @@
+\section{The GSPT Closure Manifold and Dimensional Reduction}
+\label{sec:gspt_closure_manifold}
+
+A central challenge in modeling the strongly stable boundary layer (SBL) is the observed failure of local flux-gradient closures based solely on the gradient Richardson number,
+\begin{equation}
+\mathrm{Ri}_g = \frac{N^2}{S^2} = \frac{\frac{g}{\theta_0}\frac{\partial \theta}{\partial z}}{\left(\frac{\partial U}{\partial z}\right)^2 + \left(\frac{\partial V}{\partial z}\right)^2}.
+\label{eq:rig_definition}
+\end{equation}
+In traditional 1D atmospheric closures \citep[e.g.,][]{Louis1979, MellorYamada1982}, eddy diffusivities for momentum ($K_m$) and heat ($K_h$) are parameterized as single-valued functions $K = \ell^2 S f(\mathrm{Ri}_g)$. While this formulation performs well in unstable and near-neutral regimes where large coherent structures couple local gradients directly to fluxes, it collapses under strongly stable conditions. Observational field campaigns \citep[e.g., CASES-99, FLOSS;][]{Mahrt1999} consistently show that active turbulence persists at super-critical Richardson numbers ($\mathrm{Ri}_g \gg 0.25$), generating significant scatter that cannot be represented by a single diagnostic curve.
+
+\subsection{Non-Uniqueness in Richardson Number Space}
+\label{subsec:rig_non_uniqueness}
+
+When simulated eddy diffusivities from the single-column model (SCM) are projected onto the classical $\mathrm{Ri}_g$ axis, they form a broad, multi-valued distribution spanning up to two orders of magnitude at a fixed Richardson number (Figures~\ref{fig:closure_manifold}a,b). The dominant structure of this scatter arises from dimensional reduction: projection of the higher-dimensional closure manifold onto the one-dimensional Richardson-number coordinate necessarily produces a many-to-one mapping. Numerical variability may broaden the distribution but does not generate its fundamental topology.
+
+Because $\mathrm{Ri}_g$ is a dimensionless ratio of buoyancy frequency squared ($N^2$) to shear squared ($S^2$), vastly different physical states can yield identical values of $\mathrm{Ri}_g$. For instance, a high-shear layer in the lower boundary layer ($S = 0.08\,\mathrm{s}^{-1}$, $N^2 = 0.0032\,\mathrm{s}^{-2}$) and a weak-shear region near the boundary layer top ($S = 0.008\,\mathrm{s}^{-1}$, $N^2 = 0.000032\,\mathrm{s}^{-2}$) both yield $\mathrm{Ri}_g = 0.5$. However, the high-shear state possesses sufficient kinetic energy to sustain active turbulence, whereas the weak-shear state drops toward the laminar background floor ($K_{\mathrm{min}}$).
+
+Color-coding the scatter by absolute shear magnitude $S$ (Figure~\ref{fig:closure_manifold}a) and vertical height $z$ (Figure~\ref{fig:closure_manifold}b) exposes this structural organization:
+\begin{itemize}
+    \item \textbf{Shear Ordering (Figure~\ref{fig:closure_manifold}a):} For any super-critical Richardson number ($\mathrm{Ri}_g > 0.25$), data points with high shear ($S > 0.04\,\mathrm{s}^{-1}$) cluster along the upper, highly diffusive branch ($K_m \sim 10^{-1}\text{--}10^{0}\,\mathrm{m}^2\,\mathrm{s}^{-1}$), while low-shear points drop to the lower branch.
+    \item \textbf{Height Stratification (Figure~\ref{fig:closure_manifold}b):} The upper branch corresponds predominantly to the active near-surface layer and the shear zone beneath the low-level jet (LLJ), whereas the lower branch reflects the decoupled atmosphere above the inversion height.
+\end{itemize}
+
+\subsection{Manifold Collapse onto the Fold Invariant $\Delta$}
+\label{subsec:manifold_collapse}
+
+To resolve the non-uniqueness inherent in $\mathrm{Ri}_g$ parameterizations, \textbf{GSPT} governs turbulent transport through the dimensional fold invariant $\Delta$:
+\begin{equation}
+\Delta = \eta S^2 - K_{\mathrm{buoy}} G\left(\frac{\partial \theta}{\partial z}\right),
+\label{eq:delta_definition}
+\end{equation}
+where $\eta$ sets the shear-production time scale, $K_{\mathrm{buoy}}$ scales buoyancy destruction, and $G(\cdot)$ is a bounded saturation function representing thermal stability.
+Unlike the gradient Richardson number, which is a nondimensional ratio, $\Delta$ retains the absolute competition between mechanical production and buoyancy destruction. Consequently, states with identical $\mathrm{Ri}_g$ but different shear intensity occupy different values of $\Delta$, eliminating the degeneracy inherent in $\mathrm{Ri}_g$-based closures.
+
+The state kinetic energy parameter $q^*(\Delta)$ is obtained from the equilibrium solution of the regularized fast subsystem:
+\begin{equation}
+q^*(\Delta) = \frac{1}{2} \ell_0 \left( \beta_{\mathrm{gspt}} + \sqrt{\beta_{\mathrm{gspt}}^2 + 4\Delta} \right).
+\label{eq:qstar_definition}
+\end{equation}
+
+Plotting momentum diffusivity $K_m$ directly against $\Delta$ reveals the principal geometric consequence of the GSPT closure (Figure~\ref{fig:closure_manifold}c). The multi-valued scatter cloud observed in $\mathrm{Ri}_g$ space collapses onto the one-dimensional closure manifold parameterized by $\Delta$.
+
+This collapse demonstrates that $\Delta$---which balances the \emph{absolute} rates of mechanical shear production and buoyant destruction---is the natural state coordinate of the turbulent boundary layer. The threshold $\Delta = 0$ marks the critical fold point:
+\begin{enumerate}
+    \item \textbf{Super-critical Fold Region ($\Delta > 0$):} Shear production dominates buoyancy destruction, locking the local fluid parcel onto the active turbulent branch.
+    \item \textbf{Sub-critical Fold Region ($\Delta < 0$):} Buoyancy destruction exceeds shear production, forcing $q^*$ toward zero and driving the local diffusivity down to the regularization threshold $K_{\mathrm{min}}$.
+\end{enumerate}
+
+Both $K_m$ and $K_h$ are projections of the same underlying equilibrium manifold $q^*(\Delta)$. Their apparent scatter in Richardson-number space therefore reflects information lost during projection rather than independent variability in the diffusivities themselves. By operating on $\Delta$ rather than $\mathrm{Ri}_g$, the GSPT closure naturally accommodates subcritical turbulence at $\mathrm{Ri}_g \gg 0.25$ without requiring artificial ``long-tail'' empirical adjustment functions.
+
+\subsection{Dynamic Prandtl Number Differentiation}
+\label{subsec:prandtl_number}
+
+The dynamic relationship between momentum diffusivity $K_m$ and heat diffusivity $K_h$ is illustrated through the effective turbulent Prandtl number $\mathrm{Pr}_t = K_m / K_h$ in Figure~\ref{fig:closure_manifold}d. 
+
+In near-neutral conditions ($\mathrm{Ri}_g \to 0$), the ratio approaches $\mathrm{Pr}_t \approx 1.0$, indicating isotropic turbulent transport of scalar heat and momentum. However, as stability increases ($\mathrm{Ri}_g > 0.1$), $\mathrm{Pr}_t$ increases monotonically, reaching values between $2.0$ and $5.0$.
+
+Physically, strong thermal stratification acts directly against vertical buoyancy fluctuations ($w'\theta'$), suppressing heat transport. Conversely, pressure-strain correlations sustain horizontal-to-vertical momentum transfers ($w'u'$), enabling shear-driven momentum diffusion to persist even when thermal transport is strongly suppressed. The increase of $\mathrm{Pr}_t$ with stability is therefore an emergent property of the coupled fast--slow dynamics rather than an independently prescribed empirical function, providing a realistic representation of nocturnal surface cooling and inversion strengthening.
+
+Collectively, Figure~\ref{fig:closure_manifold} demonstrates that the apparent failure of Richardson-number closures is not evidence of intrinsically stochastic turbulence. Rather, it reflects the projection of a higher-dimensional deterministic closure manifold onto a one-dimensional stability coordinate. The GSPT framework restores this missing geometric structure by parameterizing turbulent transport through the fold invariant $\Delta$, yielding a physically interpretable, mathematically single-valued closure while remaining fully compatible with conventional eddy-diffusivity formulations.
+
+{{{scm_closure_manifold_figure_block}}}

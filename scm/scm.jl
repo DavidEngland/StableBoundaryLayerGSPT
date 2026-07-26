@@ -56,30 +56,6 @@ function _get_face_diffusivity_buffers(p, T)
     end
 end
 
-function _effective_h_scale(p, U_ref::Real, V_ref::Real)
-    T = promote_type(typeof(U_ref), typeof(V_ref), typeof(p.f))
-    h_local = hasproperty(p, :h) ? convert(T, p.h) : convert(T, 100.0)
-    use_nonlocal = hasproperty(p, :use_nonlocal_h) && p.use_nonlocal_h > 0.5
-    if !use_nonlocal
-        return h_local
-    end
-
-    weight = clamp(
-        hasproperty(p, :nonlocal_h_weight) ? convert(T, p.nonlocal_h_weight) : convert(T, 0.5),
-        zero(T),
-        one(T),
-    )
-    h_min = hasproperty(p, :nonlocal_h_min) ? convert(T, p.nonlocal_h_min) : convert(T, 20.0)
-    h_max = hasproperty(p, :nonlocal_h_max) ? convert(T, p.nonlocal_h_max) : convert(T, 400.0)
-    u_floor = hasproperty(p, :nonlocal_velocity_floor) ? convert(T, p.nonlocal_velocity_floor) : convert(T, 0.1)
-    f_floor = hasproperty(p, :nonlocal_f_floor) ? convert(T, p.nonlocal_f_floor) : convert(T, 1.0e-5)
-
-    speed = max(sqrt(U_ref * U_ref + V_ref * V_ref), u_floor)
-    f_eff = max(abs(convert(T, p.f)), f_floor)
-    h_nonlocal = clamp(speed / f_eff, h_min, h_max)
-    return (one(T) - weight) * h_local + weight * h_nonlocal
-end
-
 @inline function _bounded_stability_response(stability_arg::S, g_stability_max::G) where {S<:Real,G<:Real}
     T = promote_type(S, G)
     arg = convert(T, stability_arg)
@@ -270,8 +246,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
     # Surface Option 2 Fold Geometry & Regularization
     D_surf = β_gspt^2 + convert(T, 4.0) * Δ_surf
     sqrt_D_reg_surf = sqrt(convert(T, 0.5) * (D_surf + sqrt(D_surf^2 + ξ^2)))
-    H_step_surf = convert(T, 0.5) * (one(T) + D_surf / sqrt(D_surf^2 + ξ^2))
-    q_star_surf = H_step_surf * convert(T, 0.5) * l_0 * (β_gspt + sqrt_D_reg_surf)
+    q_star_surf = convert(T, 0.5) * l_0 * (β_gspt + sqrt_D_reg_surf)
 
     tilde_e_surf = q_star_surf^2
     psi_gate_surf = sqrt(tilde_e_surf) / (sqrt(tilde_e_surf) + alpha_gate)
