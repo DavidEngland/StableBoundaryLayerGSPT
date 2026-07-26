@@ -8,23 +8,23 @@ In the singular limit $\varepsilon \to 0$, the fast turbulent kinetic energy (TK
 \end{equation}
 where $\tilde e = e + \delta \ge 0$, $\mathbf{y} = (U,V,T_s) \in \mathbb{R}^3$ represents the slow vector field, and
 \begin{equation}
-F_{\mathrm{reg}}(\tilde e,\mathbf{y}) = l_0\,\Delta(\mathbf{y})\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right) + \beta\tilde e - \frac{\tilde e^{3/2}}{l_0},
+F_{\mathrm{reg}}(\tilde e,\mathbf{y}) = l_0\,\Delta(\mathbf{y})\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha_{\mathrm{safe}}}\right) + \sigma_e\tilde e - \frac{\tilde e^{3/2}}{l_0},
 \qquad
 \Delta(\mathbf{y}) = \eta\,\gamma\,(U^2+V^2) - K\,G(T_s).
 \end{equation}
 
 In single-column model (SCM) realizations, the damping-scale contribution entering $\gamma$ is evaluated using the state-dependent emergent boundary layer height $h_{\text{eff}}$, coupling column momentum directly back into the local manifold geometry.
 
-Outside the $\mathcal{O}(\alpha)$ boundary layer near $\tilde e = 0$, transforming variables to $q \coloneqq \sqrt{\tilde e}$ yields the asymptotic manifold equation $F(q,\mathbf{y}) = q \cdot \mathcal{F}(q,\mathbf{y}) = 0$, where
+Outside the $\mathcal{O}(\alpha_{\mathrm{safe}})$ boundary layer near $\tilde e = 0$, transforming variables to $q \coloneqq \sqrt{\tilde e}$ yields the asymptotic manifold equation $F(q,\mathbf{y}) = q \cdot \mathcal{F}(q,\mathbf{y}) = 0$, where
 \begin{equation}
-\mathcal{F}(q,\mathbf{y}) = l_0\Delta(\mathbf{y}) + \beta q - \frac{q^2}{l_0}.
+\mathcal{F}(q,\mathbf{y}) = l_0\Delta(\mathbf{y}) + \sigma_e q - \frac{q^2}{l_0}.
 \label{eq:manifold_factor_F}
 \end{equation}
 Setting $F(q,\mathbf{y}) = 0$ exposes three distinct equilibrium branches:
 \begin{align}
 q_{\mathrm{lam}} &= 0 \qquad\quad\; (e^* = -\delta < 0, \text{ physical laminar floor}), \label{eq:branch_lam} \\
-q_{-}(\Delta) &= \frac{\beta l_0 - l_0\sqrt{\beta^2+4\Delta}}{2}, \label{eq:branch_minus} \\
-q_{+}(\Delta) &= \frac{\beta l_0 + l_0\sqrt{\beta^2+4\Delta}}{2}. \label{eq:branch_plus}
+q_{-}(\Delta) &= \frac{\sigma_e l_0 - l_0\sqrt{\sigma_e^2+4\Delta}}{2}, \label{eq:branch_minus} \\
+q_{+}(\Delta) &= \frac{\sigma_e l_0 + l_0\sqrt{\sigma_e^2+4\Delta}}{2}. \label{eq:branch_plus}
 \end{align}
 Here, $q_{+}(\Delta)$ defines the active attracting sheet ($\partial_q \mathcal{F} < 0$), whereas $q_{-}(\Delta)$ defines the unstable threshold sheet ($\partial_q \mathcal{F} > 0$).
 
@@ -37,13 +37,13 @@ The fold locus of the non-trivial parabolic branch is determined by the local tu
 \mathcal{F}(q,\mathbf{y}) = 0, \qquad \frac{\partial \mathcal{F}}{\partial q}(q,\mathbf{y}) = 0.
 \label{eq:fold_conditions_unified}
 \end{equation}
-Differentiating Eq.~\eqref{eq:manifold_factor_F} with respect to $q$ yields $q_{\mathrm{fold}} = \frac{1}{2}\beta l_0$. Substituting $q_{\mathrm{fold}}$ back into $\mathcal{F} = 0$ determines the critical fold coordinates in state space:
+Differentiating Eq.~\eqref{eq:manifold_factor_F} with respect to $q$ yields $q_{\mathrm{fold}} = \frac{1}{2}\sigma_e l_0$. Substituting $q_{\mathrm{fold}}$ back into $\mathcal{F} = 0$ determines the critical fold coordinates in state space:
 \begin{equation}
-q_{\mathrm{fold}} = \frac{\beta l_0}{2},
+q_{\mathrm{fold}} = \frac{\sigma_e l_0}{2},
 \qquad
-e_{\mathrm{fold}} = \frac{\beta^2 l_0^2}{4} - \delta,
+e_{\mathrm{fold}} = \frac{\sigma_e^2 l_0^2}{4} - \delta,
 \qquad
-\Delta_{\mathrm{fold}} = -\frac{\beta^2}{4}.
+\Delta_{\mathrm{fold}} = -\frac{\sigma_e^2}{4}.
 \end{equation}
 Notice that the non-linear Kolmogorov dissipation scale ($q^2/l_0 \equiv \tilde e^{3/2}/l_0$) is strictly required to produce the quadratic term in Eq.~\eqref{eq:manifold_factor_F}. Linearized dissipation ($\sim \tilde e$) yields purely monotonic branches devoid of turning points.
 
@@ -80,9 +80,9 @@ creating a saddle-node turning point in $T_s$ even while the fast atmospheric TK
 This geometric separation resolves the false equivalence between a regularized boundary intersection ($e^*$ crossing $e = 0$) and a full thermodynamic fold catastrophe. Distinguishing these mechanisms is essential for modeling intermittency, collapse-recovery hysteresis, and self-sustained nocturnal oscillations without introducing ad-hoc numerical thresholds or conditional switches.
 
 \paragraph{4. Surface Temperature Relaxation Oscillations.}
-With surface skin temperature $T_s$ acting as the primary slow variable governed by thermal capacity $C_s$:
+With surface skin temperature $T_s$ acting as the primary slow variable governed by thermal capacity $C_{\mathrm{skin}}$:
 \begin{equation}
-C_s \frac{\mathrm{d}T_s}{\mathrm{d}t} = \mathcal{H}(T_s, U, V, e) = R_{\mathrm{net}}(T_s) + H(T_s,e) + G_{\mathrm{soil}}(T_s),
+C_{\mathrm{skin}} \frac{\mathrm{d}T_s}{\mathrm{d}t} = \mathcal{H}(T_s, U, V, e) = R_{\mathrm{net}}(T_s) + H(T_s,e) + G_{\mathrm{soil}}(T_s),
 \end{equation}
 the combined $(U,V,T_s,e)$ phase space exhibits canonical relaxation oscillations. On the active sheet ($e^* > 0$), downward sensible heat flux $H > 0$ buffers radiative cooling and drives a slow thermal decay ($T_s \downarrow$). As $T_s$ decreases, atmospheric stability $G(T_s)$ strengthens until $\Delta$ crosses the collapse threshold. Upon fast quenching ($e \to 0$), sensible heat supply vanishes ($H \to 0$), accelerating surface skin cooling while the decoupled wind aloft accelerates ($(U^2+V^2) \uparrow$). The resulting geostrophic shear accumulation eventually restores $\Delta > 0$, triggering a fast turbulent burst ($e \to e^*$) that completes the relaxation cycle without artificial numerical resets.
 
@@ -104,7 +104,7 @@ On the active attracting sheet, $e^* = q_{+}^2 - \delta$ with $q_{+} = q_{+}(\De
 \end{equation}
 Differentiating $q_{+}(\Delta)$ in Eq.~\eqref{eq:branch_plus} with respect to $\Delta$:
 \begin{equation}
-\frac{\partial q_{+}}{\partial \Delta} = \frac{l_0}{\sqrt{\beta^2+4\Delta}} > 0.
+\frac{\partial q_{+}}{\partial \Delta} = \frac{l_0}{\sqrt{\sigma_e^2+4\Delta}} > 0.
 \end{equation}
 Because $q_+ > 0$, $\frac{\partial q_+}{\partial \Delta} > 0$, and $\frac{\partial \Delta}{\partial T_s} > 0$, it follows that $\frac{\partial e^*}{\partial T_s} > 0$ everywhere on the active sheet. Consequently, a monotonic decrease in surface temperature ($\Delta T_s < 0$) forces $\Delta e^* < 0$, translating the active critical manifold downward toward the laminar boundary.
 \end{proof}

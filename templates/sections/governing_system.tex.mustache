@@ -25,13 +25,13 @@ where $h_{\mathrm{eff}}$ is the state-dependent emergent boundary layer scale he
 
 The coupled fast--slow governing equations are given by:
 \begin{align}
-\varepsilon \frac{de}{dt} &= l_0\,\Delta(U,V,T_s)\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right) + \sigma_e\tilde e - \frac{\tilde e^{3/2}}{l_0}, \label{eq:gspt_fast}\\
+\varepsilon \frac{de}{dt} &= l_0\,\Delta(U,V,T_s)\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha_{\mathrm{safe}}}\right) + \sigma_e\tilde e - \frac{\tilde e^{3/2}}{l_0}, \label{eq:gspt_fast}\\
 \frac{dU}{dt} &= f(V-V_g) - \gamma\sqrt{\tilde e}\,U, \label{eq:gspt_slow_u}\\
 \frac{dV}{dt} &= -f(U-U_g) - \gamma\sqrt{\tilde e}\,V, \label{eq:gspt_slow_v}\\
 \frac{dT_s}{dt} &= \frac{1}{C_s}\left[R_{\downarrow} - \sigma T_s^4 - \rho c_p C_H\sqrt{U^2+V^2+\delta_u}\,(T_s-T_a) - \frac{K_g}{d_g}(T_s-T_g)\right]. \label{eq:gspt_slow_ts}
 \end{align}
 
-Here $\varepsilon \ll 1$ is the time-scale separation parameter, $\alpha > 0$ is a smooth $C^\infty$ activation length scale controlling the onset of turbulent transport near $\tilde e = 0$, and $\sigma_e$ parameterizes linear self-amplification within the fast subsystem.
+Here $\varepsilon \ll 1$ is the time-scale separation parameter, $\alpha_{\mathrm{safe}} > 0$ is a smooth $C^\infty$ activation length scale controlling the onset of turbulent transport near $\tilde e = 0$, and $\sigma_e$ parameterizes linear self-amplification within the fast subsystem.
 
 \begin{remark}[Physical Anchoring of Parameter $K$]
 To maintain dimensional consistency across the mechanical and thermodynamic forcing terms, $K$ is defined strictly as a \textbf{buoyant destruction acceleration scale} with physical units of $\si{\meter\per\second\squared}$ ($\text{m s}^{-2}$). This definition resolves prior dimensional ambiguities by aligning $K$ directly with the buoyant acceleration scale $g \Delta \theta / \theta_0$ in turbulent flux equations.

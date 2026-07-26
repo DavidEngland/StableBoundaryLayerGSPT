@@ -21,5 +21,7 @@ four_d_solver:
     T_a: 285.15
     T_deep: 283.15
     R_down: 260.0
+    beta_t: 15.0
+    sigma_e: 15.0
     z0m: 0.02
     z0h: 0.005

@@ -28,26 +28,26 @@ If an unconstrained trial step drives the fast state below the shifted floor, di
 
 To resolve this, the implementation incorporates a smooth safeguard gate near $e = -\delta$, ensuring that the physical domain remains strictly forward-invariant without introducing discontinuous projections. We define the state-dependent gate using the regularized activation function:
 \begin{equation}
-\Psi(e+\delta; \alpha) = \frac{\sqrt{e+\delta}}{\sqrt{e+\delta}+\alpha},
+\Psi(e+\delta; \alpha_{\mathrm{safe}}) = \frac{\sqrt{e+\delta}}{\sqrt{e+\delta}+\alpha_{\mathrm{safe}}},
 \label{eq:smooth_gate}
 \end{equation}
-where $\alpha > 0$ regulates the subgrid transition width ($\alpha \sim 10^{-2}\delta$).
+where $\alpha_{\mathrm{safe}} > 0$ regulates the subgrid transition width ($\alpha_{\mathrm{safe}} \sim 10^{-2}\delta$).
 
 Incorporating this gate directly into the fast prognostic dynamics yields:
 \begin{equation}
-\varepsilon\frac{\mathrm{d}e}{\mathrm{d}t} = l_0\,\Delta(\mathbf{y})\,(e+\delta)\,\Psi(e+\delta;\alpha) + \beta(e+\delta) - \frac{(e+\delta)^{3/2}}{l_0}.
+\varepsilon\frac{\mathrm{d}e}{\mathrm{d}t} = l_0\,\Delta(\mathbf{y})\,(e+\delta)\,\Psi(e+\delta;\alpha_{\mathrm{safe}}) + \sigma_e(e+\delta) - \frac{(e+\delta)^{3/2}}{l_0}.
 \label{eq:gated_fast_system}
 \end{equation}
 This formulation ensures that the stiff solver interacts with an infinitely differentiable $C^\infty$ right-hand-side operator across all regime transitions.
 
 \paragraph{Properties of the Safeguard Gate.}
 \begin{enumerate}
-    \item \textbf{Asymptotic Consistency:} For active turbulent states where $(e+\delta) \gg \alpha$, the gate approaches unity rapidly:
+    \item \textbf{Asymptotic Consistency:} For active turbulent states where $(e+\delta) \gg \alpha_{\mathrm{safe}}$, the gate approaches unity rapidly:
     \begin{equation}
-    \Psi(e+\delta; \alpha) = 1 - \mathcal{O}\left( \alpha\,(e+\delta)^{-1/2} \right),
+    \Psi(e+\delta; \alpha_{\mathrm{safe}}) = 1 - \mathcal{O}\left( \alpha_{\mathrm{safe}}\,(e+\delta)^{-1/2} \right),
     \end{equation}
     recovering exact physical GSPT dynamics away from the boundary.
-    \item \textbf{Singularity Interception:} As the system approaches the laminar floor ($e \to -\delta$), the shifted variable $\varphi \to 0$. Because $\alpha > 0$, the gate $\Psi$ rapidly vanishes, clamping the fast equation and preventing the state from entering the singular neighborhood where transport derivatives in Eq.~\eqref{eq:coupling_jacobian_element} diverge.
+    \item \textbf{Singularity Interception:} As the system approaches the laminar floor ($e \to -\delta$), the shifted variable $\varphi \to 0$. Because $\alpha_{\mathrm{safe}} > 0$, the gate $\Psi$ rapidly vanishes, clamping the fast equation and preventing the state from entering the singular neighborhood where transport derivatives in Eq.~\eqref{eq:coupling_jacobian_element} diverge.
     \item \textbf{Forward Invariance:} The boundary $e = -\delta$ becomes a smooth invariant orbit of the numerical system, guaranteeing $e(t) > -\delta$ for all $t > 0$ under any consistent discretization scheme.
 \end{enumerate}
 
@@ -136,7 +136,8 @@ const f_cor     = {{param_f_coriolis_code}}   # Coriolis parameter (s^-1)
 const epsilon   = {{param_epsilon_code}}      # Fast-slow timescale ratio (eps << 1)
 const delta     = {{param_delta_code}}        # Background TKE floor (m^2/s^2)
 const K_buoy    = {{param_k_code}}            # Buoyant destruction scale (m/s^2)
-const beta      = {{param_beta_code}}         # Stability sensitivity parameter
+const beta_T    = {{param_beta_t_code}}       # Thermal stability sensitivity in G(Ts)
+const sigma_e   = {{param_sigma_e_code}}      # Fast linear TKE term
 const h_bl      = {{param_h_code}}            # Boundary layer bulk scale height (m)
 const h_min     = 20.0          # Lower bound for emergent h_eff (m)
 const h_max     = 400.0         # Upper bound for emergent h_eff (m)
@@ -180,7 +181,7 @@ function gspt_sbl_dynamics!(dx, x, p, t)
 
     # 2.2 Physical Auxiliary Functions
     # Bounded tanh stability response prevents runaway buoyancy growth
-    G_Ts = tanh(beta * (Ta - Ts) / Ta)
+    G_Ts = tanh(beta_T * (Ta - Ts) / Ta)
 
     # Net mechanical production minus buoyancy balance
     shear_prod = eta * gamma_eff * (U^2 + V^2)
@@ -198,7 +199,7 @@ function gspt_sbl_dynamics!(dx, x, p, t)
 
     # 2.3 Evaluated Tendencies
     # Fast TKE Equation: activated production + non-linear dissipation
-    dx[1] = (1.0 / epsilon) * (l0 * Delta * phi * psi + beta * phi - (phi^(3/2)) / l0)
+    dx[1] = (1.0 / epsilon) * (l0 * Delta * phi * psi + sigma_e * phi - (phi^(3/2)) / l0)
 
     # Slow Momentum and Thermodynamic Equations
     dx[2] = f_cor * (V - Vg) - gamma_eff * sqrt_phi_reg * U

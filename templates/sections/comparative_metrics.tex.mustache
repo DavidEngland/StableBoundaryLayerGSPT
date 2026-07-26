@@ -5,6 +5,7 @@ We verify the prognostic $4\text{D}$ GSPT SBL formulation by comparing Single-Co
 
 \paragraph{Physical Setup and Surface Boundary Drag.}
 The physical differences between these environments lie in their surface boundary structures, aerodynamic roughness, and thermal insulation profiles. Simulations are initialized under clear nocturnal radiative cooling conditions, varying the aerodynamic roughness length $z_{0m}$ and skin layer thermal capacity $C_{\mathrm{skin}}$:
+Thermal-response sensitivity is parameterized consistently by $\beta_T$ through $G(T_s)$, while the fast linear TKE shift uses $\sigma_e$, matching the canonical governing notation.
 \begin{itemize}
     \item \textbf{CASES99 (Grassland Plains):} Featuring open terrain with moderate roughness ($z_{0m} \approx 0.02\,\mathrm{m}$), the surface exerts a continuous frictional torque on the wind field. This open-terrain regime allows trajectories to execute wide, unconstrained global dynamic loops in $(U,V)$ phase space, driven by Blackadar inertial acceleration following frictional decoupling.
     \item \textbf{FLOSS (Fluxes Over Snow Surfaces):} Smooth snow cover features an exceptionally low roughness length ($z_{0m} \approx 1.0 \times 10^{-4}\,\mathrm{m}$) combined with intense thermal insulation from the underlying snowpack. The snowpack suppresses mechanical shear and isolates the surface from soil heat flux, acting as a strong dynamic damper that rapidly quenches TKE and pins the state vector tightly to the laminar residual sheet $\mathcal{S}_0^{\mathrm{lam}}$.

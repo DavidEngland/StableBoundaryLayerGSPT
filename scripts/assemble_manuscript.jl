@@ -20,6 +20,8 @@ const PROVENANCE_PARAM_KEYS = [
     "delta",
     "xi",
     "beta",
+    "beta_t",
+    "sigma_e",
     "h",
     "l0",
     "z0m",
@@ -340,6 +342,31 @@ function codeify_number(value::Float64)
     return lowercase(string(value))
 end
 
+function set_notation_context_aliases!(context::Dict{String,String}, params::Dict{String,Float64})
+    # Thermal response sensitivity defaults to legacy beta when beta_t is absent.
+    beta_t_val = if haskey(params, "beta_t")
+        params["beta_t"]
+    elseif haskey(params, "beta")
+        params["beta"]
+    else
+        0.0
+    end
+
+    # Fast linear TKE term defaults to legacy beta when sigma_e is absent.
+    sigma_e_val = if haskey(params, "sigma_e")
+        params["sigma_e"]
+    elseif haskey(params, "beta")
+        params["beta"]
+    else
+        0.0
+    end
+
+    context["param_beta_t_tex"] = texify_number(beta_t_val)
+    context["param_beta_t_code"] = codeify_number(beta_t_val)
+    context["param_sigma_e_tex"] = texify_number(sigma_e_val)
+    context["param_sigma_e_code"] = codeify_number(sigma_e_val)
+end
+
 function write_parameter_macro_bundle(active_dataset::String)
     mkpath(joinpath("reports", "generated", "parameters"))
 
@@ -373,6 +400,8 @@ function write_parameter_macro_bundle(active_dataset::String)
         context[parameter_to_context_key(k)] = texify_number(v)
         context[parameter_to_code_context_key(k)] = codeify_number(v)
     end
+
+    set_notation_context_aliases!(context, active_params)
 
     if haskey(datasets_data, "CASES99")
         p = datasets_data["CASES99"]["parameters"]::Dict{String,Float64}
@@ -601,6 +630,8 @@ function verify_parameter_macro_bundle!(macro_path::String, active_dataset::Stri
         "delta",
         "xi",
         "beta",
+        "beta_t",
+        "sigma_e",
         "h",
         "l0",
         "z0m",

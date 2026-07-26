@@ -32,7 +32,7 @@ Ri_g = \frac{\frac{g}{\theta_0}\frac{\partial \theta}{\partial z}}{\left(\frac{\
 To explicitly capture the rapid stabilization and structural collapse of the stable boundary layer (SBL), the localized turbulent field is driven by a singular perturbation equation for the turbulent kinetic energy $e$. Incorporating the non-dimensional timescale ratio $0 < \varepsilon \ll 1$, the continuous system is coupled via:
 
 \begin{equation}
-\varepsilon \frac{\partial e}{\partial t} = l_0\,\Delta_{\mathrm{col}}\left(\frac{e+\delta}{\sqrt{e+\delta}+\alpha}\right) + \beta(e+\delta) - \frac{(e+\delta)^{3/2}}{l_0},
+\varepsilon \frac{\partial e}{\partial t} = l_0\,\Delta_{\mathrm{col}}\left(\frac{e+\delta}{\sqrt{e+\delta}+\alpha_{\mathrm{safe}}}\right) + \sigma_e(e+\delta) - \frac{(e+\delta)^{3/2}}{l_0},
 \label{eq:gov_tke_continuous}
 \end{equation}
 where the resolved-column forcing diagnostic is
@@ -45,7 +45,7 @@ In the vertically collapsed reduced model, the corresponding bulk forcing diagno
 \end{equation}
 where the bounded thermodynamic closure is
 \begin{equation}
-G(T_s)=\tanh\!\left(\beta\,\frac{T_a-T_s}{T_a}\right),
+G(T_s)=\tanh\!\left(\beta_T\,\frac{T_a-T_s}{T_a}\right),
 \end{equation}
 so $\Delta_{\mathrm{col}}$ resolves local shear-stratification competition in $z$, while $\Delta(U,V,T_s)$ captures its state-space projection on the reduced manifold and shifts downward under nocturnal cooling.
 
@@ -76,7 +76,7 @@ The Boundary--Fold Separation Theorem clarifies that SBL collapse cannot be unde
 
 To guarantee that the reduced fast--slow system accurately represents continuous physical dynamics, we apply Fenichel's Theorems \citep{Fenichel1979, Kuehn2015} to the critical manifold $\mathcal{S}_0 \subset \mathcal{X}$, defined by:
 \begin{equation}
-\mathcal{S}_0 = \left\{ (e, U, V, T_s) \in \mathcal{X} \;\middle|\; l_0\,\Delta(U,V,T_s)\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha}\right) + \beta\tilde e - \frac{\tilde e^{3/2}}{l_0} = 0 \right\}.
+\mathcal{S}_0 = \left\{ (e, U, V, T_s) \in \mathcal{X} \;\middle|\; l_0\,\Delta(U,V,T_s)\left(\frac{\tilde e}{\sqrt{\tilde e}+\alpha_{\mathrm{safe}}}\right) + \sigma_e\tilde e - \frac{\tilde e^{3/2}}{l_0} = 0 \right\}.
 \end{equation}
 
 A compact submanifold $\mathcal{S}_{0,k} \subset \mathcal{S}_0$ is \textbf{normally hyperbolic} if all eigenvalues $\lambda$ of the fast linearized Jacobian matrix $D_e \dot{e}$ evaluated along $\mathcal{S}_{0,k}$ have non-zero real parts ($\mathrm{Re}(\lambda) \neq 0$).
@@ -87,7 +87,7 @@ Let $\delta > 0$ define the background mixing floor such that $\tilde e = e + \d
 \begin{enumerate}
     \item \textbf{Normal Hyperbolicity of the Laminar Sheet:} For all states on the lower laminar branch $\mathcal{S}_0^{\mathrm{lam}}$ where turbulent production drops to zero, the background mixing floor $\delta > 0$ ensures that the linearized fast eigenvalue satisfies:
     \begin{equation}
-    \lambda_{\mathrm{fast}} \equiv \left.\frac{\partial \dot{e}}{\partial \tilde{e}}\right|_{\mathcal{S}_0^{\mathrm{lam}}} = \beta - \frac{3}{2}\frac{\sqrt{\delta}}{l_0} + \mathcal{O}(\alpha) < 0,
+    \lambda_{\mathrm{fast}} \equiv \left.\frac{\partial \dot{e}}{\partial \tilde{e}}\right|_{\mathcal{S}_0^{\mathrm{lam}}} = \sigma_e - \frac{3}{2}\frac{\sqrt{\delta}}{l_0} + \mathcal{O}(\alpha_{\mathrm{safe}}) < 0,
     \end{equation}
     bound strictly away from zero. Thus, the laminar branch remains normally hyperbolic.
     \item \textbf{Smooth Manifold Persistence:} By Fenichel's First Persistence Theorem \citep{Fenichel1979}, for sufficiently small $\varepsilon > 0$, the compact normally hyperbolic submanifolds of $\mathcal{S}_0$ persist as smooth, invariant slow manifolds $\mathcal{S}_\varepsilon$ located $\mathcal{O}(\varepsilon)$-close to $\mathcal{S}_0$.

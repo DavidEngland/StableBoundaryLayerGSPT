@@ -43,6 +43,8 @@ function default_4d_parameters(; case_name::Union{Symbol,AbstractString}=:midlat
         "delta" => 1.0e-4,
         "K" => 0.32,
         "beta" => 15.0,
+        "beta_t" => 15.0,
+        "sigma_e" => 15.0,
         "h" => 50.0,
         # Optional non-local scaling controls for h
         "use_nonlocal_h" => 0.0,
@@ -167,12 +169,12 @@ function _production_minus_buoyancy(
 )
     K = Float64(p["K"])
     Ta = Float64(p["T_a"])
-    beta = Float64(p["beta"])
+    beta_t = Float64(get(p, "beta_t", p["beta"]))
     g_stability_max = Float64(get(p, "g_stability_max", 1.0))
     shear_eff = Float64(get(p, "shear_production_efficiency", 1.0))
 
     gamma = isnothing(gamma_override) ? closure_coefficients(p; U=U, V=V)[1] : Float64(gamma_override)
-    G = _bounded_stability_response(Ts, Ta, beta, g_stability_max)
+    G = _bounded_stability_response(Ts, Ta, beta_t, g_stability_max)
     return shear_eff * gamma * (U * U + V * V) - K * G
 end
 

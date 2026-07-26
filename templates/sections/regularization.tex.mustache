@@ -4,14 +4,14 @@
 To enforce structural well-posedness at the laminar boundary while preserving smooth $C^1$ solver interfaces for numerical integration and Geometric Singular Perturbation Theory (GSPT) reductions, we regularize the fast mechanical production term with an activation gate:
 
 \begin{equation}
-\Psi(\tilde e;\alpha) = \frac{\sqrt{\tilde e}}{\sqrt{\tilde e}+\alpha},
+\Psi(\tilde e;\alpha_{\mathrm{safe}}) = \frac{\sqrt{\tilde e}}{\sqrt{\tilde e}+\alpha_{\mathrm{safe}}},
 \qquad \tilde e = e + \delta,
 \label{eq:activation_gate_def}
 \end{equation}
-where $\alpha > 0$ regulates the width of the subgrid transition layer and prevents square-root derivative singularities near the physical boundary $e = -\delta$. The prognostic fast TKE subsystem is formulated as:
+where $\alpha_{\mathrm{safe}} > 0$ regulates the width of the subgrid transition layer and prevents square-root derivative singularities near the physical boundary $e = -\delta$. The prognostic fast TKE subsystem is formulated as:
 
 \begin{equation}
-\varepsilon\frac{\mathrm{d}e}{\mathrm{d}t} = l_0\,\Delta(\mathbf{y})\,\tilde e\,\Psi(\tilde e;\alpha) + \beta\tilde e - \frac{\tilde e^{3/2}}{l_0},
+\varepsilon\frac{\mathrm{d}e}{\mathrm{d}t} = l_0\,\Delta(\mathbf{y})\,\tilde e\,\Psi(\tilde e;\alpha_{\mathrm{safe}}) + \sigma_e\tilde e - \frac{\tilde e^{3/2}}{l_0},
 \label{eq:gated_fast_operator}
 \end{equation}
 where $\mathbf{y} = (U, V, T_s)^T \in \mathbb{R}^3$ denotes the slow atmospheric state vector.
@@ -35,21 +35,21 @@ Consider the regularized fast TKE sub-dynamics in Equation~\eqref{eq:gated_fast_
 \begin{proof}
 Define the non-negative shifted coordinate $\varphi \coloneqq e + \delta \ge 0$. In terms of $\varphi$, Equation~\eqref{eq:gated_fast_operator} becomes the autonomous initial value problem $\varepsilon \frac{\mathrm{d}\varphi}{\mathrm{d}t} = g(\varphi)$, where:
 \begin{equation}
-g(\varphi) = l_0\,\Delta(\mathbf{y})\,\frac{\varphi^{3/2}}{\sqrt{\varphi}+\alpha} + \beta\varphi - \frac{\varphi^{3/2}}{l_0}.
+g(\varphi) = l_0\,\Delta(\mathbf{y})\,\frac{\varphi^{3/2}}{\sqrt{\varphi}+\alpha_{\mathrm{safe}}} + \sigma_e\varphi - \frac{\varphi^{3/2}}{l_0}.
 \end{equation}
 We verify that $g(\varphi)$ is continuously differentiable ($C^1$) on the semi-infinite domain $[0, \infty)$. Evaluating the right-hand derivative of each term as $\varphi \to 0^+$:
 \begin{align}
-\lim_{\varphi \to 0^+} \frac{\mathrm{d}}{\mathrm{d}\varphi}\left( \frac{\varphi^{3/2}}{\sqrt{\varphi}+\alpha} \right) &= \lim_{\varphi \to 0^+} \frac{\varphi + \frac{3}{2}\alpha\sqrt{\varphi}}{(\sqrt{\varphi}+\alpha)^2} = 0, \\
-\lim_{\varphi \to 0^+} \frac{\mathrm{d}}{\mathrm{d}\varphi} (\beta\varphi) &= \beta, \\
+\lim_{\varphi \to 0^+} \frac{\mathrm{d}}{\mathrm{d}\varphi}\left( \frac{\varphi^{3/2}}{\sqrt{\varphi}+\alpha_{\mathrm{safe}}} \right) &= \lim_{\varphi \to 0^+} \frac{\varphi + \frac{3}{2}\alpha_{\mathrm{safe}}\sqrt{\varphi}}{(\sqrt{\varphi}+\alpha_{\mathrm{safe}})^2} = 0, \\
+\lim_{\varphi \to 0^+} \frac{\mathrm{d}}{\mathrm{d}\varphi} (\sigma_e\varphi) &= \sigma_e, \\
 \lim_{\varphi \to 0^+} \frac{\mathrm{d}}{\mathrm{d}\varphi}\left( \frac{\varphi^{3/2}}{l_0} \right) &= \lim_{\varphi \to 0^+} \frac{3\sqrt{\varphi}}{2l_0} = 0.
 \end{align}
-Thus, $\lim_{\varphi \to 0^+} g'(\varphi) = \beta$, establishing that $g \in C^1([0, \infty))$ and is locally Lipschitz continuous at $\varphi = 0$.
+Thus, $\lim_{\varphi \to 0^+} g'(\varphi) = \sigma_e$, establishing that $g \in C^1([0, \infty))$ and is locally Lipschitz continuous at $\varphi = 0$.
 
 Evaluating the vector field directly on the boundary $\varphi = 0$ yields $g(0) = 0$. Consequently, the physical boundary $\varphi = 0$ ($e = -\delta$) is a fixed manifold equilibrium orbit. By Picard--Lindelöf uniqueness for locally Lipschitz vector fields, no trajectory originating in the physical interior ($\varphi(0) > 0$) can intersect or cross the boundary orbit $\varphi = 0$. Therefore, $e(t) \ge -\delta$ for all $t \ge 0$.
 \end{proof}
 
 \begin{remark}[Singularity Safeguarding]
-In standard un-regularized closures with square-root diffusion or production terms ($\sim \sqrt{e}$), numerical integration frequently encounters square-root singularities or negative radicands when trajectories approach $e=0$, triggering solver crashes or non-physical complex values. The $C^\infty$ activation gate $\Psi(\tilde e;\alpha)$ acts as a mathematical safeguard, ensuring $C^1$ continuity and smooth derivative properties at the boundary without clipping derivatives.
+In standard un-regularized closures with square-root diffusion or production terms ($\sim \sqrt{e}$), numerical integration frequently encounters square-root singularities or negative radicands when trajectories approach $e=0$, triggering solver crashes or non-physical complex values. The $C^\infty$ activation gate $\Psi(\tilde e;\alpha_{\mathrm{safe}})$ acts as a mathematical safeguard, ensuring $C^1$ continuity and smooth derivative properties at the boundary without clipping derivatives.
 \end{remark}
 
 \subsection{Discrete Exterior Calculus and Topological Invariant Preservation}
