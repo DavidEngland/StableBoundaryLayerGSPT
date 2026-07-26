@@ -696,7 +696,7 @@ function build_tex_figure_includes(fig_dir::String;
         ),
         "regime_map_z0m_ug" => (
             title="Analytical regime map in \$(z_{0m}, U_g)\$ parameter space derived from surface-layer similarity scaling. The three dynamic regimes—continuous weak turbulence (Regime I), intermittent relaxation oscillations (Regime II), and runaway radiative decoupling (Regime III)—are partitioned by the critical geostrophic shear boundaries \$S_c\$. Observational field campaign markers locate typical parameter pairs for CASES99, FLOSS, and SHEBA.",
-            label="fig:regime_map_z0m_ug_generated",
+            label="fig:regime_map_z0m_ug",
         ),
         "figure_regime_map_z0m_ug" => (
             title="Analytical regime map in \$(z_{0m}, U_g)\$ parameter space derived from surface-layer similarity scaling. The three dynamic regimes—continuous weak turbulence (Regime I), intermittent relaxation oscillations (Regime II), and runaway radiative decoupling (Regime III)—are partitioned by the critical geostrophic shear boundaries \$S_c\$. Observational field campaign markers locate typical parameter pairs for CASES99, FLOSS, and SHEBA.",
@@ -779,6 +779,38 @@ function build_tex_figure_includes(fig_dir::String;
         if !haskey(candidate_paths, stem) || endswith(lowercase(img_path), ".pdf")
             candidate_paths[stem] = img_path
         end
+    end
+
+    # Collapse known alias stems to a canonical figure key to avoid duplicate
+    # figure blocks and label collisions when both legacy and current names exist.
+    stem_aliases = Dict(
+        "regime_map_z0m_ug" => ["figure_regime_map_z0m_ug"],
+        "figure_gspt_manifold_tikz" => ["fig_gspt_manifold_tikz"],
+    )
+    for (canonical, aliases) in stem_aliases
+        if haskey(candidate_paths, canonical)
+            for alias in aliases
+                pop!(candidate_paths, alias, nothing)
+            end
+        else
+            for alias in aliases
+                if haskey(candidate_paths, alias)
+                    candidate_paths[canonical] = candidate_paths[alias]
+                    pop!(candidate_paths, alias, nothing)
+                    break
+                end
+            end
+        end
+    end
+
+    # These figures are embedded directly in section templates and should not
+    # be duplicated in the auto-generated diagnostics block.
+    manual_section_stems = Set([
+        "regime_map_z0m_ug",
+        "figure_regime_map_z0m_ug",
+    ])
+    for stem in manual_section_stems
+        pop!(candidate_paths, stem, nothing)
     end
 
     preferred_stems = isempty(preferred_stems_cfg) ? [
