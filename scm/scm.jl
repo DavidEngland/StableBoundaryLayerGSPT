@@ -212,8 +212,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
         # Option 2 Fold Catastrophe Equilibrium & C^\infty Hyperbolic Embedding
         D_local = β_gspt^2 + convert(T, 4.0) * Δ_local
         sqrt_D_reg = sqrt(convert(T, 0.5) * (D_local + sqrt(D_local^2 + ξ^2)))
-        H_step = convert(T, 0.5) * (one(T) + D_local / sqrt(D_local^2 + ξ^2))
-        q_star = H_step * convert(T, 0.5) * l_0 * (β_gspt + sqrt_D_reg)
+        q_star = convert(T, 0.5) * l_0 * (β_gspt + sqrt_D_reg)
 
         # Regularized Lipschitz Activation Gate Psi(tilde_e; alpha)
         tilde_e_star = q_star^2
@@ -350,7 +349,7 @@ function scm_gspt_tendencies!(dX, X, p, t)
         z0m = max(convert(T, p.z0m), eps(T))
         z0h = max(convert(T, p.z0h), eps(T))
         ratio_floor = convert(T, 1.05)
-        h_ref_surf = max(h_eff_surf, max(z0m, z0h) * ratio_floor)
+        h_ref_surf = max(dz_surf, max(z0m, z0h) * ratio_floor)
         log_m = log(max(h_ref_surf / z0m, ratio_floor))
         log_h = log(max(h_ref_surf / z0h, ratio_floor))
         C_H_surf = (kappa * kappa) / max(log_m * log_h, eps(T))

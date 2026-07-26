@@ -608,6 +608,14 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     km_all = _flatten_field(ts, :Km_faces)
     kh_all = _flatten_field(ts, :Kh_faces)
 
+    # Reconstruct the face-height coordinate so height can be used as a visual
+    # separator from the stability response.
+    z_face_mid = zf[2:(end-1)]
+    z_all = Float64[]
+    for _ in ts
+        append!(z_all, z_face_mid)
+    end
+
     ri_max_display = 2.0
     ri_min_display = max(minimum(ri_all), -0.5)
     keep = [
@@ -616,14 +624,22 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
         for i in eachindex(ri_all)
     ]
 
+    km_plot_vals = max.(km_all[keep], 1.0e-6)
+    kh_plot_vals = max.(kh_all[keep], 1.0e-6)
+
     p7a = Plots.scatter(
         ri_all[keep],
-        km_all[keep];
+        km_plot_vals;
+        zcolor=z_all[keep],
+        c=:viridis,
+        yscale=:log10,
         markersize=2,
+        markerstrokewidth=0,
         alpha=0.5,
         xlabel="Ri_g",
-        ylabel="K_m",
-        title="K_m vs Ri_g (Ri_g <= 2)",
+        ylabel="K_m (m^2 s^-1)",
+        title="K_m vs Ri_g (Color = z)",
+        colorbar_title="z (m)",
         xlims=(ri_min_display, ri_max_display),
         label="",
         legend=:none,
@@ -631,12 +647,17 @@ function generate_figures(payload_path::String, outdir::String, fmt::String, dpi
     )
     p7b = Plots.scatter(
         ri_all[keep],
-        kh_all[keep];
+        kh_plot_vals;
+        zcolor=z_all[keep],
+        c=:viridis,
+        yscale=:log10,
         markersize=2,
+        markerstrokewidth=0,
         alpha=0.5,
         xlabel="Ri_g",
-        ylabel="K_h",
-        title="K_h vs Ri_g (Ri_g <= 2)",
+        ylabel="K_h (m^2 s^-1)",
+        title="K_h vs Ri_g (Color = z)",
+        colorbar_title="z (m)",
         xlims=(ri_min_display, ri_max_display),
         label="",
         legend=:none,

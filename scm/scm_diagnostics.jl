@@ -153,8 +153,7 @@ function compute_face_closure(U, V, theta, T_s, p; cfg=SCMDiagnosticConfig())
 
         D_local = beta_gspt^2 + 4.0 * delta_local
         sqrt_D_reg = sqrt(0.5 * (D_local + sqrt(D_local^2 + xi^2)))
-        H_step = 0.5 * (1.0 + D_local / sqrt(D_local^2 + xi^2))
-        q_star = H_step * 0.5 * l0 * (beta_gspt + sqrt_D_reg)
+        q_star = 0.5 * l0 * (beta_gspt + sqrt_D_reg)
 
         e_star = q_star^2
         psi_gate = sqrt(e_star) / (sqrt(e_star) + alpha_gate)
@@ -249,7 +248,7 @@ function compute_snapshot_diagnostics(X, p; t=0.0, cfg=SCMDiagnosticConfig())
     z0m = max(p.z0m, eps(Float64))
     z0h = max(p.z0h, eps(Float64))
     ratio_floor = 1.05
-    h_ref_surf = max(h_eff_surf, max(z0m, z0h) * ratio_floor)
+    h_ref_surf = max(dz_surf, max(z0m, z0h) * ratio_floor)
     log_m = log(max(h_ref_surf / z0m, ratio_floor))
     log_h = log(max(h_ref_surf / z0h, ratio_floor))
     C_H_surf = (kappa * kappa) / max(log_m * log_h, eps(Float64))

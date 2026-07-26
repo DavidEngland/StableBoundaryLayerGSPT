@@ -112,6 +112,15 @@ function _parse_bool(s::AbstractString)
     end
 end
 
+function _normalize_case_name(case_name::AbstractString)
+    normalized = lowercase(strip(case_name))
+    if normalized == "cases99" || normalized == "floss"
+        return "idealized_sbl"
+    end
+    return normalized
+end
+    println("  --case <gabls1|idealized_sbl|cases99|floss|sheba>  Case name (default: gabls1)")
+
 function parse_args(args::Vector{String})
     cfg = Dict{String,Any}(
         "case" => "gabls1",
@@ -155,7 +164,7 @@ function parse_args(args::Vector{String})
             _usage()
             exit(0)
         elseif a == "--case" && i < length(args)
-            cfg["case"] = lowercase(args[i+1])
+            cfg["case"] = _normalize_case_name(args[i+1])
             i += 2
         elseif a == "--duration" && i < length(args)
             cfg["duration_hours"] = parse(Float64, args[i+1])
@@ -329,6 +338,7 @@ end
 function build_case(case_name::String, N::Int, dz::Float64; theta_lapse_rate_override=nothing)
     d = _base_case_params(N, dz)
     z = d["z_centers"]
+    case_name = _normalize_case_name(case_name)
 
     if case_name == "gabls1"
         d["Ug"] = 8.0
