@@ -1,11 +1,7 @@
 #!/usr/bin/env julia
 # scripts/generate_symbols.jl - Symbol Single Source of Truth (SSOT) Generator
 # This script generates LaTeX and Markdown representations of the symbols defined in `spec/symbols.yaml`.
-# It ensures a single source of truth for mathematical symbols, their meanings, units, and code mappings.
-# The generated assets include:
-# - `reports/generated/sections/list_of_symbols.tex` (LaTeX table)
-# - `docs/SYMBOLS.md` (Markdown reference)
-# The script also provides validation to ensure the integrity of the symbols specification.
+
 module SymbolSSOT
 
 using YAML
@@ -30,16 +26,18 @@ function _read_yaml(path::String)
 end
 
 function _latex_escape(s::AbstractString)
-    out = String(s)
-    out = replace(out, "\\" => "\\textbackslash{}")
-    out = replace(out, "{" => "\\{")
-    out = replace(out, "}" => "\\}")
-    out = replace(out, "_" => "\\_")
-    out = replace(out, "%" => "\\%")
-    out = replace(out, "#" => "\\#")
-    out = replace(out, "&" => "\\&")
-    out = replace(out, "~" => "\\textasciitilde{}")
-    return out
+    # Simultaneous single-pass replacement prevents re-escaping generated braces/slashes
+    return replace(
+        String(s),
+        "\\" => "\\textbackslash{}",
+        "{" => "\\{",
+        "}" => "\\}",
+        "_" => "\\_",
+        "%" => "\\%",
+        "#" => "\\#",
+        "&" => "\\&",
+        "~" => "\\textasciitilde{}"
+    )
 end
 
 function _validate_spec(spec)
@@ -107,18 +105,24 @@ function _render_tex(spec; generated_path::String)
     push!(lines, "\\setlength{\\tabcolsep}{5pt}")
     push!(lines, "\\renewcommand{\\arraystretch}{1.15}")
     push!(lines, "\\begin{center}")
-    push!(lines, "\\begin{tabular}{p{0.12\\textwidth}p{0.34\\textwidth}p{0.16\\textwidth}p{0.30\\textwidth}}")
+    push!(lines, "\\begin{tabular}{p{0.14\\textwidth}p{0.34\\textwidth}p{0.18\\textwidth}p{0.24\\textwidth}}")
     push!(lines, "\\toprule")
     push!(lines, "\\textbf{Symbol} & \\textbf{Meaning} & \\textbf{Units} & \\textbf{Code Mapping} \\\\")
     push!(lines, "\\midrule")
 
+    first_cat = true
     for cat in categories
         cat_id = String(cat["id"])
         cat_name = _latex_escape(String(cat["name"]))
         entries = get(grouped, cat_id, Any[])
         isempty(entries) && continue
 
-        push!(lines, "\\multicolumn{4}{l}{\\textit{$(cat_name)}} \\\\")
+        if !first_cat
+            push!(lines, "\\addlinespace[0.6em]")
+        end
+        first_cat = false
+
+        push!(lines, "\\multicolumn{4}{l}{\\textbf{$(cat_name)}} \\\\")
         push!(lines, "\\midrule")
         for e in entries
             symbol_tex = String(e["symbol_tex"])
@@ -127,7 +131,6 @@ function _render_tex(spec; generated_path::String)
             code_key = _latex_escape(String(e["code_key"]))
             push!(lines, "\\($(symbol_tex)\\) & $(meaning) & $(units_tex) & \\texttt{$(code_key)} \\\\")
         end
-        push!(lines, "\\midrule")
     end
 
     push!(lines, "\\bottomrule")
@@ -145,7 +148,7 @@ function _render_markdown(spec; generated_path::String)
     lines = String[]
     push!(lines, "# Symbols Reference")
     push!(lines, "")
-    push!(lines, "Auto-generated from $(generated_path). Do not edit by hand.")
+    push!(lines, "Auto-generated from `$(generated_path)`. Do not edit by hand.")
     push!(lines, "")
 
     for cat in categories
@@ -161,7 +164,7 @@ function _render_markdown(spec; generated_path::String)
             meaning = String(e["name"])
             units_md = String(e["units_md"])
             code_key = String(e["code_key"])
-            push!(lines, "| $(symbol_md) | $(meaning) | $(units_md) | $(code_key) |")
+            push!(lines, "| `$(symbol_md)` | $(meaning) | $(units_md) | `$(code_key)` |")
         end
         push!(lines, "")
     end
@@ -184,8 +187,8 @@ function _build_context(spec)
 end
 
 function generate_symbols_assets(; spec_path::String="spec/symbols.yaml",
-                                   tex_out::String="reports/generated/sections/list_of_symbols.tex",
-                                   md_out::String="docs/SYMBOLS.md")
+    tex_out::String="reports/generated/sections/list_of_symbols.tex",
+    md_out::String="docs/SYMBOLS.md")
     spec = _read_yaml(spec_path)
     _validate_spec(spec)
 
@@ -207,7 +210,7 @@ end # module SymbolSSOT
 if abspath(PROGRAM_FILE) == @__FILE__
     context, tex_out, md_out = SymbolSSOT.generate_symbols_assets()
     println("Generated symbols artifacts:")
-    println(tex_out)
-    println(md_out)
+    println("  TeX: $(tex_out)")
+    println("  MD:  $(md_out)")
     println("Loaded symbol context keys: $(length(context))")
 end
