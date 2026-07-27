@@ -1,0 +1,400 @@
+schema_version: 0.1.0
+
+categories:
+  - id: state_variables
+    name: State Variables and Coordinates
+  - id: fast_slow_parameters
+    name: Fast-Slow and Regularization Parameters
+  - id: closure_parameters
+    name: Closure and Surface Coupling Parameters
+  - id: environmental_forcings
+    name: Atmospheric Forcings and Background Constants
+  - id: gspt_operators
+    name: GSPT Coordinates, Manifolds, and Operators
+  - id: diagnostics_invariants
+    name: Diagnostics and Geometric Invariants
+
+symbols:
+  # --- State Variables ---
+  - id: e
+    symbol_tex: e
+    symbol_md: e
+    code_key: e
+    units_tex: "\\mathrm{m}^2\\,\\mathrm{s}^{-2}"
+    units_md: m^2 s^-2
+    name: Turbulent kinetic energy
+    description: Fast turbulent state coordinate in the reduced 4D system.
+    category: state_variables
+
+  - id: U
+    symbol_tex: U
+    symbol_md: U
+    code_key: U
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-1}"
+    units_md: m s^-1
+    name: Zonal wind component
+    description: Slow momentum coordinate aligned with geostrophic forcing.
+    category: state_variables
+
+  - id: V
+    symbol_tex: V
+    symbol_md: V
+    code_key: V
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-1}"
+    units_md: m s^-1
+    name: Meridional wind component
+    description: Slow momentum coordinate orthogonal to U.
+    category: state_variables
+
+  - id: T_s
+    symbol_tex: T_s
+    symbol_md: T_s
+    code_key: Ts
+    units_tex: "\\mathrm{K}"
+    units_md: K
+    name: Surface skin temperature
+    description: Slow thermodynamic coordinate coupled through the surface energy budget.
+    category: state_variables
+
+  # --- Fast-Slow Parameters ---
+  - id: epsilon
+    symbol_tex: "\\varepsilon"
+    symbol_md: epsilon
+    code_key: epsilon
+    mustache_key: param_epsilon_code
+    units_tex: "-"
+    units_md: "-"
+    name: Fast-slow timescale ratio
+    description: Ratio between fast TKE relaxation and slow thermodynamic-dynamic evolution.
+    category: fast_slow_parameters
+
+  - id: delta
+    symbol_tex: "\\delta"
+    symbol_md: delta
+    code_key: delta
+    mustache_key: param_delta_code
+    units_tex: "\\mathrm{m}^2\\,\\mathrm{s}^{-2}"
+    units_md: m^2 s^-2
+    name: Background TKE floor
+    description: Regularization floor enforcing forward invariance near laminar conditions.
+    category: fast_slow_parameters
+
+  - id: alpha_safe
+    symbol_tex: "\\alpha_{\\mathrm{safe}}"
+    symbol_md: alpha_safe
+    code_key: alpha_safe
+    mustache_key: param_alpha_safe_code
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-1}"
+    units_md: m s^-1
+    name: Safeguard gate scale
+    description: Smooth gate scale in Psi that intercepts derivative singular behavior near zero TKE.
+    category: fast_slow_parameters
+
+  - id: sigma_e
+    symbol_tex: "\\sigma_e"
+    symbol_md: sigma_e
+    code_key: sigma_e
+    mustache_key: param_sigma_e_code
+    units_tex: "\\mathrm{s}^{-1}"
+    units_md: s^-1
+    name: Fast linear TKE term
+    description: Linear damping or growth coefficient in the fast TKE equation.
+    category: fast_slow_parameters
+
+  - id: beta_T
+    symbol_tex: "\\beta_T"
+    symbol_md: beta_T
+    code_key: beta_t
+    mustache_key: param_beta_t_code
+    units_tex: "-"
+    units_md: "-"
+    name: Thermal stability sensitivity
+    description: Bounded gain scaling the non-linear thermal shift response G(T_s).
+    category: fast_slow_parameters
+
+  - id: eta
+    symbol_tex: "\\eta"
+    symbol_md: eta
+    code_key: eta
+    units_tex: "-"
+    units_md: "-"
+    name: Shear efficiency factor
+    description: Dimensionless scaling coefficient for mechanical shear TKE production.
+    category: fast_slow_parameters
+
+  # --- Closure Parameters ---
+  - id: l0
+    symbol_tex: "\\ell_0"
+    symbol_md: l0
+    code_key: l0
+    mustache_key: param_l0_code
+    units_tex: "\\mathrm{m}"
+    units_md: m
+    name: Master mixing length
+    description: Characteristic eddy length scale governing TKE dissipation rate.
+    category: closure_parameters
+
+  - id: K
+    symbol_tex: K
+    symbol_md: K
+    code_key: K
+    mustache_key: param_k_code
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-2}"
+    units_md: m s^-2
+    name: Buoyant destruction scale
+    description: Kinematic buoyancy scale in production-minus-buoyancy forcing balance.
+    category: closure_parameters
+
+  - id: C_skin
+    symbol_tex: "C_{\\mathrm{skin}}"
+    symbol_md: C_skin
+    code_key: C_skin
+    mustache_key: param_c_skin_code
+    units_tex: "\\mathrm{J}\\,\\mathrm{m}^{-2}\\,\\mathrm{K}^{-1}"
+    units_md: J m^-2 K^-1
+    name: Surface thermal capacity
+    description: Heat capacity of the surface skin layer in the surface energy budget.
+    category: closure_parameters
+
+  - id: gamma
+    symbol_tex: "\\gamma"
+    symbol_md: gamma
+    code_key: gamma
+    units_tex: "\\mathrm{s}^{-1}"
+    units_md: s^-1
+    name: Effective drag coefficient
+    description: State-dependent drag scaling used in reduced momentum equations.
+    category: closure_parameters
+
+  - id: C_H
+    symbol_tex: C_H
+    symbol_md: C_H
+    code_key: CH
+    units_tex: "-"
+    units_md: "-"
+    name: Heat exchange coefficient
+    description: Surface-layer heat transfer coefficient from roughness-based closure.
+    category: closure_parameters
+
+  - id: z_0m
+    symbol_tex: z_{0m}
+    symbol_md: z_0m
+    code_key: z0m
+    units_tex: "\\mathrm{m}"
+    units_md: m
+    name: Momentum roughness length
+    description: Aerodynamic surface roughness length scale for momentum flux.
+    category: closure_parameters
+
+  - id: z_0h
+    symbol_tex: z_{0h}
+    symbol_md: z_0h
+    code_key: z0h
+    units_tex: "\\mathrm{m}"
+    units_md: m
+    name: Thermal roughness length
+    description: Surface roughness length scale for sensible heat transfer.
+    category: closure_parameters
+
+  # --- Environmental Forcings ---
+  - id: U_g
+    symbol_tex: U_g
+    symbol_md: U_g
+    code_key: Ug
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-1}"
+    units_md: m s^-1
+    name: Zonal geostrophic wind
+    description: Large-scale pressure gradient forcing along the zonal axis.
+    category: environmental_forcings
+
+  - id: V_g
+    symbol_tex: V_g
+    symbol_md: V_g
+    code_key: Vg
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-1}"
+    units_md: m s^-1
+    name: Meridional geostrophic wind
+    description: Large-scale pressure gradient forcing along the meridional axis.
+    category: environmental_forcings
+
+  - id: T_a
+    symbol_tex: T_a
+    symbol_md: T_a
+    code_key: Ta
+    units_tex: "\\mathrm{K}"
+    units_md: K
+    name: Reference air temperature
+    description: Prescribed ambient air potential temperature above the surface layer.
+    category: environmental_forcings
+
+  - id: R_n
+    symbol_tex: R_n
+    symbol_md: R_n
+    code_key: Rn
+    units_tex: "\\mathrm{W}\\,\\mathrm{m}^{-2}"
+    units_md: W m^-2
+    name: Net radiative forcing
+    description: Prescribed net longwave/shortwave surface radiation in the SEB closure.
+    category: environmental_forcings
+
+  - id: f_0
+    symbol_tex: f_0
+    symbol_md: f_0
+    code_key: f0
+    units_tex: "\\mathrm{s}^{-1}"
+    units_md: s^-1
+    name: Coriolis parameter
+    description: Planetary vorticity scale governing geostrophic momentum turning.
+    category: environmental_forcings
+
+  - id: g
+    symbol_tex: g
+    symbol_md: g
+    code_key: g
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-2}"
+    units_md: m s^-2
+    name: Gravitational acceleration
+    description: Acceleration due to gravity driving buoyant stratification forces.
+    category: environmental_forcings
+
+  # --- GSPT Coordinates, Manifolds & Operators ---
+  - id: phi
+    symbol_tex: "\\phi"
+    symbol_md: phi
+    code_key: phi
+    units_tex: "\\mathrm{m}^2\\,\\mathrm{s}^{-2}"
+    units_md: m^2 s^-2
+    name: Shifted TKE coordinate
+    description: Shifted fast coordinate phi = e + delta enforcing non-singular dynamics.
+    category: gspt_operators
+
+  - id: q
+    symbol_tex: q
+    symbol_md: q
+    code_key: q
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-1}"
+    units_md: m s^-1
+    name: Shifted TKE amplitude
+    description: Square-root state coordinate q = sqrt(e + delta) in amplitude space.
+    category: gspt_operators
+
+  - id: psi
+    symbol_tex: "\\psi"
+    symbol_md: psi
+    code_key: psi
+    units_tex: "-"
+    units_md: "-"
+    name: Regularization gate function
+    description: Smooth C^inf multiplier gating shear production as phi approaches zero.
+    category: gspt_operators
+
+  - id: G_Ts
+    symbol_tex: "G(T_s)"
+    symbol_md: G(T_s)
+    code_key: G_Ts
+    units_tex: "-"
+    units_md: "-"
+    name: Thermal shift function
+    description: Bounded non-linear tanh function mapping temperature contrast to buoyancy destruction.
+    category: gspt_operators
+
+  - id: S_0
+    symbol_tex: "\\mathcal{S}_0"
+    symbol_md: S_0
+    code_key: S0
+    units_tex: "-"
+    units_md: "-"
+    name: Critical manifold
+    description: Singular equilibrium manifold of the fast subsystem in the limit epsilon -> 0.
+    category: gspt_operators
+
+  - id: S_epsilon
+    symbol_tex: "\\mathcal{S}_{\\varepsilon}"
+    symbol_md: S_epsilon
+    code_key: S_epsilon
+    units_tex: "-"
+    units_md: "-"
+    name: Invariant slow manifold
+    description: Normally hyperbolic slow invariant manifold persisting for 0 < epsilon << 1.
+    category: gspt_operators
+
+  # --- Diagnostics and Geometric Invariants ---
+  - id: Delta
+    symbol_tex: "\\Delta"
+    symbol_md: Delta
+    code_key: Delta
+    units_tex: "\\mathrm{m}^2\\,\\mathrm{s}^{-2}"
+    units_md: m^2 s^-2
+    name: Fold invariant diagnostic
+    description: Net production-minus-buoyancy control coordinate organizing manifold collapse.
+    category: diagnostics_invariants
+
+  - id: q_fold
+    symbol_tex: "q_{\\mathrm{fold}}"
+    symbol_md: q_fold
+    code_key: q_fold
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-1}"
+    units_md: m s^-1
+    name: Fold turbulent amplitude
+    description: Critical fold coordinate in shifted amplitude space q = sqrt(e + delta).
+    category: diagnostics_invariants
+
+  - id: e_fold
+    symbol_tex: "e_{\\mathrm{fold}}"
+    symbol_md: e_fold
+    code_key: e_fold
+    units_tex: "\\mathrm{m}^2\\,\\mathrm{s}^{-2}"
+    units_md: m^2 s^-2
+    name: Fold TKE level
+    description: Critical turbulent kinetic energy level where manifold turning occurs.
+    category: diagnostics_invariants
+
+  - id: Delta_fold
+    symbol_tex: "\\Delta_{\\mathrm{fold}}"
+    symbol_md: Delta_fold
+    code_key: Delta_fold
+    units_tex: "\\mathrm{m}^2\\,\\mathrm{s}^{-2}"
+    units_md: m^2 s^-2
+    name: Fold forcing threshold
+    description: Critical forcing level separating active and collapse-prone regimes.
+    category: diagnostics_invariants
+
+  - id: Ri_g
+    symbol_tex: "\\mathrm{Ri}_g"
+    symbol_md: Ri_g
+    code_key: Rig
+    units_tex: "-"
+    units_md: "-"
+    name: Gradient Richardson number
+    description: Ratio of static buoyancy frequency squared to vertical wind shear squared.
+    category: diagnostics_invariants
+
+  - id: Pr_t
+    symbol_tex: "\\mathrm{Pr}_t"
+    symbol_md: Pr_t
+    code_key: Prt
+    units_tex: "-"
+    units_md: "-"
+    name: Turbulent Prandtl number
+    description: Ratio of momentum eddy diffusivity Km to heat eddy diffusivity Kh.
+    category: diagnostics_invariants
+
+  - id: K_m
+    symbol_tex: K_m
+    symbol_md: K_m
+    code_key: Km
+    units_tex: "\\mathrm{m}^2\\,\\mathrm{s}^{-1}"
+    units_md: m^2 s^-1
+    name: Eddy viscosity
+    description: Exchange coefficient parameterizing vertical turbulent momentum transport.
+    category: diagnostics_invariants
+
+  - id: K_h
+    symbol_tex: K_h
+    symbol_md: K_h
+    code_key: Kh
+    units_tex: "\\mathrm{m}^2\\,\\mathrm{s}^{-1}"
+    units_md: m^2 s^-1
+    name: Eddy diffusivity for heat
+    description: Exchange coefficient parameterizing vertical turbulent heat transport.
+    category: diagnostics_invariants

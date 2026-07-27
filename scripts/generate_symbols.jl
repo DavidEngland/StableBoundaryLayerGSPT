@@ -1,5 +1,11 @@
 #!/usr/bin/env julia
-
+# scripts/generate_symbols.jl - Symbol Single Source of Truth (SSOT) Generator
+# This script generates LaTeX and Markdown representations of the symbols defined in `spec/symbols.yaml`.
+# It ensures a single source of truth for mathematical symbols, their meanings, units, and code mappings.
+# The generated assets include:
+# - `reports/generated/sections/list_of_symbols.tex` (LaTeX table)
+# - `docs/SYMBOLS.md` (Markdown reference)
+# The script also provides validation to ensure the integrity of the symbols specification.
 module SymbolSSOT
 
 using YAML
