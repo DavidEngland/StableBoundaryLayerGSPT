@@ -15,6 +15,7 @@ const DEFAULT_DATASET = "CASES99"
 const DEFAULT_GENERATED_DATE_HUMAN = "July 13, 2026"
 const SUPPORTED_DATASETS = ["CASES99", "FLOSS", "SHEBA"]
 const DEFAULT_PROSE_LINT_ALLOWLIST_PATH = "config/prose_lint_allowlist.txt"
+const DEFAULT_FIGURE_SPEC_PATH = "config/manuscript_figures.json"
 const RAW_TEMPLATE_SUFFIXES = ("_tex", "_includes", "_blocks")
 const PROVENANCE_PARAM_KEYS = [
     "epsilon",
@@ -95,6 +96,99 @@ function parse_args(args::Vector{String})
     return uppercase(String(strip(dataset))), String(strip(generated_date_human)), write_parameter_macros_only, check_parameter_drift, lint_prose_literals, lint_prose_strict, String(strip(lint_prose_allowlist_path))
 end
 
+function load_figure_metadata(path::String=DEFAULT_FIGURE_SPEC_PATH)
+    return load_manuscript_figure_config(path)
+end
+
+function _entry_get_str(entry, key::String, fallback::String="")
+    if entry isa AbstractDict
+        if haskey(entry, key)
+            return String(entry[key])
+        end
+    end
+    return fallback
+end
+
+function prettify_figure_title(stem::String, acronyms::Dict{String,Any}=Dict{String,Any}())
+    parts = split(replace(stem, "-" => "_"), "_")
+    normalized = String[]
+    for part in parts
+        lw = lowercase(part)
+        if haskey(acronyms, lw)
+            push!(normalized, String(acronyms[lw]))
+        else
+            push!(normalized, uppercasefirst(lw))
+        end
+    end
+    return join(normalized, " ")
+end
+
+function get_figure_info(meta::Dict{String,Any}, fig_key::AbstractString)
+    stem = replace(fig_key, r"\.(pdf|png|svg|eps|jpe?g)$"i => "")
+
+    figures_dict = get(meta, "figures", Dict{String,Any}())
+    scm_dict = get(meta, "scm_figures", Dict{String,Any}())
+    acronyms = get(meta, "acronyms", Dict{String,Any}())
+
+    if haskey(figures_dict, stem)
+        entry = figures_dict[stem]
+        return (
+            caption = _entry_get_str(entry, "title", prettify_figure_title(stem, acronyms)),
+            label = _entry_get_str(entry, "label", "fig:$(stem)"),
+        )
+    end
+
+    if haskey(scm_dict, stem)
+        entry = scm_dict[stem]
+        return (
+            caption = _entry_get_str(entry, "caption", prettify_figure_title(stem, acronyms)),
+            label = _entry_get_str(entry, "label", "fig:$(stem)"),
+        )
+    end
+
+    alt_stem = startswith(stem, "fig_") ? replace(stem, "fig_" => "figure_", count=1) :
+               startswith(stem, "figure_") ? replace(stem, "figure_" => "fig_", count=1) : stem
+
+    if haskey(figures_dict, alt_stem)
+        entry = figures_dict[alt_stem]
+        return (
+            caption = _entry_get_str(entry, "title", prettify_figure_title(alt_stem, acronyms)),
+            label = _entry_get_str(entry, "label", "fig:$(alt_stem)"),
+        )
+    end
+
+    fallback_title = prettify_figure_title(stem, acronyms)
+    fallback_label = "fig:" * lowercase(replace(stem, r"[^A-Za-z0-9]+" => "_"))
+    @warn "Figure key '$(fig_key)' not found in $(DEFAULT_FIGURE_SPEC_PATH). Using derived fallback."
+    return (caption=fallback_title, label=fallback_label)
+end
+
+function render_figure_environment(fig_key::AbstractString, image_rel_path::String, meta::Dict{String,Any};
+                                   width::String="0.95\\textwidth", position::String="htbp")
+    info = get_figure_info(meta, fig_key)
+    lines = String[
+        "\\begin{figure}[$(position)]",
+        "    \\centering",
+        "    \\includegraphics[width=$(width)]{$(image_rel_path)}",
+        "    \\caption{$(info.caption)}",
+        "    \\label{$(info.label)}",
+        "\\end{figure}",
+    ]
+    return join(lines, "\n")
+end
+
+function inject_figure_metadata!(context::Dict{String,String}, meta::Dict{String,Any})
+    for (key, val) in get(meta, "figures", Dict{String,Any}())
+        context["fig_title_$(key)"] = _entry_get_str(val, "title", "")
+        context["fig_label_$(key)"] = _entry_get_str(val, "label", "")
+    end
+    for (key, val) in get(meta, "scm_figures", Dict{String,Any}())
+        context["fig_caption_$(key)"] = _entry_get_str(val, "caption", "")
+        context["fig_label_$(key)"] = _entry_get_str(val, "label", "")
+    end
+    return context
+end
+
 function read_text(path::String; fallback::String="")
     return isfile(path) ? read(path, String) : fallback
 end
@@ -141,6 +235,7 @@ function build_tex_template_sections(section_dir::String, context::Dict{String,S
     content_templates = filter(name -> (name != wrapper_name) && !(name in front_matter_templates) && !(name in excluded_templates), all_tex_templates)
 
     preferred_order = [
+        "theory.tex.mustache",
         "governing_system.tex.mustache",
         "governing_equations.tex.mustache",
         "critical_manifold_geometry.tex.mustache",
@@ -675,114 +770,13 @@ end
 
 function build_tex_figure_includes(fig_dir::String;
                                    tex_output_dir::String=joinpath("reports", "generated"),
-                                   config_path::String=joinpath("config", "manuscript_figures.json"))
+                                   config_path::String=DEFAULT_FIGURE_SPEC_PATH)
     if !isdir(fig_dir)
         return "% No generated figures directory found."
     end
 
-    figure_cfg = load_manuscript_figure_config(config_path)
-    fig_metadata_cfg = get(figure_cfg, "figures", Dict{String,Any}())
+    figure_cfg = load_figure_metadata(config_path)
     preferred_stems_cfg = Vector{String}(get(figure_cfg, "preferred_stems", String[]))
-    acronyms_cfg = get(figure_cfg, "acronyms", Dict{String,Any}())
-
-    FIGURE_METADATA = Dict(
-        "figure_bifurcation_fold_envelope" => (
-            title="Comparative benchmark: Bifurcation envelope under a classical interior fold scenario (shown for structural comparison only; not generated by the present model). This illustrates the scenario where the active turbulent branch loses normal hyperbolicity at an interior saddle-node locus.",
-            label="fig:fold_envelope",
-        ),
-        "figure_bifurcation_fold_map" => (
-            title="Comparative benchmark: Topological phase-space map of an interior fold regime (shown for comparison only). Vector fields highlight the catastrophic jump dynamics occurring at an interior fold point, contrasting with the boundary-crossing mechanics of the present system.",
-            label="fig:fold_map",
-        ),
-        "figure_bifurcation_transcritical_envelope" => (
-            title="Transcritical bifurcation envelope corresponding to the transversal boundary crossing regime (\$e=0\$). The diagram illustrates the smooth transition tracking the physical admissibility threshold \$\\Delta = \\delta / l_0\$.",
-            label="fig:transcritical_envelope",
-        ),
-        "figure_bifurcation_transcritical_map" => (
-            title="Trajectory flow field mapping the non-folding boundary crossing. The phase portraits confirm that the system transitions smoothly onto the regularized background laminar floor without undergoing an interior saddle-node collapse.",
-            label="fig:transcritical_map",
-        ),
-        "figure_bifurcation_transcritical_distance_map" => (
-            title="Distance-to-threshold map for the transcritical boundary crossing. Smaller values indicate states close to the critical exchange surface where the laminar branch changes stability.",
-            label="fig:transcritical_distance_map",
-        ),
-        "figure_bifurcation_parameter_sensitivity_envelope" => (
-            title="Sensitivity envelope for transcritical threshold statistics under coupled parameter scaling. The median and extrema summarize threshold migration as closure controls are perturbed.",
-            label="fig:parameter_sensitivity_envelope",
-        ),
-        "4d_sbl_diagnostics" => (
-            title="Complete 4D time-series trajectories and phase-space projections for the nocturnal stable boundary layer simulated under CASES99 conditions. The panels illustrate the rapid initial turbulent decay followed by the slow ageostrophic development of the nocturnal low-level jet.",
-            label="fig:sbl_diagnostics",
-        ),
-        "diagnostic_regularization_comparison" => (
-            title="Comparative analysis of the state-derived vertical eddy diffusivities (\$K_m, K_h\$) versus the \$C^\\infty\$ regularized hyperbolic embedded tracks (\$K_{m,\\star}, K_{h,\\star}\$) defined in Eq.~\\eqref{eq:embedded_diffusivities}. The comparison illustrates how the smooth embedding smooths out the sharp gradient kinks at the collapse threshold while ensuring a bounded closure Jacobian \$J_K\$.",
-            label="fig:regularization_comparison",
-        ),
-        "figure_gspt_manifold_tikz" => (
-            title="Geometric Singular Perturbation Theory (GSPT) phase-space schematic illustrating nocturnal transition geometry. The active turbulent branch (\$\\mathcal{M}_0^+\$) forms an upper potential cup in state space. Progressive radiative cooling deforms the cup until the attracting equilibrium disappears at the fold curve \$\\mathcal{C}_{\\text{fold}}\$, driving a rapid vertical transition along fast fibers to the weakly turbulent manifold (\$\\mathcal{M}_0^0\$). On this lower branch, ageostrophic inertial adjustment generates the nocturnal low-level jet until accumulated vertical shear triggers turbulent re-ignition.",
-            label="fig:gspt_manifold_tikz",
-        ),
-        "fig_gspt_manifold_tikz" => (
-            title="Geometric Singular Perturbation Theory (GSPT) phase-space schematic illustrating nocturnal transition geometry. The active turbulent branch (\$\\mathcal{M}_0^+\$) forms an upper potential cup in state space. Progressive radiative cooling deforms the cup until the attracting equilibrium disappears at the fold curve \$\\mathcal{C}_{\\text{fold}}\$, driving a rapid vertical transition along fast fibers to the weakly turbulent manifold (\$\\mathcal{M}_0^0\$). On this lower branch, ageostrophic inertial adjustment generates the nocturnal low-level jet until accumulated vertical shear triggers turbulent re-ignition.",
-            label="fig:gspt_manifold_tikz",
-        ),
-        "regime_map_z0m_ug" => (
-            title="Analytical regime map in \$(z_{0m}, U_g)\$ parameter space derived from surface-layer similarity scaling. The three dynamic regimes—continuous weak turbulence (Regime I), intermittent relaxation oscillations (Regime II), and runaway radiative decoupling (Regime III)—are partitioned by the critical geostrophic shear boundaries \$S_c\$. Observational field campaign markers locate typical parameter pairs for CASES99, FLOSS, and SHEBA.",
-            label="fig:regime_map_z0m_ug",
-        ),
-        "figure_regime_map_z0m_ug" => (
-            title="Analytical regime map in \$(z_{0m}, U_g)\$ parameter space derived from surface-layer similarity scaling. The three dynamic regimes—continuous weak turbulence (Regime I), intermittent relaxation oscillations (Regime II), and runaway radiative decoupling (Regime III)—are partitioned by the critical geostrophic shear boundaries \$S_c\$. Observational field campaign markers locate typical parameter pairs for CASES99, FLOSS, and SHEBA.",
-            label="fig:regime_map_z0m_ug",
-        ),
-    )
-
-    function figure_caption_and_label(stem::String)
-        if haskey(fig_metadata_cfg, stem)
-            meta = fig_metadata_cfg[stem]
-            title = get(meta, "title", prettify_figure_title(stem))
-            label = get(meta, "label", "")
-            return String(title), String(label)
-        end
-        if haskey(FIGURE_METADATA, stem)
-            meta = FIGURE_METADATA[stem]
-            return meta.title, meta.label
-        end
-        return prettify_figure_title(stem), ""
-    end
-
-    function make_figure_block(path::String, caption::String, label::String)
-        rel_path = relpath(path, tex_output_dir)
-        label_line = isempty(label) ? "" : "\n\\label{$(label)}"
-        return "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{$(rel_path)}\n\\caption{$(caption)}$(label_line)\n\\end{figure}"
-    end
-
-    function prettify_figure_title(stem::String)
-        parts = split(replace(stem, "-" => "_"), "_")
-        normalized = String[]
-        for part in parts
-            lw = lowercase(part)
-            if haskey(acronyms_cfg, lw)
-                push!(normalized, String(acronyms_cfg[lw]))
-            elseif lw == "4d"
-                push!(normalized, "4D")
-            elseif lw == "sbl"
-                push!(normalized, "SBL")
-            elseif lw == "tke"
-                push!(normalized, "TKE")
-            elseif lw == "gspt"
-                push!(normalized, "GSPT")
-            elseif lw == "nwp"
-                push!(normalized, "NWP")
-            elseif lw == "ug"
-                push!(normalized, "\$U_g\$")
-            elseif lw == "z0m"
-                push!(normalized, "\$z_{0m}\$")
-            else
-                push!(normalized, uppercasefirst(lw))
-            end
-        end
-        return join(normalized, " ")
-    end
 
     tex_files = sort(filter(name -> startswith(name, "figure_bifurcation_") && endswith(name, ".tex"), readdir(fig_dir)))
     handled_stems = Set{String}()
@@ -873,8 +867,8 @@ function build_tex_figure_includes(fig_dir::String;
     end
 
     for stem in ordered_stems
-        title, label = figure_caption_and_label(stem)
-        push!(blocks, make_figure_block(candidate_paths[stem], title, label))
+        rel_path = relpath(candidate_paths[stem], tex_output_dir)
+        push!(blocks, render_figure_environment(stem, rel_path, figure_cfg; width="0.95\\linewidth", position="ht!"))
     end
 
     if isempty(blocks)
@@ -1008,7 +1002,7 @@ function find_scm_summary_path()
     return ""
 end
 
-function read_scm_summary_context(; config_path::String=joinpath("config", "manuscript_figures.json"))
+function read_scm_summary_context(; config_path::String=DEFAULT_FIGURE_SPEC_PATH)
     path = find_scm_summary_path()
     if isempty(path)
         return Dict{String,String}(
@@ -1037,45 +1031,8 @@ function read_scm_summary_context(; config_path::String=joinpath("config", "manu
     case_name = string(getnested(summary, ["case"], "n/a"))
     outdir = string(getnested(summary, ["outdir"], dirname(path)))
 
-    figure_cfg = load_manuscript_figure_config(config_path)
-    scm_fig_meta_cfg = get(figure_cfg, "scm_figures", Dict{String,Any}())
+    figure_cfg = load_figure_metadata(config_path)
 
-    SCM_FIG_META = Dict(
-        "fig01" => (
-            caption="Time-series evolution of surface skin temperature \\(T_s\\), surface sensible heat flux \\(H\\), and friction velocity \\(u_*\\) over the course of the simulation.",
-            label="fig:scm_time_series",
-        ),
-        "fig02" => (
-            caption="Time-height contour map representing horizontal wind speed \\(U\\), demonstrating the gradual aloft development and consolidation of the nocturnal low-level jet (LLJ).",
-            label="fig:scm_wind_contour",
-        ),
-        "fig03" => (
-            caption="Time-height contour of potential temperature \\(\\theta\\), demonstrating surface-driven nocturnal radiative cooling and progressive boundary-layer inversion growth.",
-            label="fig:scm_theta_contour",
-        ),
-        "fig04" => (
-            caption="Representative vertical profiles of horizontal wind speed \\(U\\), potential temperature \\(\\theta\\), and momentum eddy diffusivity \\(K_m\\) at diagnostic times.",
-            label="fig:scm_profiles",
-        ),
-        "fig05" => (
-            caption="Surface energy budget (SEB) components illustrating the dynamic balance of net radiation \\(R_n\\), sensible heat flux \\(H\\), soil heat flux \\(G\\), and surface-storage thermal layers.",
-            label="fig:scm_surface_energy",
-        ),
-        "fig06" => (
-            caption="Regularized slow-manifold phase portrait mapping the net TKE production-buoyancy balance \\(\\Delta\\) against the regularized coordinate \\(e_\\xi^*\\) across characteristic height bands (surface, mid-BL jet core, and upper boundary layer). The vertical reference line shows the analytical critical transition condition \\(\\Delta = \\delta / \\ell_0\\).",
-            label="fig:scm_phase_delta_exi",
-        ),
-        "fig07" => (
-            caption="The GSPT closure manifold. (a) Momentum diffusivity \\(K_m\\) vs. gradient Richardson number \\((\\mathrm{Ri}_g)\\) color-coded by shear \\(S\\). (b) \\(K_m\\) vs. \\((\\mathrm{Ri}_g)\\) color-coded by height \\(z\\). (c) Collapse of \\(K_m\\) onto the fold invariant \\(\\Delta\\). (d) Dynamic Prandtl number \\(\\mathrm{Pr}_t\\) vs. \\((\\mathrm{Ri}_g)\\).",
-            label="fig:closure_manifold",
-        ),
-        "fig08" => (
-            caption="Temporal evolution of the surface fold-proximity metric, showing the proximity of the surface state relative to the regularized manifold transition boundary.",
-            label="fig:scm_fold_proximity",
-        ),
-    )
-
-    phase_fig_path = joinpath(outdir, "plots", "fig06_phase_delta_exi.png")
     phase_fig_block = "% SCM phase portrait figure unavailable"
     closure_manifold_fig_block = "% SCM closure manifold figure unavailable"
 
@@ -1097,22 +1054,9 @@ function read_scm_summary_context(; config_path::String=joinpath("config", "manu
             prefix_match = match(r"fig\d+", stem)
             prefix = prefix_match === nothing ? stem : prefix_match.match
 
-            caption, label = if haskey(scm_fig_meta_cfg, prefix)
-                meta = scm_fig_meta_cfg[prefix]
-                default_label = "fig:scm_" * lowercase(replace(stem, r"[^A-Za-z0-9]+" => "_"))
-                caption_val = haskey(meta, "caption") ? meta["caption"] : stem
-                label_val = haskey(meta, "label") ? meta["label"] : default_label
-                String(caption_val), String(label_val)
-            elseif haskey(SCM_FIG_META, prefix)
-                SCM_FIG_META[prefix].caption, SCM_FIG_META[prefix].label
-            else
-                fallback_label = "fig:scm_" * lowercase(replace(stem, r"[^A-Za-z0-9]+" => "_"))
-                prettify_figure_title(stem), fallback_label
-            end
-
             img_path = joinpath(scm_plots_dir, file)
             rel_img_path = relpath(img_path, joinpath("reports", "generated"))
-            fig_latex = "\\begin{figure}[ht!]\n\\centering\n\\includegraphics[width=0.95\\linewidth]{\\detokenize{$(rel_img_path)}}\n\\caption{$(caption)}\n\\label{$(label)}\n\\end{figure}"
+            fig_latex = render_figure_environment(prefix, "\\detokenize{$(rel_img_path)}", figure_cfg; width="0.95\\linewidth", position="ht!")
             push!(all_scm_blocks, fig_latex)
 
             if prefix == "fig06"
@@ -1249,6 +1193,7 @@ function assemble_manuscript(args::Vector{String}=ARGS)
         "sheba_rmse" => format_metric(quadratic_fit_rmse(latest_solution_csv("SHEBA"))),
     )
     merge!(section_context, read_scm_summary_context())
+    inject_figure_metadata!(section_context, load_figure_metadata())
     merge!(section_context, parameter_context)
     merge!(section_context, symbols_context)
     template_sections_tex = build_tex_template_sections("templates/sections", section_context)
@@ -1274,6 +1219,7 @@ function assemble_manuscript(args::Vector{String}=ARGS)
         "figure_tex_includes" => figure_tex_includes,
         "active_parameter_macros_path" => parameter_context["active_parameter_macros_path"],
     )
+    inject_figure_metadata!(tex_context, load_figure_metadata())
     merge!(tex_context, symbols_context)
 
     md_context = Dict(

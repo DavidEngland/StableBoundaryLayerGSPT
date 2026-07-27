@@ -3,7 +3,7 @@
 
 A central challenge in modeling the strongly stable boundary layer (SBL) is the observed degradation of local flux-gradient closures based solely on the gradient Richardson number,
 \begin{equation}
-\mathrm{Ri}_g = \frac{N^2}{S^2} = \frac{\frac{g}{\theta_0}\frac{\partial \theta}{\partial z}}{\left(\frac{\partial U}{\partial z}\right)^2 + \left(\frac{\partial V}{\partial z}\right)^2}.
+\mathrm{Ri}_g = \frac{N^2}{S^2} = \frac{g}{\theta_0} \frac{\frac{\partial \theta}{\partial z}}{\left(\frac{\partial U}{\partial z}\right)^2 + \left(\frac{\partial V}{\partial z}\right)^2}.
 \label{eq:rig_definition}
 \end{equation}
 In traditional 1D atmospheric closures \citep[e.g.,][]{Louis1979, MellorYamada1982}, eddy diffusivities for momentum ($K_m$) and heat ($K_h$) are parameterized as single-valued functions $K = \ell^2 S f(\mathrm{Ri}_g)$. While this formulation performs well in unstable and near-neutral regimes where large coherent structures couple local gradients directly to fluxes, it loses predictive skill under strongly stable conditions. Observational field campaigns \citep[e.g., CASES-99, FLOSS;][]{Mahrt1999} consistently show that active turbulence persists at super-critical Richardson numbers ($\mathrm{Ri}_g \gg 0.25$), generating significant scatter that cannot be represented by a single diagnostic curve.

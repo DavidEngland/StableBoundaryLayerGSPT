@@ -29,7 +29,12 @@ h_{\text{eff}}^{\star} = \min\!\left(
 h_{\text{eff}} = \operatorname{clamp}\!\left(h_{\mathrm{eff}}^{\star}, h_{\min}, h_{\max}\right),
 \label{eq:heff_emergent}
 \end{equation}
-where $N^2 = \frac{g}{\theta_0}\frac{\partial\theta}{\partial z}$ is the local squared Brunt--Väisälä frequency, and $\delta_u$ is a small velocity-scale regularizer ensuring well-posed mechanical limits as $u_* \to 0$. By adapting dynamically to local state space, $h_{\text{eff}}$ prevents the runaway surface cooling typical of static local closures under strongly stable conditions \citep{Derbyshire1990, Holtslag1993}. This dual-limit scale height incorporates empirical mechanical and buoyancy scaling documented during landmark SBL field campaigns, including CASES-99 \citep{poulos2002cases99} over midlatitude grasslands and SHEBA \citep{grachev2005} over Arctic sea ice.
+where $N^2 = \frac{g}{\theta_0}\frac{\partial\theta}{\partial z}$ is the local squared Brunt--Väisälä frequency, and $\delta_u$ is a small velocity-scale regularizer ensuring well-posed mechanical limits as $u_* \to 0$. The coefficients $c_1$ and $c_2$ are dimensionless empirical scaling constants calibrating two distinct physical depth constraints:
+\begin{itemize}
+\item $c_1$ scales the mechanical-rotational (Rossby--Montgomery/Zilitinkevich-type) limit $h \sim u_*/|f|$, which governs depth under shear-dominated or weakly stable conditions.
+\item $c_2$ scales the buoyancy-stratification (Deardorff-type) limit $h \sim \sqrt{e}/N$, which governs depth under strongly stable nocturnal conditions.
+\end{itemize}
+Within the minimum operator, Eq.~\eqref{eq:heff_emergent} therefore selects the active physical cap: under weak stability and stronger winds, the $c_1$ branch limits $h_{\text{eff}}$ at rotational/Ekman scales; under strong stability and weaker winds, the $c_2$ branch truncates $h_{\text{eff}}$ in proportion to $\sqrt{e}/N$. By adapting dynamically to local state space, this dual-limit closure prevents the runaway surface cooling typical of static local closures under strongly stable conditions \citep{Derbyshire1990, Holtslag1993}. The resulting envelope is consistent with empirical mechanical and buoyancy scaling documented in landmark SBL field campaigns, including CASES-99 \citep{poulos2002cases99} over midlatitude grasslands and SHEBA \citep{grachev2005} over Arctic sea ice.
 
 \subsection{Geometric Separation: Boundary Crossings vs. Thermodynamic Folds}
 \label{subsec:geometric_consequences}

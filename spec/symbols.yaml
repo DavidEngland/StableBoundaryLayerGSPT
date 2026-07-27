@@ -142,6 +142,204 @@ symbols:
     name: Heat exchange coefficient
     description: Surface-layer heat transfer coefficient from roughness-based closure.
     category: closure_parameters
+  - id: K_m
+    symbol_tex: K_m
+    symbol_md: K_m
+    code_key: K_m
+    units_tex: "\\mathrm{m}^2\\,\\mathrm{s}^{-1}"
+    units_md: m^2 s^-1
+    name: Eddy viscosity for momentum
+    description: Turbulent eddy viscosity controlling momentum diffusion in the column closure.
+    category: closure_parameters
+  - id: K_h
+    symbol_tex: K_h
+    symbol_md: K_h
+    code_key: K_h
+    units_tex: "\\mathrm{m}^2\\,\\mathrm{s}^{-1}"
+    units_md: m^2 s^-1
+    name: Eddy diffusivity for heat
+    description: Turbulent eddy diffusivity controlling thermodynamic transport.
+    category: closure_parameters
+  - id: Ri_g
+    symbol_tex: "\\mathrm{Ri}_g"
+    symbol_md: Ri_g
+    code_key: Ri_g
+    units_tex: "-"
+    units_md: "-"
+    name: Gradient Richardson number
+    description: Local stability ratio of buoyancy suppression to shear production.
+    category: closure_parameters
+  - id: Pr_t
+    symbol_tex: "\\mathrm{Pr}_t"
+    symbol_md: Pr_t
+    code_key: Pr_t
+    units_tex: "-"
+    units_md: "-"
+    name: Turbulent Prandtl number
+    description: Ratio of momentum diffusivity to heat diffusivity, Pr_t = K_m/K_h.
+    category: closure_parameters
+  - id: kappa
+    symbol_tex: "\\kappa"
+    symbol_md: kappa
+    code_key: kappa
+    units_tex: "-"
+    units_md: "-"
+    name: Von Karman constant
+    description: Surface-layer similarity constant used in momentum and heat closures.
+    category: closure_parameters
+  - id: alpha
+    symbol_tex: "\\alpha"
+    symbol_md: alpha
+    code_key: alpha
+    units_tex: "-"
+    units_md: "-"
+    name: Legacy gate scaling parameter
+    description: Legacy closure/gating parameter retained for notation compatibility with prior drafts.
+    category: closure_parameters
+  - id: beta
+    symbol_tex: "\\beta"
+    symbol_md: beta
+    code_key: beta
+    units_tex: "-"
+    units_md: "-"
+    name: Legacy fast linear TKE coefficient
+    description: Legacy non-dimensional fast-subsystem coefficient superseded by sigma_e in the canonical split.
+    category: closure_parameters
+  - id: eta
+    symbol_tex: "\\eta"
+    symbol_md: eta
+    code_key: eta
+    units_tex: "-"
+    units_md: "-"
+    name: Shear production efficiency
+    description: Closure ratio parameter controlling shear production scaling.
+    category: closure_parameters
+  - id: delta_u
+    symbol_tex: "\\delta_u"
+    symbol_md: delta_u
+    code_key: delta_u
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-1}"
+    units_md: m s^-1
+    name: Velocity regularization floor
+    description: Small velocity-scale floor used to regularize near-calm mechanical limits.
+    category: closure_parameters
+  - id: phi_m
+    symbol_tex: "\\phi_m"
+    symbol_md: phi_m
+    code_key: phi_m
+    units_tex: "-"
+    units_md: "-"
+    name: Momentum stability function
+    description: Monin-Obukhov similarity stability function for momentum transport.
+    category: closure_parameters
+  - id: phi_h
+    symbol_tex: "\\phi_h"
+    symbol_md: phi_h
+    code_key: phi_h
+    units_tex: "-"
+    units_md: "-"
+    name: Heat stability function
+    description: Monin-Obukhov similarity stability function for heat transport.
+    category: closure_parameters
+  - id: U_g
+    symbol_tex: U_g
+    symbol_md: U_g
+    code_key: U_g
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-1}"
+    units_md: m s^-1
+    name: Zonal geostrophic wind
+    description: Large-scale zonal geostrophic forcing component.
+    category: closure_parameters
+  - id: V_g
+    symbol_tex: V_g
+    symbol_md: V_g
+    code_key: V_g
+    units_tex: "\\mathrm{m}\\,\\mathrm{s}^{-1}"
+    units_md: m s^-1
+    name: Meridional geostrophic wind
+    description: Large-scale meridional geostrophic forcing component.
+    category: closure_parameters
+  - id: T_a
+    symbol_tex: T_a
+    symbol_md: T_a
+    code_key: T_a
+    units_tex: "\\mathrm{K}"
+    units_md: K
+    name: Reference atmospheric temperature
+    description: Background atmospheric reference temperature used in thermal response terms.
+    category: closure_parameters
+  - id: T_g
+    symbol_tex: T_g
+    symbol_md: T_g
+    code_key: T_deep
+    units_tex: "\\mathrm{K}"
+    units_md: K
+    name: Deep ground temperature
+    description: Deep soil/ground thermal reservoir temperature in surface-energy closure.
+    category: closure_parameters
+  - id: R_down
+    symbol_tex: "R_{\\downarrow}"
+    symbol_md: R_down
+    code_key: R_down
+    units_tex: "\\mathrm{W}\\,\\mathrm{m}^{-2}"
+    units_md: W m^-2
+    name: Downwelling longwave radiation
+    description: Atmospheric longwave radiative forcing incident on the surface.
+    category: closure_parameters
+  - id: C_D
+    symbol_tex: C_D
+    symbol_md: C_D
+    code_key: C_D
+    units_tex: "-"
+    units_md: "-"
+    name: Neutral drag coefficient
+    description: Surface drag coefficient setting momentum exchange strength.
+    category: closure_parameters
+  - id: C_s
+    symbol_tex: C_s
+    symbol_md: C_s
+    code_key: C_s
+    units_tex: "-"
+    units_md: "-"
+    name: Surface heat exchange coefficient
+    description: Legacy heat exchange coefficient notation retained for compatibility with prior sections.
+    category: closure_parameters
+  - id: h_min
+    symbol_tex: h_{\min}
+    symbol_md: h_min
+    code_key: h_min
+    units_tex: "\\mathrm{m}"
+    units_md: m
+    name: Minimum effective boundary-layer height
+    description: Lower clamp bound for emergent effective boundary-layer depth.
+    category: closure_parameters
+  - id: h_max
+    symbol_tex: h_{\max}
+    symbol_md: h_max
+    code_key: h_max
+    units_tex: "\\mathrm{m}"
+    units_md: m
+    name: Maximum effective boundary-layer height
+    description: Upper clamp bound for emergent effective boundary-layer depth.
+    category: closure_parameters
+  - id: c1
+    symbol_tex: c_1
+    symbol_md: c1
+    code_key: c1
+    units_tex: "-"
+    units_md: "-"
+    name: Mechanical-rotational depth scaling constant
+    description: Dimensionless coefficient scaling the Rossby-Montgomery/Zilitinkevich depth limit h~u_*/|f|.
+    category: closure_parameters
+  - id: c2
+    symbol_tex: c_2
+    symbol_md: c2
+    code_key: c2
+    units_tex: "-"
+    units_md: "-"
+    name: Buoyancy-stratification depth scaling constant
+    description: Dimensionless coefficient scaling the Deardorff-type depth limit h~sqrt(e)/N.
+    category: closure_parameters
   - id: Delta
     symbol_tex: "\\Delta"
     symbol_md: Delta
@@ -150,6 +348,33 @@ symbols:
     units_md: m^2 s^-2
     name: Fold invariant forcing diagnostic
     description: Net production-minus-buoyancy control coordinate organizing manifold collapse.
+    category: diagnostics_invariants
+  - id: S0
+    symbol_tex: "\\mathcal{S}_0"
+    symbol_md: S0
+    code_key: S0
+    units_tex: "-"
+    units_md: "-"
+    name: Critical manifold
+    description: Fast equilibrium manifold (e-nullcline surface) in the singular limit.
+    category: diagnostics_invariants
+  - id: C_manifold
+    symbol_tex: "\\mathcal{C}"
+    symbol_md: C
+    code_key: C_fold
+    units_tex: "-"
+    units_md: "-"
+    name: Fold singularity set
+    description: Turning-point set organizing fast transitions between attracting and laminar sheets.
+    category: diagnostics_invariants
+  - id: X_domain
+    symbol_tex: "\\mathcal{X}"
+    symbol_md: X
+    code_key: X_domain
+    units_tex: "-"
+    units_md: "-"
+    name: Phase-space domain
+    description: Admissible state-space domain for the reduced SBL dynamical system.
     category: diagnostics_invariants
   - id: q_fold
     symbol_tex: "q_{\\mathrm{fold}}"
