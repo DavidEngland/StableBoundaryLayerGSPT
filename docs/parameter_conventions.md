@@ -34,9 +34,19 @@ Each layer has different syntax constraints and integration points.
 - TeX macro names are normalized to control-sequence-safe identifiers.
 - Assembly keys are lowercased with a suffix convention for rendered section values.
 
+## Symbols SSOT
+
+- Canonical symbols metadata is defined in `spec/symbols.yaml`.
+- Generated artifacts:
+   - `reports/generated/sections/list_of_symbols.tex`
+   - `docs/SYMBOLS.md`
+- Generation entrypoint: `scripts/generate_symbols.jl`.
+- Assembly integration: `scripts/assemble_manuscript.jl` injects `{{{symbols_list_tex}}}` into the paper template.
+
 ## Change Safety Checklist
 
 - If adding a new parameter to SCM reports, update scm/render_case_report.jl and templates/scm_case_report.tex.mustache together.
 - If adding a new manuscript macro, update scripts/assemble_manuscript.jl macro generation and any consuming TeX templates together.
 - If adding a new section-level parameter reference, verify the corresponding param_*_tex key is populated in scripts/assemble_manuscript.jl.
 - After edits, run make check-parameter-drift-all and make scm-verify.
+- After symbols metadata edits, run `julia --project scripts/generate_symbols.jl` and `make paper-appendix-check`.

@@ -9,6 +9,7 @@ using Printf
 using Statistics
 
 include(joinpath(@__DIR__, "lib", "utils.jl"))
+include(joinpath(@__DIR__, "generate_symbols.jl"))
 
 const DEFAULT_DATASET = "CASES99"
 const DEFAULT_GENERATED_DATE_HUMAN = "July 13, 2026"
@@ -1226,6 +1227,9 @@ function assemble_manuscript(args::Vector{String}=ARGS)
     tex_template = read_text(tex_template_path; fallback="\\documentclass{article}\\begin{document}Template missing.\\end{document}")
     md_template = read_text(md_template_path; fallback="# Template missing")
 
+    symbols_context, symbols_tex_path, _ = SymbolSSOT.generate_symbols_assets()
+    symbols_list_tex = isfile(symbols_tex_path) ? "\\input{" * relpath(symbols_tex_path, dirname(tex_out)) * "}" : "% List of symbols unavailable"
+
     theory_md = read_text("reports/generated/theory/01_state_space.md"; fallback="Theory section not generated yet.")
     archive_md = read_text("reports/generated/theory/02_archive_synthesis.md"; fallback="Archive synthesis not generated yet.")
     diag_md = read_text("reports/generated/diagnostics/03_bifurcation_sweep.md"; fallback="Diagnostics section not generated yet.")
@@ -1246,6 +1250,7 @@ function assemble_manuscript(args::Vector{String}=ARGS)
     )
     merge!(section_context, read_scm_summary_context())
     merge!(section_context, parameter_context)
+    merge!(section_context, symbols_context)
     template_sections_tex = build_tex_template_sections("templates/sections", section_context)
     appendix_tex = build_optional_tex_template(
         "templates/sections/mixing_length.tex.mustache",
@@ -1263,11 +1268,13 @@ function assemble_manuscript(args::Vector{String}=ARGS)
         "generated_timestamp" => timestamp,
         "generated_date_human" => generated_date_human,
         "abstract_tex" => abstract_tex,
+        "symbols_list_tex" => symbols_list_tex,
         "template_sections_tex" => template_sections_tex,
         "appendix_tex" => appendix_tex,
         "figure_tex_includes" => figure_tex_includes,
         "active_parameter_macros_path" => parameter_context["active_parameter_macros_path"],
     )
+    merge!(tex_context, symbols_context)
 
     md_context = Dict(
         "dataset" => dataset,
