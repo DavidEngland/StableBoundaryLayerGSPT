@@ -1,0 +1,22 @@
+import bibtexparser
+from bibtexparser.bparser import BibTexParser
+from bibtexparser.bibdatabase import BibDatabase
+
+with open("references.bib", "r") as f:
+    parser = BibTexParser(common_strings=True)
+    db = parser.parse_file(f)
+
+seen_keys = set()
+unique_entries = []
+
+for entry in db.entries:
+    key = entry["ID"].lower()
+    if key not in seen_keys:
+        seen_keys.add(key)
+        unique_entries.append(entry)
+
+clean_db = BibDatabase()
+clean_db.entries = unique_entries
+
+with open("references_clean.bib", "w") as f:
+    bibtexparser.dump(clean_db, f)

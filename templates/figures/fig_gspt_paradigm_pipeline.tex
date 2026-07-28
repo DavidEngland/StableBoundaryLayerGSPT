@@ -1,0 +1,59 @@
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
+
+\begin{document}
+\begin{tikzpicture}[
+  >=Stealth,
+  x=1cm,
+  y=1cm,
+  block/.style={
+    rectangle,
+    rounded corners=2pt,
+    draw=black!70,
+    fill=blue!3,
+    minimum width=4.0cm,
+    minimum height=0.72cm,
+    align=center,
+    font=\small
+  },
+  header/.style={
+    rectangle,
+    draw=black!70,
+    fill=black!8,
+    rounded corners=2pt,
+    inner sep=4pt,
+    font=\bfseries\small,
+    align=center
+  },
+  note/.style={font=\scriptsize, align=center}
+]
+
+% Classical track
+\node[header, minimum width=12.6cm] (h1) at (0, 6.3) {CLASSICAL CLOSURE PERSPECTIVE};
+\node[block] (c1) at (-4.2, 5.1) {Monin--Obukhov Similarity\\(MOST)};
+\node[block] (c2) at (0.0, 5.1) {Gradient Richardson\\number $\mathrm{Ri}_g$};
+\node[block] (c3) at (4.2, 5.1) {Discontinuous\\switching at $\mathrm{Ri}_{\mathrm{crit}}$};
+\node[block, minimum width=8.8cm, fill=red!6] (c4) at (0.0, 3.9) {Closure breakdown signatures:\\oscillation, clipping, and brittle branch logic};
+
+\draw[->, thick] (c1) -- (c2);
+\draw[->, thick] (c2) -- (c3);
+\draw[->, thick] (c3) -- (c4);
+
+% Transition arrow
+\draw[->, ultra thick, black!70] (0.0, 3.2) -- (0.0, 2.45);
+\node[note] at (0.0, 2.82) {Replaced by fast--slow geometric formulation};
+
+% GSPT track
+\node[header, minimum width=12.6cm] (h2) at (0, 1.85) {GSPT-SBL DYNAMICAL FRAMEWORK};
+\node[block, minimum width=4.3cm] (g1) at (-4.2, 0.65) {Fast--slow system\\$(\mathbf{x},\mathbf{y})$};
+\node[block, minimum width=4.3cm] (g2) at (0.0, 0.65) {Regularized critical\\manifold $\mathcal{S}_\epsilon$};
+\node[block, minimum width=4.3cm] (g3) at (4.2, 0.65) {Fold set and branch\\transition geometry};
+\node[block, minimum width=9.4cm, fill=green!8] (g4) at (0.0, -0.55) {Observable SBL regimes:\\collapse/recovery branches, hysteresis, and smooth transition pathways};
+
+\draw[->, thick] (g1) -- (g2);
+\draw[->, thick] (g2) -- (g3);
+\draw[->, thick] (g3) -- (g4);
+
+\end{tikzpicture}
+\end{document}

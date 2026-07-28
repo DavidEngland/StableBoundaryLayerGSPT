@@ -27,6 +27,8 @@ SCM_PROFILE_EVERY ?= 1800
 SCM_OUTDIR ?= results/$(SCM_CASE)
 SCM_PLOT_FORMAT ?= png
 SCM_PLOT_DPI ?= 200
+SCM_PLOT_FIGURE ?= all
+SCM_PLOT_MAX_POINTS ?= 25000
 SCM_REPORT_TEMPLATE ?= templates/scm_case_report.tex.mustache
 SCM_SOLVER_JACOBIAN ?= autodiff
 SCM_JACOBIAN_SPARSITY ?= dense
@@ -165,6 +167,7 @@ visual-assets:
 	@mkdir -p reports/generated/figures
 	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated/figures templates/figures/figure_gspt_manifold_tikz.tex
 	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated/figures templates/figures/fig_gspt_manifold_schematic.tex
+	pdflatex -interaction=nonstopmode -halt-on-error -output-directory reports/generated/figures templates/figures/fig_gspt_paradigm_pipeline.tex
 
 figure-phase-space-hysteresis:
 	julia --project=. scripts/plot_phase_space_hysteresis.jl --datasets CASES99,FLOSS --out reports/generated/figures/phase_space_hysteresis_orbit.png
@@ -243,7 +246,7 @@ scm-run:
 	julia --project=. scm/run_case.jl --case $(SCM_CASE) --duration $(SCM_DURATION) --dt $(SCM_DT) --grid-size $(SCM_GRID_SIZE) --dz $(SCM_DZ) --profile-every $(SCM_PROFILE_EVERY) --outdir $(SCM_OUTDIR) --solver-jacobian $(SCM_SOLVER_JACOBIAN) --jacobian-sparsity $(SCM_JACOBIAN_SPARSITY) $(SCM_EXTRA_ARGS)
 
 scm-plot:
-	julia --project=. scm/plot_case.jl --input $(SCM_OUTDIR)/payload.jld2 --outdir $(SCM_OUTDIR)/plots --format $(SCM_PLOT_FORMAT) --dpi $(SCM_PLOT_DPI)
+	julia --project=. scm/plot_case.jl --input $(SCM_OUTDIR)/payload.jld2 --outdir $(SCM_OUTDIR)/plots --format $(SCM_PLOT_FORMAT) --dpi $(SCM_PLOT_DPI) --figure $(SCM_PLOT_FIGURE) --max-points $(SCM_PLOT_MAX_POINTS)
 
 scm-plot-all:
 	@echo "Rendering diagnostic plots for all payload.jld2 files under results/..."
@@ -253,7 +256,9 @@ scm-plot-all:
 			--input "$$payload" \
 			--outdir "$$(dirname "$$payload")/plots" \
 			--format $(SCM_PLOT_FORMAT) \
-			--dpi $(SCM_PLOT_DPI) || exit 1; \
+			--dpi $(SCM_PLOT_DPI) \
+			--figure $(SCM_PLOT_FIGURE) \
+			--max-points $(SCM_PLOT_MAX_POINTS) || exit 1; \
 	done
 	@echo "All payload plots rendered successfully."
 

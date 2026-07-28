@@ -1,0 +1,125 @@
+\documentclass[11pt,a4paper]{article}
+
+% Preamble & Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts,bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{geometry}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% Color Definitions for GSPT Regimes
+\definecolor{gsptblue}{RGB}{30,144,255}
+\definecolor{gsptorange}{RGB}{255,140,0}
+\definecolor{gsptred}{RGB}{220,20,60}
+
+\title{\textbf{\Large {{meta.title}}}\\
+\large {{meta.subtitle}}}
+
+\author{
+{{#meta.authors}}
+    	extbf{ {{{name}}} }\thanks{ {{{affiliation}}} }\ \href{mailto:{{{email}}}}{\texttt{\small {{{email}}}}}{{^last}}, {{/last}}
+{{/meta.authors}}
+}
+
+\date{\small {{meta.date}} \quad | \quad Version {{meta.version}}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+{{{meta.abstract}}}
+\end{abstract}
+
+\noindent\textbf{Keywords:} {{{meta.keywords_csv}}}
+
+\vspace{0.5cm}
+\hrule
+\vspace{0.5cm}
+
+\section{System Parameters (Single Source of Truth)}
+
+The non-dimensional fast-slow dynamical system and its underlying critical manifold $\mathcal{M}_0$ are parameterized by the canonical SSOT configuration listed in Table~\ref{tab:ssot_parameters}.
+
+\begin{table}[h!]
+\centering
+\caption{Single Source of Truth (SSOT) physical and GSPT manifold parameters.}
+\label{tab:ssot_parameters}
+\begin{tabular}{llcc}
+\toprule
+\textbf{Parameter} & \textbf{Physical / Mathematical Meaning} & \textbf{Symbol} & \textbf{Value (SSOT)} \\
+\midrule
+Mechanical Efficiency & Shear-to-TKE conversion efficiency & $\eta$ & {{parameters.eta}} \\
+Shear Production Factor & Vertical gradient scaling coefficient & $\gamma$ & {{parameters.gamma}} \\
+Shear Coupling & Combined shear parameter ($c_s = \eta\gamma$) & $c_s$ & {{parameters.c_s}} \\
+Dissipation Feedback & Fast TKE decay rate parameter & $\beta$ & {{parameters.beta}} \\
+Mixing Length Scale & Characteristic boundary-layer eddy scale & $\ell_0$ & ${{parameters.l0}}\text{ m}$ \\
+Buoyancy Scale & Kinematic surface destruction scale & $K$ & ${{parameters.K}}\text{ m s}^{-2}$ \\
+Thermal Response Scale & Inverse temperature scaling factor & $\beta_T$ & {{parameters.beta_T}} \\
+Regularization Floor & Minimum dissipation cutoff & $\delta$ & $10^{ {{parameters.delta_log10}} }$ \\
+Gravitational Accel. & Constant acceleration of gravity & $g$ & ${{parameters.g}}\text{ m s}^{-2}$ \\
+Reference Potential Temp. & Background state potential temperature & $\theta_0$ & ${{parameters.theta_ref}}\text{ K}$ \\
+First Layer Height & Surface flux layer thickness & $z_1$ & ${{parameters.z1}}\text{ m}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Analytical Fold Geometry and Stability Thresholds}
+
+The active turbulent sheet $\mathcal{M}_0^+$ loses Fenichel normal hyperbolicity along the 1D fold curve $\mathcal{C}_{\text{fold}}$, defined by $\frac{\partial f}{\partial q} = 0$, where $q = \sqrt{e+\delta}$. The mathematical relationships governing stability and hysteresis transitions are given by:
+
+\begin{align}
+\text{Buoyancy Destruction Law:}\quad & B(T_s) = K \tanh \!\left( \beta_T \frac{T_a - T_s}{T_a} \right) \\
+\text{Control Parameter:}\quad & \Pi(T_s) = \frac{\beta^2 \ell_0}{4 B(T_s)} \\
+	ext{Transcritical Activation:}\quad & \mathrm{Ri}_{\text{trans}} = c_s = {{parameters.c_s}} \\
+	ext{Dynamic Fold Locus:}\quad & \mathrm{Ri}_{\text{fold}}(T_s) = \frac{c_s}{1 - \Pi(T_s)}
+\end{align}
+
+\section{Diagnostic Trajectory Analysis}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{%
+{{{figures.ri_fold_overlay.path}}}%
+}
+\caption{\textbf{ {{{figures.ri_fold_overlay.title}}} }}
+\label{fig:ri_fold_overlay}
+\end{figure}
+
+\subsection{SCM Run Summary and Event Flags}
+
+Simulation output executed using the \texttt{ {{{diagnostics.closure}}} } buoyancy closure yields the state-space diagnostics summarized in Table~\ref{tab:diagnostics_summary}.
+
+\begin{table}[h!]
+\centering
+\caption{Trajectory transition events detected across the simulation window.}
+\label{tab:diagnostics_summary}
+\begin{tabular}{lcccc}
+\toprule
+	extbf{Event Type} & \textbf{Time (h)} & \textbf{$\Delta T = T_a - T_s$ (K)} & \textbf{$\mathrm{Ri}_b$} & \textbf{$\mathrm{Ri}_{\text{fold}}(T_s)$} \\
+\midrule
+{{#diagnostics.events}}
+{{type_label}} & {{time_hrs}} & {{dT_K}} & {{ri_val}} & {{ri_fold_val}} \\
+{{/diagnostics.events}}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Regime Topology Breakdown}
+
+The state space is partitioned into three distinct geometric regions based on local values of $\mathrm{Ri}_b$:
+
+\begin{enumerate}
+    \item \textbf{\color{gsptblue}Active Turbulent Branch ($\mathrm{Ri}_b < \mathrm{Ri}_{\text{trans}}$):} Shear production dominates; system remains fully coupled.
+    \item \textbf{\color{gsptorange}Bistable Hysteresis Region ($\mathrm{Ri}_{\text{trans}} \le \mathrm{Ri}_b \le \mathrm{Ri}_{\text{fold}}$):} System exhibits history-dependent bistability governed by canard dynamics.
+    \item \textbf{\color{gsptred}Collapsed Branch ($\mathrm{Ri}_b > \mathrm{Ri}_{\text{fold}}$):} Normal hyperbolicity fails; surface thermally decouples.
+\end{enumerate}
+
+\end{document}

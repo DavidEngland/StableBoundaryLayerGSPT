@@ -64,6 +64,53 @@ Nocturnal boundary layer transitions present a notorious modeling challenge due 
 
 The manuscript is organized as a unified applied-mathematics stack: governing system, fast--slow decomposition, critical manifold geometry, regularization, regime-transition geometry, and numerical experiments.
 
+\section{Scope, Contribution, and Model Positioning}
+\label{sec:scope_contribution_positioning}
+
+\subsection{What GSPT-SBL Is and Is Not}
+To avoid category errors, we explicitly distinguish the mathematical framework from a full atmospheric turbulence closure suite:
+\begin{itemize}
+    \item \textbf{GSPT-SBL is a reduced fast--slow dynamical systems framework} for regime transitions, manifold geometry, and fold-mediated pathways.
+    \item \textbf{GSPT-SBL is not a complete SBL parameterization} intended to resolve all turbulent processes, mesoscale interactions, or replace LES in all regimes.
+    \item The intended scientific role is to expose transition topology and timescale separation structure that can then inform closure design and numerics.
+\end{itemize}
+
+\subsection{Primary Theorem-Level Contribution}
+The central mathematical claim can be summarized in theorem form.
+
+\begin{assumption}[Regularity and Separation Conditions]
+Assume smooth vector fields for the coupled fast--slow SBL system, finite nonzero timescale separation parameter $\varepsilon$, and physically admissible parameter ranges under which the critical set is piecewise smooth and compact in the analyzed domain.
+\end{assumption}
+
+\begin{theorem}[Geometric Transition Structure of GSPT-SBL]
+Under the stated regularity and separation assumptions, the regularized fast--slow system admits a normally hyperbolic slow manifold away from fold singularities. Regime transitions are organized by folded critical manifold geometry and associated branch switching pathways, rather than by discontinuous closure switching rules.
+\end{theorem}
+
+\begin{remark}
+In this manuscript, the theorem is supported by analytical construction where available and by numerical manifold diagnostics where closed-form expressions are not tractable.
+\end{remark}
+
+\subsection{Structural vs Calibrated Parameters}
+For interpretability and transferability, parameters are partitioned into:
+\begin{itemize}
+    \item \textbf{Structural parameters:} quantities controlling model topology and fast--slow geometry (for example $\varepsilon$, $\delta$, manifold-shaping coefficients, regularization scales).
+    \item \textbf{Calibration parameters:} physically tuned exchange, radiative, and surface-coupling coefficients tied to site, forcing, roughness, or campaign context.
+\end{itemize}
+This separation clarifies which conclusions are intrinsic to the framework and which are dataset dependent.
+
+\subsection{Operational Definition of Turbulence Collapse}
+Throughout this work, ``collapse'' is used in an operational dynamical sense: concurrent decay of turbulence energy and transport efficacy below prescribed thresholds, accompanied by state-space transition toward a weak-mixing attracting branch. This definition distinguishes geometric regime transition from transient amplitude fluctuations.
+
+As illustrated in Fig.~\ref{fig:gspt_paradigm_pipeline}, the GSPT framework replaces discontinuous algebraic switching with dynamic passage through regularized folded manifold geometry, making the transition architecture explicit before introducing the full fast--slow equation set.
+
+\subsection{Conceptual Pipeline Diagram}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figures/fig_gspt_paradigm_pipeline.pdf}
+    \caption{Conceptual paradigm pipeline: progression from classical closure logic to the GSPT-SBL fast--slow manifold formulation and fold-mediated regime-transition pathways.}
+    \label{fig:gspt_paradigm_pipeline}
+\end{figure}
+
 % --- Dynamic Sections Compiled via Mustache ---
 
 {{{template_sections_tex}}}
@@ -71,6 +118,38 @@ The manuscript is organized as a unified applied-mathematics stack: governing sy
 \section{Generated Diagnostics Figures}
 \label{sec:generated_diagnostics_figures}
 {{{figure_tex_includes}}}
+
+\section{Structural Stability, Falsifiable Predictions, and Limitations}
+\label{sec:stability_predictions_limitations}
+
+\subsection{Structural Stability Considerations}
+The practical utility of the framework depends on persistence of the folded geometry under moderate perturbations to forcing and parameter values. While a full structural-stability proof over the complete forcing class is outside present scope, numerical continuation and parameter sweeps indicate that the principal branch architecture and fold-mediated transition pathways are robust over the analyzed regime envelope.
+
+\subsection{Falsifiable Predictions}
+The framework yields testable claims that can be rejected by data:
+\begin{enumerate}
+    \item \textbf{Hysteresis under forcing cycles:} collapse and recovery thresholds need not coincide under cyclic cooling/warming trajectories.
+    \item \textbf{Branch occupancy signatures:} trajectory residence time should cluster near identifiable manifold sectors during persistent stable regimes.
+    \item \textbf{Recovery asymmetry:} post-collapse recovery pathways should differ dynamically from pre-collapse cooling pathways in phase-space coordinates.
+\end{enumerate}
+
+\subsection{Practical Implications for Atmospheric Modeling}
+For SCM and NWP closure development, the main gain is not wholesale model replacement but topology-aware closure logic:
+\begin{itemize}
+    \item fewer ad hoc stability switches,
+    \item smoother numerical behavior near regime transition,
+    \item physically interpretable transition diagnostics,
+    \item incremental integration into existing model stacks.
+\end{itemize}
+
+\subsection{Limitations and Domain of Validity}
+We emphasize the following scope boundaries:
+\begin{itemize}
+    \item focus on nocturnal stable boundary-layer dynamics,
+    \item reduced-order representation of intermittency and wave-coupled processes,
+    \item limited treatment of cloud-radiative feedbacks, complex terrain, and heterogeneous canopies,
+    \item framework-level interpretation rather than universal closure replacement.
+\end{itemize}
 
 \section{Conclusion: A Geometric Framework for Stable Boundary-Layer Dynamics}
 \label{sec:conclusion}

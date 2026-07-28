@@ -834,6 +834,7 @@ function build_tex_figure_includes(fig_dir::String;
     manual_section_stems = Set([
         "regime_map_z0m_ug",
         "figure_regime_map_z0m_ug",
+        "fig_gspt_paradigm_pipeline",
     ])
     for stem in manual_section_stems
         pop!(candidate_paths, stem, nothing)

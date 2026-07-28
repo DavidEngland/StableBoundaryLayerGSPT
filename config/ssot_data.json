@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "title": "Fast-Slow Manifold Geometry and Richardson Number Dynamics in the Stable Boundary Layer",
+    "subtitle": "Single Source of Truth (SSOT) Automated Diagnostic Report",
+    "version": "1.0.0",
+    "date": "July 2026",
+    "authors": [
+      {
+        "name": "David England, Ph.D.",
+        "affiliation": "Department of Atmospheric Sciences",
+        "email": "David.England@UAH.Edu",
+        "last": true
+      }
+    ],
+    "abstract": "We present an automated LaTeX template populated directly from our Single Source of Truth (SSOT) data model. The framework maps Single Column Model (SCM) trajectories onto the exact fast-slow critical manifold and dynamic fold locus $\\mathrm{Ri}_{\\mathrm{fold}}(T_s)$.",
+    "keywords": [
+      "GSPT",
+      "Boundary Layer Meteorology",
+      "Bulk Richardson Number",
+      "Hysteresis",
+      "Mustache SSOT"
+    ]
+  },
+  "parameters": {
+    "eta": 1.0,
+    "gamma": 0.22,
+    "c_s": 0.22,
+    "beta": 0.12,
+    "l0": 15.0,
+    "K": 0.08,
+    "beta_T": 12.0,
+    "delta_log10": -6,
+    "g": 9.81,
+    "theta_ref": 288.15,
+    "z1": 10.0
+  },
+  "figures": {
+    "ri_fold_overlay": {
+      "path": "figures/ri_fold_trajectory_overlay.png",
+      "title": "State-space trajectory overlay of SCM output against the dynamic GSPT fold locus $\\mathrm{Ri}_{\\mathrm{fold}}(T_s)$ and transcritical activation threshold $\\mathrm{Ri}_{\\mathrm{trans}}$."
+    }
+  },
+  "diagnostics": {
+    "closure": "tanh",
+    "events": [
+      {
+        "type_label": "Thermal Collapse ($\\blacktriangle$)",
+        "time_hrs": "3.24",
+        "dT_K": "4.82",
+        "ri_val": "0.38",
+        "ri_fold_val": "0.37"
+      },
+      {
+        "type_label": "Turbulent Recovery ($\\blacktriangledown$)",
+        "time_hrs": "7.81",
+        "dT_K": "8.15",
+        "ri_val": "0.21",
+        "ri_fold_val": "0.64"
+      }
+    ]
+  }
+}
