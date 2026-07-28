@@ -126,44 +126,44 @@ using ForwardDiff
 # ====================================================================
 # 1. Physical and Numerical Parameters (Active Baseline)
 # ====================================================================
-const Ug        = {{param_u_g_code}}          # Zonal geostrophic wind (m/s)
-const Vg        = {{param_v_g_code}}          # Meridional geostrophic wind (m/s)
-const Ta        = {{param_t_a_code}}          # Reference air temperature (K)
-const Tdeep     = {{param_t_deep_code}}       # Deep soil/ice core temperature (K)
-const Rdown     = {{param_r_down_code}}       # Downward longwave radiation (W/m^2)
-const f_cor     = {{param_f_coriolis_code}}   # Coriolis parameter (s^-1)
+const Ug = 10.0            # Zonal geostrophic wind (m/s)
+const Vg = 0.0             # Meridional geostrophic wind (m/s)
+const Ta = 285.15          # Reference air temperature (K)
+const Tdeep = 283.15       # Deep soil/ice core temperature (K)
+const Rdown = 260.0        # Downward longwave radiation (W/m^2)
+const f_cor = 0.0001       # Coriolis parameter (s^-1)
 
-const epsilon   = {{param_epsilon_code}}      # Fast-slow timescale ratio (eps << 1)
-const delta     = {{param_delta_code}}        # Background TKE floor (m^2/s^2)
-const K_buoy    = {{param_k_code}}            # Buoyant destruction scale (m/s^2)
-const beta_T    = {{param_beta_t_code}}       # Thermal stability sensitivity in G(Ts)
-const sigma_e   = {{param_sigma_e_code}}      # Fast linear TKE term
-const h_bl      = {{param_h_code}}            # Boundary layer bulk scale height (m)
-const h_min     = 20.0          # Lower bound for emergent h_eff (m)
-const h_max     = 400.0         # Upper bound for emergent h_eff (m)
-const l0        = {{param_l0_code}}           # Master turbulent mixing length (m)
-const gamma     = 1.4e-3        # Effective momentum drag scaling (s^-1)
-const CH        = 1.2e-3        # Thermal exchange coefficient
-const eta       = 1.5           # Shear production efficiency
+const epsilon = 0.01       # Fast-slow timescale ratio (eps << 1)
+const delta = 0.0001       # Background TKE floor (m^2/s^2)
+const K_buoy = 0.32        # Buoyant destruction scale (m/s^2)
+const beta_T = 15.0        # Thermal stability sensitivity in G(Ts)
+const sigma_e = 15.0       # Fast linear TKE term
+const h_bl = 50.0          # Boundary layer bulk scale height (m)
+const h_min = 20.0         # Lower bound for emergent h_eff (m)
+const h_max = 400.0        # Upper bound for emergent h_eff (m)
+const l0 = 15.0            # Master turbulent mixing length (m)
+const gamma = 1.4e-3       # Effective momentum drag scaling (s^-1)
+const CH = 1.2e-3          # Thermal exchange coefficient
+const eta = 1.5            # Shear production efficiency
 
-const sigma_SB  = {{param_sigma_sb_code}}     # Stefan-Boltzmann constant (W/m^2/K^4)
-const lambda    = {{param_lambda_soil_code}}  # Soil/Ice thermal conductivity (W/m/K)
-const d_soil    = {{param_d_soil_code}}       # Soil coupling depth (m)
-const rho_cp    = {{param_rho_cp_code}}       # Volumetric heat capacity of air (J/m^3/K)
-const C_skin    = {{param_c_skin_code}}       # Thermal capacity of skin layer (J/m^2/K)
+const sigma_SB = 5.67e-8   # Stefan-Boltzmann constant (W/m^2/K^4)
+const lambda = 1.2         # Soil/Ice thermal conductivity (W/m/K)
+const d_soil = 0.5         # Soil coupling depth (m)
+const rho_cp = 1200.0      # Volumetric heat capacity of air (J/m^3/K)
+const C_skin = 20000.0     # Thermal capacity of skin layer (J/m^2/K)
 
 # Numerical Safeguard Parameters
-const alpha_safe = 1.0e-6      # Damping scale for the safeguard floor gate
-const ts_min     = 220.0       # Validated physical Arctic surface floor (K)
+const alpha_safe = 1.0e-6  # Damping scale for the safeguard floor gate
+const ts_min = 220.0       # Validated physical Arctic surface floor (K)
 
 # ====================================================================
 # 2. Vector Field Definition (AD-Safe, Type-Generic Structure)
 # ====================================================================
 function gspt_sbl_dynamics!(dx, x, p, t)
     # State mapping: x = [e, U, V, Ts]
-    e  = x[1]
-    U  = x[2]
-    V  = x[3]
+    e = x[1]
+    U = x[2]
+    V = x[3]
     Ts = max(x[4], ts_min) # Apply physical safety floor inline
 
     # Shifted TKE coordinate
@@ -185,8 +185,8 @@ function gspt_sbl_dynamics!(dx, x, p, t)
 
     # Net mechanical production minus buoyancy balance
     shear_prod = eta * gamma_eff * (U^2 + V^2)
-    buoy_dest  = K_buoy * G_Ts
-    Delta      = shear_prod - buoy_dest
+    buoy_dest = K_buoy * G_Ts
+    Delta = shear_prod - buoy_dest
 
     # C^inf coordinate shifting avoids non-differentiable max() gates
     # and prevents derivative blowup in ForwardDiff.Dual components
@@ -194,8 +194,8 @@ function gspt_sbl_dynamics!(dx, x, p, t)
 
     # Surface Energy Budget Terms
     Rn = Rdown - sigma_SB * (Ts^4)
-    H  = rho_cp * CH * sqrt_phi_reg * (Ts - Ta)
-    G  = lambda * (Ts - Tdeep) / d_soil
+    H = rho_cp * CH * sqrt_phi_reg * (Ts - Ta)
+    G = lambda * (Ts - Tdeep) / d_soil
 
     # 2.3 Evaluated Tendencies
     # Fast TKE Equation: activated production + non-linear dissipation

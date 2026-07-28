@@ -10,7 +10,7 @@
 		figure-fold-illusion figure-publication-suite paper-appendix-check paper-all archive-paper paper-stamped \
         stablebl-build stablebl-build-sheba stablebl-diagnostics stablebl-diagnostics-sheba \
         stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic \
-		scm-run scm-plot scm-report scm-all scm-verify scm-verity \
+		scm-run scm-plot scm-plot-all scm-report scm-all scm-verify scm-verity \
         run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd \
 		compile-scm-reports sweep-two-layer-envelope check-all ci test clean
 
@@ -244,6 +244,18 @@ scm-run:
 
 scm-plot:
 	julia --project=. scm/plot_case.jl --input $(SCM_OUTDIR)/payload.jld2 --outdir $(SCM_OUTDIR)/plots --format $(SCM_PLOT_FORMAT) --dpi $(SCM_PLOT_DPI)
+
+scm-plot-all:
+	@echo "Rendering diagnostic plots for all payload.jld2 files under results/..."
+	@find results -type f -name "payload.jld2" -not -path "*/_archived*" | while read -r payload; do \
+		echo "==> Plotting $$payload"; \
+		julia --project=. scm/plot_case.jl \
+			--input "$$payload" \
+			--outdir "$$(dirname "$$payload")/plots" \
+			--format $(SCM_PLOT_FORMAT) \
+			--dpi $(SCM_PLOT_DPI) || exit 1; \
+	done
+	@echo "All payload plots rendered successfully."
 
 scm-report:
 	@echo "Rendering semantic report: $(SCM_REPORT_PATH)"
