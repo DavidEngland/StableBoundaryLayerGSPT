@@ -160,6 +160,11 @@ INPUT results/sheba/plots/fig03c_wind_startup_zoom.png
 INPUT results/sheba/plots/fig03c_wind_startup_zoom.png
 INPUT results/sheba/plots/fig03c_wind_startup_zoom.png
 INPUT results/sheba/plots/fig03c_wind_startup_zoom.png
+INPUT results/sheba/plots/fig03d_triheight_timeseries.png
+INPUT results/sheba/plots/fig03d_triheight_timeseries.png
+INPUT results/sheba/plots/fig03d_triheight_timeseries.png
+INPUT results/sheba/plots/fig03d_triheight_timeseries.png
+INPUT results/sheba/plots/fig03d_triheight_timeseries.png
 INPUT results/sheba/plots/fig04_profiles_u_theta_km.png
 INPUT results/sheba/plots/fig04_profiles_u_theta_km.png
 INPUT results/sheba/plots/fig04_profiles_u_theta_km.png
@@ -175,6 +180,11 @@ INPUT results/sheba/plots/fig06_phase_delta_exi.png
 INPUT results/sheba/plots/fig06_phase_delta_exi.png
 INPUT results/sheba/plots/fig06_phase_delta_exi.png
 INPUT results/sheba/plots/fig06_phase_delta_exi.png
+INPUT results/sheba/plots/fig07_closure_manifold.png
+INPUT results/sheba/plots/fig07_closure_manifold.png
+INPUT results/sheba/plots/fig07_closure_manifold.png
+INPUT results/sheba/plots/fig07_closure_manifold.png
+INPUT results/sheba/plots/fig07_closure_manifold.png
 INPUT results/sheba/plots/fig07_diffusivity_vs_ri.png
 INPUT results/sheba/plots/fig07_diffusivity_vs_ri.png
 INPUT results/sheba/plots/fig07_diffusivity_vs_ri.png

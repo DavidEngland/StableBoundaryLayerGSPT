@@ -1,4 +1,9 @@
+┌ Warning: Failed to copy figure artifact
+│   source = "figures/figure_bifurcation_transcritical_envelope.pdf"
+│   destination = "reports/generated/figures/figure_bifurcation_transcritical_envelope.pdf"
+│   exception = IOError: open("figures/figure_bifurcation_transcritical_envelope.pdf", 0, 0): no such file or directory (ENOENT)
+└ @ StableBoundaryLayerGSPT.Visualization ~/Documents/GitHub/StableBoundaryLayerGSPT/src/Visualization/Visualization.jl:209
 Bifurcation sweep complete
-run_dir=results/CASES99/bifurcation_20260727_112510
-summary=results/CASES99/bifurcation_20260727_112510/bifurcation_summary.json
+run_dir=results/CASES99/bifurcation_20260727_135537
+summary=results/CASES99/bifurcation_20260727_135537/bifurcation_summary.json
 report_fragment=reports/generated/diagnostics/03_bifurcation_sweep.md

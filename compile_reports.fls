@@ -497,6 +497,9 @@ INPUT ./results/CASES99/plots/fig03c_theta_startup_zoom.png
 INPUT ./results/CASES99/plots/fig03c_wind_startup_zoom.png
 INPUT ./results/CASES99/plots/fig03c_wind_startup_zoom.png
 INPUT ./results/CASES99/plots/fig03c_wind_startup_zoom.png
+INPUT ./results/CASES99/plots/fig03d_triheight_timeseries.png
+INPUT ./results/CASES99/plots/fig03d_triheight_timeseries.png
+INPUT ./results/CASES99/plots/fig03d_triheight_timeseries.png
 INPUT ./results/CASES99/plots/fig04_profiles_u_theta_km.png
 INPUT ./results/CASES99/plots/fig04_profiles_u_theta_km.png
 INPUT ./results/CASES99/plots/fig04_profiles_u_theta_km.png
@@ -506,6 +509,9 @@ INPUT ./results/CASES99/plots/fig05_surface_energy_budget.png
 INPUT ./results/CASES99/plots/fig06_phase_delta_exi.png
 INPUT ./results/CASES99/plots/fig06_phase_delta_exi.png
 INPUT ./results/CASES99/plots/fig06_phase_delta_exi.png
+INPUT ./results/CASES99/plots/fig07_closure_manifold.png
+INPUT ./results/CASES99/plots/fig07_closure_manifold.png
+INPUT ./results/CASES99/plots/fig07_closure_manifold.png
 INPUT ./results/CASES99/plots/fig07_diffusivity_vs_ri.png
 INPUT ./results/CASES99/plots/fig07_diffusivity_vs_ri.png
 INPUT ./results/CASES99/plots/fig07_diffusivity_vs_ri.png
