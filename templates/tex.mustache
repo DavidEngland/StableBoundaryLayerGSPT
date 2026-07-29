@@ -24,7 +24,7 @@
 
 \author{
 {{#meta.authors}}
-    	extbf{ {{{name}}} }\thanks{ {{{affiliation}}} }\ \href{mailto:{{{email}}}}{\texttt{\small {{{email}}}}}{{^last}}, {{/last}}
+\textbf{ {{{name}}} }\thanks{ {{{affiliation}}} }\ \href{mailto:{{{email}}}}{\texttt{\small {{{email}}}}}{{^last}}, {{/last}}
 {{/meta.authors}}
 }
 
@@ -44,43 +44,52 @@
 \hrule
 \vspace{0.5cm}
 
-\section{System Parameters (Single Source of Truth)}
+\section{Canonical Model Parameters}
 
-The non-dimensional fast-slow dynamical system and its underlying critical manifold $\mathcal{M}_0$ are parameterized by the canonical SSOT configuration listed in Table~\ref{tab:ssot_parameters}.
+The non-dimensional fast-slow dynamical system and its underlying critical manifold $\mathcal{M}_0$ are parameterized by the reference configuration listed in Table~\ref{tab:ssot_parameters}. Values are generated automatically from repository configuration artifacts to maintain reproducibility across analysis and manuscript builds.
 
 \begin{table}[h!]
 \centering
-\caption{Single Source of Truth (SSOT) physical and GSPT manifold parameters.}
+\caption{Reference physical and GSPT manifold parameters used in analysis and diagnostics.}
 \label{tab:ssot_parameters}
 \begin{tabular}{llcc}
 \toprule
-\textbf{Parameter} & \textbf{Physical / Mathematical Meaning} & \textbf{Symbol} & \textbf{Value (SSOT)} \\
+\textbf{Parameter} & \textbf{Physical / Mathematical Meaning} & \textbf{Symbol} & \textbf{Value} \\
 \midrule
+\multicolumn{4}{l}{\textbf{Constants}} \\
+Gravitational Accel. & Constant acceleration of gravity & $g$ & ${{parameters.g}}\,\mathrm{m\,s^{-2}}$ \\
+Reference Potential Temp. & Background state potential temperature & $\theta_0$ & ${{parameters.theta_ref}}\,\mathrm{K}$ \\
+\midrule
+\multicolumn{4}{l}{\textbf{Mechanical Parameters}} \\
 Mechanical Efficiency & Shear-to-TKE conversion efficiency & $\eta$ & {{parameters.eta}} \\
 Shear Production Factor & Vertical gradient scaling coefficient & $\gamma$ & {{parameters.gamma}} \\
 Shear Coupling & Combined shear parameter ($c_s = \eta\gamma$) & $c_s$ & {{parameters.c_s}} \\
+Mixing Length Scale & Characteristic boundary-layer eddy scale & $\ell_0$ & ${{parameters.l0}}\,\mathrm{m}$ \\
+\midrule
+\multicolumn{4}{l}{\textbf{Turbulence Parameters}} \\
 Dissipation Feedback & Fast TKE decay rate parameter & $\beta$ & {{parameters.beta}} \\
-Mixing Length Scale & Characteristic boundary-layer eddy scale & $\ell_0$ & ${{parameters.l0}}\text{ m}$ \\
-Buoyancy Scale & Kinematic surface destruction scale & $K$ & ${{parameters.K}}\text{ m s}^{-2}$ \\
-Thermal Response Scale & Inverse temperature scaling factor & $\beta_T$ & {{parameters.beta_T}} \\
 Regularization Floor & Minimum dissipation cutoff & $\delta$ & $10^{ {{parameters.delta_log10}} }$ \\
-Gravitational Accel. & Constant acceleration of gravity & $g$ & ${{parameters.g}}\text{ m s}^{-2}$ \\
-Reference Potential Temp. & Background state potential temperature & $\theta_0$ & ${{parameters.theta_ref}}\text{ K}$ \\
-First Layer Height & Surface flux layer thickness & $z_1$ & ${{parameters.z1}}\text{ m}$ \\
+\midrule
+\multicolumn{4}{l}{\textbf{Thermal Parameters}} \\
+Buoyancy Scale & Kinematic surface destruction scale & $K$ & ${{parameters.K}}\,\mathrm{m\,s^{-2}}$ \\
+Thermal Response Scale & Inverse temperature scaling factor & $\beta_T$ & {{parameters.beta_T}} \\
+First Layer Height & Surface flux layer thickness & $z_1$ & ${{parameters.z1}}\,\mathrm{m}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \section{Analytical Fold Geometry and Stability Thresholds}
 
-The active turbulent sheet $\mathcal{M}_0^+$ loses Fenichel normal hyperbolicity along the 1D fold curve $\mathcal{C}_{\text{fold}}$, defined by $\frac{\partial f}{\partial q} = 0$, where $q = \sqrt{e+\delta}$. The mathematical relationships governing stability and hysteresis transitions are given by:
+The active turbulent sheet $\mathcal{M}_0^+$ loses Fenichel normal hyperbolicity along the 1D fold curve $\mathcal{C}_{\mathrm{fold}}$. Introducing the regularized variable $q = \sqrt{e+\delta}$, the fold condition $\partial f / \partial e = 0$ is equivalently written as $\partial f / \partial q = 0$. The governing stability and hysteresis relationships are:
 
 \begin{align}
-\text{Buoyancy Destruction Law:}\quad & B(T_s) = K \tanh \!\left( \beta_T \frac{T_a - T_s}{T_a} \right) \\
-\text{Control Parameter:}\quad & \Pi(T_s) = \frac{\beta^2 \ell_0}{4 B(T_s)} \\
-	ext{Transcritical Activation:}\quad & \mathrm{Ri}_{\text{trans}} = c_s = {{parameters.c_s}} \\
-	ext{Dynamic Fold Locus:}\quad & \mathrm{Ri}_{\text{fold}}(T_s) = \frac{c_s}{1 - \Pi(T_s)}
+\text{Buoyancy Destruction Law:}\quad & B(T_s) = K \tanh \!\left( \beta_T \frac{T_a - T_s}{T_a} \right) \label{eq:buoyancy} \\
+\text{Control Parameter:}\quad & \Pi(T_s) = \frac{\beta^2 \ell_0}{4 B(T_s)} \label{eq:pi} \\
+\text{Transcritical Activation:}\quad & \mathrm{Ri}_{\mathrm{trans}} = c_s = {{parameters.c_s}} \label{eq:trans} \\
+\text{Dynamic Fold Locus:}\quad & \mathrm{Ri}_{\mathrm{fold}}(T_s) = \frac{c_s}{1 - \Pi(T_s)} \label{eq:fold}
 \end{align}
+
+Equation~(\ref{eq:pi}) and Equation~(\ref{eq:fold}) are used directly in the diagnostics workflow to preserve consistency between analysis code, generated figures, and manuscript text.
 
 \section{Diagnostic Trajectory Analysis}
 
@@ -89,7 +98,7 @@ The active turbulent sheet $\mathcal{M}_0^+$ loses Fenichel normal hyperbolicity
 \includegraphics[width=0.92\textwidth]{%
 {{{figures.ri_fold_overlay.path}}}%
 }
-\caption{\textbf{ {{{figures.ri_fold_overlay.title}}} }}
+\caption{ {{{figures.ri_fold_overlay.title}}} }
 \label{fig:ri_fold_overlay}
 \end{figure}
 
@@ -101,25 +110,34 @@ Simulation output executed using the \texttt{ {{{diagnostics.closure}}} } buoyan
 \centering
 \caption{Trajectory transition events detected across the simulation window.}
 \label{tab:diagnostics_summary}
-\begin{tabular}{lcccc}
+\begin{tabular}{llcccc}
 \toprule
-	extbf{Event Type} & \textbf{Time (h)} & \textbf{$\Delta T = T_a - T_s$ (K)} & \textbf{$\mathrm{Ri}_b$} & \textbf{$\mathrm{Ri}_{\text{fold}}(T_s)$} \\
+\textbf{Event Type} & \textbf{Branch} & \textbf{Time (h)} & \textbf{$\Delta T = T_a - T_s$ (K)} & \textbf{$\mathrm{Ri}_b$} & \textbf{$\mathrm{Ri}_{\mathrm{fold}}(T_s)$} \\
 \midrule
 {{#diagnostics.events}}
-{{type_label}} & {{time_hrs}} & {{dT_K}} & {{ri_val}} & {{ri_fold_val}} \\
+{{type_label}} & {{event_branch}} & {{time_hrs}} & {{dT_K}} & {{ri_val}} & {{ri_fold_val}} \\
 {{/diagnostics.events}}
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{Regime Topology Breakdown}
+\section{Regime Topology Summary}
 
-The state space is partitioned into three distinct geometric regions based on local values of $\mathrm{Ri}_b$:
+The state space is partitioned into three distinct geometric regions based on local values of $\mathrm{Ri}_b$ (Table~\ref{tab:regime_summary}):
 
-\begin{enumerate}
-    \item \textbf{\color{gsptblue}Active Turbulent Branch ($\mathrm{Ri}_b < \mathrm{Ri}_{\text{trans}}$):} Shear production dominates; system remains fully coupled.
-    \item \textbf{\color{gsptorange}Bistable Hysteresis Region ($\mathrm{Ri}_{\text{trans}} \le \mathrm{Ri}_b \le \mathrm{Ri}_{\text{fold}}$):} System exhibits history-dependent bistability governed by canard dynamics.
-    \item \textbf{\color{gsptred}Collapsed Branch ($\mathrm{Ri}_b > \mathrm{Ri}_{\text{fold}}$):} Normal hyperbolicity fails; surface thermally decouples.
-\end{enumerate}
+\begin{table}[h!]
+\centering
+\caption{Three-regime GSPT partition in Richardson-number state space.}
+\label{tab:regime_summary}
+\begin{tabular}{lll}
+\toprule
+\textbf{Region} & \textbf{Criterion} & \textbf{Physical Interpretation} \\
+\midrule
+\textcolor{gsptblue}{Active} & $\mathrm{Ri}_b < \mathrm{Ri}_{\mathrm{trans}}$ & Fully turbulent \\
+\textcolor{gsptorange}{Hysteretic} & $\mathrm{Ri}_{\mathrm{trans}} \le \mathrm{Ri}_b \le \mathrm{Ri}_{\mathrm{fold}}$ & Bistable \\
+\textcolor{gsptred}{Collapsed} & $\mathrm{Ri}_b > \mathrm{Ri}_{\mathrm{fold}}$ & Decoupled \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}

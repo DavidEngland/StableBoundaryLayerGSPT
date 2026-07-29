@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Fast-Slow Manifold Geometry and Richardson Number Dynamics in the Stable Boundary Layer",
-    "subtitle": "Single Source of Truth (SSOT) Automated Diagnostic Report",
+    "subtitle": "Automated Diagnostic Report from Repository Configuration",
     "version": "1.0.0",
     "date": "July 2026",
     "authors": [
@@ -12,13 +12,13 @@
         "last": true
       }
     ],
-    "abstract": "We present an automated LaTeX template populated directly from our Single Source of Truth (SSOT) data model. The framework maps Single Column Model (SCM) trajectories onto the exact fast-slow critical manifold and dynamic fold locus $\\mathrm{Ri}_{\\mathrm{fold}}(T_s)$.",
+    "abstract": "We present an automated LaTeX template populated directly from a repository-tracked reference parameter set. The framework maps Single Column Model (SCM) trajectories onto the exact fast-slow critical manifold and dynamic fold locus $\\mathrm{Ri}_{\\mathrm{fold}}(T_s)$.",
     "keywords": [
       "GSPT",
       "Boundary Layer Meteorology",
       "Bulk Richardson Number",
       "Hysteresis",
-      "Mustache SSOT"
+      "Reproducible Workflows"
     ]
   },
   "parameters": {

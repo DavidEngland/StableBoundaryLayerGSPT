@@ -15,6 +15,19 @@ Usage:
 using JSON3
 using Mustache
 
+function infer_event_branch(type_label::AbstractString)
+    normalized = lowercase(type_label)
+    if occursin("collapse", normalized)
+        return "Collapse"
+    elseif occursin("recover", normalized)
+        return "Recovery"
+    elseif occursin("burst", normalized)
+        return "Burst"
+    else
+        return "Active"
+    end
+end
+
 function inject_derived_fields!(data::Dict{String, Any})
     meta = get(data, "meta", Dict{String, Any}())
     keywords = get(meta, "keywords", Any[])
@@ -24,6 +37,19 @@ function inject_derived_fields!(data::Dict{String, Any})
         meta["keywords_csv"] = ""
     end
     data["meta"] = meta
+
+    diagnostics = get(data, "diagnostics", Dict{String, Any}())
+    events = get(diagnostics, "events", Any[])
+    if events isa AbstractVector
+        for event in events
+            if event isa Dict{String, Any}
+                event["event_branch"] = get(event, "event_branch", infer_event_branch(string(get(event, "type_label", ""))))
+            end
+        end
+        diagnostics["events"] = events
+    end
+    data["diagnostics"] = diagnostics
+
     return data
 end
 
