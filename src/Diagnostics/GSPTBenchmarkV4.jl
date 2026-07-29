@@ -5,6 +5,449 @@ using LsqFit
 using LinearAlgebra
 using Random
 using Printf
+import CSV
+import JLD2
+
+include(joinpath(@__DIR__, "..", "Config", "CaseDefaults.jl"))
+using .CaseDefaults: normalize_case_symbol
+
+export BENCHMARK_RESULT_SCHEMA_VERSION
+export BENCHMARK_RESULT_FIELDS
+export GroundTruthParams
+export generate_synthetic_data
+export run_bootstrapped_estimator
+export calibrate_case_series
+export load_case_series
+export calibrate_case
+export calibrate_cases
+export run_benchmark_suite
+
+const BENCHMARK_RESULT_SCHEMA_VERSION = "1.0.0"
+const BENCHMARK_RESULT_FIELDS = (
+    :Ri_fold_hat,
+    :Ri_trans_hat,
+    :Delta_Ri_H_hat,
+    :gamma_hat,
+    :c_hat,
+    :fold_ci,
+    :gamma_ci,
+    :branch_labels,
+    :eta_star,
+    :valid,
+)
+
+const CASE_SERIES_FIELDS = (:t, :Ri, :e)
+const CASE_REPORT_METRIC_FIELDS = (
+    :Ri_fold_hat,
+    :Ri_fold_ci_low,
+    :Ri_fold_ci_high,
+    :Ri_critical_proxy,
+    :Delta_Ri_H_hat,
+    :gamma_hat,
+    :c_hat,
+)
+
+function _nan_case_metrics()
+    return (
+        Ri_fold_hat=NaN,
+        Ri_fold_ci_low=NaN,
+        Ri_fold_ci_high=NaN,
+        Ri_critical_proxy=NaN,
+        Delta_Ri_H_hat=NaN,
+        gamma_hat=NaN,
+        c_hat=NaN,
+    )
+end
+
+function _normalize_report_status(status::Symbol)
+    if status === :ok
+        return :ok
+    elseif status === :insufficient_extinction_samples
+        return :insufficient_extinction
+    elseif status === :calibration_invalid
+        return :invalid_fit
+    elseif status === :missing_artifacts || status === :missing_artifacts_after_fallback
+        return :data_unavailable
+    elseif status === :payload_read_error || status === :csv_read_error
+        return :artifact_read_error
+    elseif status === :scm_fallback_failed
+        return :fallback_failed
+    elseif status === :calibration_exception
+        return :calibration_exception
+    end
+    return :unknown_failure
+end
+
+function _ri_critical_proxy(data, calibration)
+    if !isnan(calibration.Ri_trans_hat)
+        return max(0.0, calibration.Ri_trans_hat)
+    end
+    if data === nothing || length(data.Ri) == 0
+        return NaN
+    end
+    # Conservative fallback proxy when burst-based Ri_trans is unavailable.
+    return max(0.0, quantile(data.Ri, 0.10))
+end
+
+function _build_case_metrics(data, calibration)
+    if calibration === nothing
+        return _nan_case_metrics()
+    end
+    return (
+        Ri_fold_hat=calibration.Ri_fold_hat,
+        Ri_fold_ci_low=calibration.fold_ci[1],
+        Ri_fold_ci_high=calibration.fold_ci[2],
+        Ri_critical_proxy=_ri_critical_proxy(data, calibration),
+        Delta_Ri_H_hat=calibration.Delta_Ri_H_hat,
+        gamma_hat=calibration.gamma_hat,
+        c_hat=calibration.c_hat,
+    )
+end
+
+function _normalize_case_token(case_name::Union{String,Symbol})
+    return lowercase(strip(String(case_name)))
+end
+
+function _candidate_case_dirs(case_name::Union{String,Symbol})
+    token = _normalize_case_token(case_name)
+    if token == "cases99"
+        return ["CASES99", "cases99", "idealized_sbl"]
+    elseif token == "floss"
+        return ["FLOSS", "floss", "idealized_sbl"]
+    elseif token == "sheba"
+        return ["SHEBA", "sheba"]
+    elseif token == "gabls1"
+        return ["GABLS1", "gabls1"]
+    end
+    return [uppercase(token), token]
+end
+
+function _extract_series_from_payload(payload::Dict{String,Any})
+    haskey(payload, "time_series") || error("payload missing time_series")
+    ts = payload["time_series"]
+    length(ts) > 0 || error("payload time_series is empty")
+
+    t = Float64[]
+    Ri = Float64[]
+    e = Float64[]
+
+    for row in ts
+        push!(t, Float64(getproperty(row, :t)))
+        push!(Ri, Float64(getproperty(row, :ri_min)))
+        push!(e, Float64(getproperty(row, :surface_e_xi)))
+    end
+
+    return (t=t, Ri=Ri, e=e)
+end
+
+function _extract_series_from_csv(csv_path::AbstractString)
+    table = CSV.File(csv_path)
+    if !(:t in propertynames(table)) || !(:ri_min in propertynames(table)) || !(:surface_e_xi in propertynames(table))
+        error("time_series.csv missing required columns: t, ri_min, surface_e_xi")
+    end
+
+    t = Float64[]
+    Ri = Float64[]
+    e = Float64[]
+    for row in table
+        push!(t, Float64(row.t))
+        push!(Ri, Float64(row.ri_min))
+        push!(e, Float64(row.surface_e_xi))
+    end
+
+    return (t=t, Ri=Ri, e=e)
+end
+
+function _run_scm_fallback(case_name::Union{String,Symbol}, outdir::AbstractString)
+    case_arg = _normalize_case_token(case_name)
+    run_case_script = normpath(joinpath(@__DIR__, "..", "..", "scm", "run_case.jl"))
+    cmd = `$(Base.julia_cmd()) --project=. $run_case_script --case $case_arg --outdir $outdir`
+    run(cmd)
+    return nothing
+end
+
+function _case_failure(case_name::Union{String,Symbol}, case_dir::AbstractString, source::Symbol, code::Symbol, message::String)
+    return (
+        ok=false,
+        case_input=String(case_name),
+        case_family=String(normalize_case_symbol(case_name)),
+        case_dir=case_dir,
+        source=source,
+        status=code,
+        message=message,
+        data=nothing,
+        calibration=nothing,
+    )
+end
+
+"""
+    load_case_series(case_name; results_root="results", run_if_missing=true)
+
+Resolve one case using artifact-first strategy:
+1) `payload.jld2`
+2) `time_series.csv`
+3) run `scm/run_case.jl` fallback when enabled and retry
+"""
+function load_case_series(case_name::Union{String,Symbol}; results_root::AbstractString="results", run_if_missing::Bool=true)
+    case_dirs = _candidate_case_dirs(case_name)
+
+    for case_dir in case_dirs
+        root = joinpath(results_root, case_dir)
+        payload_path = joinpath(root, "payload.jld2")
+        csv_path = joinpath(root, "time_series.csv")
+
+        if isfile(payload_path)
+            try
+                payload = JLD2.load(payload_path)
+                series = _extract_series_from_payload(payload)
+                return (
+                    ok=true,
+                    case_input=String(case_name),
+                    case_family=String(normalize_case_symbol(case_name)),
+                    case_dir=case_dir,
+                    source=:payload_jld2,
+                    status=:ok,
+                    message="loaded from payload.jld2",
+                    data=series,
+                    calibration=nothing,
+                )
+            catch err
+                return _case_failure(case_name, case_dir, :payload_jld2, :payload_read_error, sprint(showerror, err))
+            end
+        end
+
+        if isfile(csv_path)
+            try
+                series = _extract_series_from_csv(csv_path)
+                return (
+                    ok=true,
+                    case_input=String(case_name),
+                    case_family=String(normalize_case_symbol(case_name)),
+                    case_dir=case_dir,
+                    source=:time_series_csv,
+                    status=:ok,
+                    message="loaded from time_series.csv",
+                    data=series,
+                    calibration=nothing,
+                )
+            catch err
+                return _case_failure(case_name, case_dir, :time_series_csv, :csv_read_error, sprint(showerror, err))
+            end
+        end
+    end
+
+    primary_dir = first(case_dirs)
+    primary_root = joinpath(results_root, primary_dir)
+    if run_if_missing
+        try
+            mkpath(primary_root)
+            _run_scm_fallback(case_name, primary_root)
+        catch err
+            return _case_failure(case_name, primary_dir, :scm_fallback, :scm_fallback_failed, sprint(showerror, err))
+        end
+
+        payload_retry = joinpath(primary_root, "payload.jld2")
+        csv_retry = joinpath(primary_root, "time_series.csv")
+        if isfile(payload_retry)
+            try
+                payload = JLD2.load(payload_retry)
+                series = _extract_series_from_payload(payload)
+                return (
+                    ok=true,
+                    case_input=String(case_name),
+                    case_family=String(normalize_case_symbol(case_name)),
+                    case_dir=primary_dir,
+                    source=:scm_fallback_payload,
+                    status=:ok,
+                    message="generated via SCM fallback and loaded from payload.jld2",
+                    data=series,
+                    calibration=nothing,
+                )
+            catch err
+                return _case_failure(case_name, primary_dir, :scm_fallback_payload, :payload_read_error, sprint(showerror, err))
+            end
+        elseif isfile(csv_retry)
+            try
+                series = _extract_series_from_csv(csv_retry)
+                return (
+                    ok=true,
+                    case_input=String(case_name),
+                    case_family=String(normalize_case_symbol(case_name)),
+                    case_dir=primary_dir,
+                    source=:scm_fallback_csv,
+                    status=:ok,
+                    message="generated via SCM fallback and loaded from time_series.csv",
+                    data=series,
+                    calibration=nothing,
+                )
+            catch err
+                return _case_failure(case_name, primary_dir, :scm_fallback_csv, :csv_read_error, sprint(showerror, err))
+            end
+        end
+        return _case_failure(case_name, primary_dir, :scm_fallback, :missing_artifacts_after_fallback, "SCM fallback completed but no payload.jld2 or time_series.csv found")
+    end
+
+    return _case_failure(case_name, primary_dir, :artifact_lookup, :missing_artifacts, "No payload.jld2 or time_series.csv found")
+end
+
+"""
+    calibrate_case_series(time, Ri, e; q_level=0.10, run_bootstrap_ci=true, e_floor=0.001)
+
+Public, import-safe calibration entry point for downstream scripts and report builders.
+This function performs light validation, clips energy to the laminar floor, computes a
+representative `dt` from strictly increasing timestamps, and returns the benchmark estimate
+in the stable schema defined by `BENCHMARK_RESULT_FIELDS`.
+"""
+function calibrate_case_series(
+    time::AbstractVector{<:Real},
+    Ri::AbstractVector{<:Real},
+    e::AbstractVector{<:Real};
+    q_level::Float64=0.10,
+    run_bootstrap_ci::Bool=true,
+    e_floor::Float64=0.001,
+)
+    n = length(time)
+    if length(Ri) != n || length(e) != n
+        throw(ArgumentError("time, Ri, and e must have equal lengths"))
+    end
+    if n < 8
+        throw(ArgumentError("at least 8 samples are required for calibration"))
+    end
+
+    t = Float64.(time)
+    Ri_vec = Float64.(Ri)
+    e_vec = max.(e_floor, Float64.(e))
+
+    if !all(isfinite, t) || !all(isfinite, Ri_vec) || !all(isfinite, e_vec)
+        throw(ArgumentError("time, Ri, and e must be finite"))
+    end
+
+    dt_vec = diff(t)
+    if any(<=(0.0), dt_vec)
+        throw(ArgumentError("time must be strictly monotonically increasing"))
+    end
+
+    data = (
+        time=t,
+        Ri=Ri_vec,
+        e=e_vec,
+        dt=median(dt_vec),
+    )
+
+    result = run_bootstrapped_estimator(data; q_level=q_level, run_bootstrap_ci=run_bootstrap_ci, e_floor=e_floor)
+    return result
+end
+
+"""
+    calibrate_case(case_name; results_root="results", run_if_missing=true, q_level=0.10, run_bootstrap_ci=true, e_floor=0.001)
+
+Phase-2 case adapter that resolves artifacts (or runs fallback SCM) and returns a
+structured status tuple. Failures are encoded in `status/message` and do not throw.
+"""
+function calibrate_case(
+    case_name::Union{String,Symbol};
+    results_root::AbstractString="results",
+    run_if_missing::Bool=true,
+    q_level::Float64=0.10,
+    run_bootstrap_ci::Bool=true,
+    e_floor::Float64=0.001,
+)
+    loaded = load_case_series(case_name; results_root=results_root, run_if_missing=run_if_missing)
+    if !loaded.ok
+        return (
+            ok=false,
+            case_input=loaded.case_input,
+            case_family=loaded.case_family,
+            case_dir=loaded.case_dir,
+            source=loaded.source,
+            status=loaded.status,
+            report_status=_normalize_report_status(loaded.status),
+            message=loaded.message,
+            data=nothing,
+            calibration=nothing,
+            metrics=_nan_case_metrics(),
+            metric_fields=CASE_REPORT_METRIC_FIELDS,
+        )
+    end
+
+    d = loaded.data
+    try
+        result = calibrate_case_series(d.t, d.Ri, d.e; q_level=q_level, run_bootstrap_ci=run_bootstrap_ci, e_floor=e_floor)
+        n_ext = count(result.branch_labels .== :extinction)
+        if !result.valid && n_ext < 20
+            return (
+                ok=false,
+                case_input=loaded.case_input,
+                case_family=loaded.case_family,
+                case_dir=loaded.case_dir,
+                source=loaded.source,
+                status=:insufficient_extinction_samples,
+                report_status=:insufficient_extinction,
+                message="insufficient extinction samples for fit (n_extinction=$(n_ext), required>=20)",
+                data=loaded.data,
+                calibration=result,
+                metrics=_build_case_metrics(loaded.data, result),
+                metric_fields=CASE_REPORT_METRIC_FIELDS,
+            )
+        end
+        if !result.valid
+            return (
+                ok=false,
+                case_input=loaded.case_input,
+                case_family=loaded.case_family,
+                case_dir=loaded.case_dir,
+                source=loaded.source,
+                status=:calibration_invalid,
+                report_status=:invalid_fit,
+                message="calibration returned invalid fit",
+                data=loaded.data,
+                calibration=result,
+                metrics=_build_case_metrics(loaded.data, result),
+                metric_fields=CASE_REPORT_METRIC_FIELDS,
+            )
+        end
+
+        return (
+            ok=true,
+            case_input=loaded.case_input,
+            case_family=loaded.case_family,
+            case_dir=loaded.case_dir,
+            source=loaded.source,
+            status=:ok,
+            report_status=:ok,
+            message="case calibration completed",
+            data=loaded.data,
+            calibration=result,
+            metrics=_build_case_metrics(loaded.data, result),
+            metric_fields=CASE_REPORT_METRIC_FIELDS,
+        )
+    catch err
+        return (
+            ok=false,
+            case_input=loaded.case_input,
+            case_family=loaded.case_family,
+            case_dir=loaded.case_dir,
+            source=loaded.source,
+            status=:calibration_exception,
+            report_status=:calibration_exception,
+            message=sprint(showerror, err),
+            data=loaded.data,
+            calibration=nothing,
+            metrics=_nan_case_metrics(),
+            metric_fields=CASE_REPORT_METRIC_FIELDS,
+        )
+    end
+end
+
+"""
+    calibrate_cases(case_names; kwargs...)
+
+Run case calibration for a list of datasets and return a vector of report-facing
+status tuples, each including normalized status semantics and the agreed metric set.
+"""
+function calibrate_cases(case_names::AbstractVector{<:Union{String,Symbol}}; kwargs...)
+    return [calibrate_case(case_name; kwargs...) for case_name in case_names]
+end
 
 # ==============================================================================
 # 1. HELPER FUNCTIONS: SAVITZKY-GOLAY & GAUSSIAN KERNEL ENVELOPE (C^∞)
@@ -474,6 +917,3 @@ function run_benchmark_suite()
 end
 
 end # module
-
-import .GSPTBenchmarkV4: run_benchmark_suite
-run_benchmark_suite()

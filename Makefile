@@ -12,7 +12,7 @@
         stablebl-paper stablebl-paper-sheba stablebl-bundle-synthetic \
 		scm-run scm-plot scm-plot-all scm-report scm-all scm-verify scm-verity \
         run-gabls1 run-idealized-sbl run-sheba run-sheba-fd run-sheba-high-top run-sheba-high-top-fd \
-		compile-scm-reports sweep-two-layer-envelope check-all ci test clean
+		gspt-calibration compile-scm-reports sweep-two-layer-envelope check-all ci test clean
 
 DATASET ?= CASES99
 LATEXMK ?= latexmk
@@ -43,6 +43,14 @@ SCM_WRAPPER_PDF_NAME ?= $(SCM_REPORT_BASE)_wrapper.pdf
 SCM_WRAPPER_TEX_PATH ?= $(SCM_OUTDIR)/$(SCM_WRAPPER_TEX_NAME)
 SCM_WRAPPER_PDF_PATH ?= $(SCM_OUTDIR)/$(SCM_WRAPPER_PDF_NAME)
 SCM_WRITE_COMPAT_WRAPPER ?= 0
+GSPT_CAL_CASES ?= CASES99,FLOSS,SHEBA,GABLS1,GABLS4
+GSPT_CAL_RESULTS_ROOT ?= results
+GSPT_CAL_REPORTS_DIAGNOSTICS ?= reports/diagnostics
+GSPT_CAL_REPORTS_FIGURES ?= reports/figures
+GSPT_CAL_RUN_IF_MISSING ?= false
+GSPT_CAL_Q_LEVEL ?= 0.10
+GSPT_CAL_RUN_BOOTSTRAP_CI ?= true
+GSPT_CAL_E_FLOOR ?= 0.001
 BIFURCATION_VERBOSE ?= 0
 BIFURCATION_LOG_DIR ?= results/_logs
 CASES99_SUMMARY := results/CASES99/latest/summary.json
@@ -274,6 +282,17 @@ scm-report:
 	@echo "Rendered semantic wrapper PDF: $(SCM_WRAPPER_PDF_PATH)"
 
 scm-all: scm-run scm-plot scm-report
+
+gspt-calibration:
+	julia --project=. scripts/generate_gspt_calibration_outputs.jl \
+		--cases $(GSPT_CAL_CASES) \
+		--results-root $(GSPT_CAL_RESULTS_ROOT) \
+		--reports-diagnostics $(GSPT_CAL_REPORTS_DIAGNOSTICS) \
+		--reports-figures $(GSPT_CAL_REPORTS_FIGURES) \
+		--run-if-missing $(GSPT_CAL_RUN_IF_MISSING) \
+		--q-level $(GSPT_CAL_Q_LEVEL) \
+		--run-bootstrap-ci $(GSPT_CAL_RUN_BOOTSTRAP_CI) \
+		--e-floor $(GSPT_CAL_E_FLOOR)
 
 sweep-two-layer-envelope:
 	julia --project=. scripts/sweep_two_layer_envelope.jl --ug-min 2.0 --ug-max 15.0 --ug-step 1.0 --duration-hours 6.0 --dt-seconds 300.0 --outdir results/two_layer_gspt
