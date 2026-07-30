@@ -44,6 +44,26 @@ Top relaxation coefficient & $\lambda_{top}$ & {{param_lambda_top}}\,s$^{-1}$ \\
 \end{tabular}
 \end{table}
 
+\subsection{GSPT Bifurcation \& Manifold Calibration}
+\begin{table}[htbp]
+\centering
+\caption{GSPT Normal Form Calibration Parameters for {{case_name}}}
+\label{tab:gspt_calibration_{{report_slug}}}
+\begin{tabular}{lll}
+\hline
+{\bfseries Metric} & {\bfseries Symbol} & {\bfseries Estimated Value} \\
+\hline
+Report / Calibration Status & --- & \texttt{ {{gspt_report_status}} } \\
+Estimated Fold Richardson Number & $\hat{Ri}_{\mathrm{fold}}$ & {{gspt_Ri_fold_hat}} \\
+95\% MBB Confidence Interval & CI$_{95}$ & [{{gspt_Ri_fold_ci_low}}, {{gspt_Ri_fold_ci_high}}] \\
+Transcritical Ignition Proxy & $\hat{Ri}_{\mathrm{critical}}$ & {{gspt_Ri_critical_proxy}} \\
+Hysteresis Width & $\Delta Ri_H$ & {{gspt_Delta_Ri_H_hat}} \\
+Scaling Exponent & $\hat{\gamma}$ & {{gspt_gamma_hat}} \\
+Normal Form Amplitude & $\hat{c}$ & {{gspt_c_hat}} \\
+\hline
+\end{tabular}
+\end{table}
+
 \subsection{Numerical Verification}
 \begin{itemize}
   \item Maximum surface energy closure error:

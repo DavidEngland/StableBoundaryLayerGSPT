@@ -3,7 +3,7 @@
 \label{sec:scm_case_cases99_cases99_80x2m_9h_report}
 
 This section was generated automatically from the SCM diagnostics artifact
-\texttt{ results/cases99/summary.json }. The simulation completed with \texttt{ OrdinaryDiffEqRosenbrock.Rodas5P\{0, ADTypes.AutoForwardDiff\{nothing, Nothing\}, Nothing, typeof(OrdinaryDiffEqCore.DEFAULT\_PRECS), Val\{:forward\}(), true, nothing, typeof(OrdinaryDiffEqCore.trivial\_limiter!), typeof(OrdinaryDiffEqCore.trivial\_limiter!)\} }
+\texttt{ results/CASES99/summary.json }. The simulation completed with \texttt{ OrdinaryDiffEqRosenbrock.Rodas5P\{0, ADTypes.AutoForwardDiff\{nothing, Nothing\}, Nothing, typeof(OrdinaryDiffEqCore.DEFAULT\_PRECS), Val\{:forward\}(), true, nothing, typeof(OrdinaryDiffEqCore.trivial\_limiter!), typeof(OrdinaryDiffEqCore.trivial\_limiter!)\} }
 and returned \texttt{ Success }.
 
 \subsection{Core Run Metadata}
@@ -44,6 +44,26 @@ Top relaxation coefficient & $\lambda_{top}$ & 0.000000\,s$^{-1}$ \\
 \end{tabular}
 \end{table}
 
+\subsection{GSPT Bifurcation \& Manifold Calibration}
+\begin{table}[htbp]
+\centering
+\caption{GSPT Normal Form Calibration Parameters for idealized\_sbl}
+\label{tab:gspt_calibration_cases99_cases99_80x2m_9h_report}
+\begin{tabular}{lll}
+\hline
+{\bfseries Metric} & {\bfseries Symbol} & {\bfseries Estimated Value} \\
+\hline
+Report / Calibration Status & --- & \texttt{ invalid\_fit } \\
+Estimated Fold Richardson Number & $\hat{Ri}_{\mathrm{fold}}$ & NA \\
+95\% MBB Confidence Interval & CI$_{95}$ & [NA, NA] \\
+Transcritical Ignition Proxy & $\hat{Ri}_{\mathrm{critical}}$ & 0.000000 \\
+Hysteresis Width & $\Delta Ri_H$ & NA \\
+Scaling Exponent & $\hat{\gamma}$ & NA \\
+Normal Form Amplitude & $\hat{c}$ & NA \\
+\hline
+\end{tabular}
+\end{table}
+
 \subsection{Numerical Verification}
 \begin{itemize}
   \item Maximum surface energy closure error:
@@ -59,7 +79,7 @@ Top relaxation coefficient & $\lambda_{top}$ & 0.000000\,s$^{-1}$ \\
 \subsection{Generated Artifacts}
 \begin{itemize}
   \item Time-series CSV: \texttt{ results/cases99/time\_series.csv }
-  \item Diagnostic summary JSON: \texttt{ results/cases99/summary.json }
+  \item Diagnostic summary JSON: \texttt{ results/CASES99/summary.json }
   \item Payload JLD2: \texttt{ results/cases99/payload.jld2 }
 \end{itemize}
 
@@ -79,91 +99,91 @@ Top relaxation coefficient & $\lambda_{top}$ & 0.000000\,s$^{-1}$ \\
 % Requires \usepackage{graphicx} in the parent document preamble.
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig01_timeseries_ts_h_ustar.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig01_timeseries_ts_h_ustar.png}}
   \caption{Time series of T\_s, sensible heat flux, and friction velocity}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig02_hovmoller_wind.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig02_hovmoller_wind.png}}
   \caption{Time-height contour of wind speed with LLJ evolution}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig03_hovmoller_theta.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig03_hovmoller_theta.png}}
   \caption{Time-height contour of potential temperature and inversion growth}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig03b_hovmoller_km_exi.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig03b_hovmoller_km_exi.png}}
   \caption{Vertical profiles of U, theta, and Km at representative times}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig03c_km_startup_zoom.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig03c_km_startup_zoom.png}}
   \caption{Surface energy budget components (R\_n, H, G, storage)}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig03c_qnorm_startup_zoom.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig03c_qnorm_startup_zoom.png}}
   \caption{Phase portrait on regularized manifold (Delta vs e\_xi)}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig03c_theta_startup_zoom.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig03c_theta_startup_zoom.png}}
   \caption{Closure manifold diagnostics (Km vs Ri\_g and Km vs Delta)}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig03c_wind_startup_zoom.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig03c_wind_startup_zoom.png}}
   \caption{Fold proximity diagnostics versus time}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig03d_triheight_timeseries.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig03d_triheight_timeseries.png}}
   \caption{fig03d triheight timeseries.png}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig04_profiles_u_theta_km.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig04_profiles_u_theta_km.png}}
   \caption{fig04 profiles u theta km.png}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig05_surface_energy_budget.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig05_surface_energy_budget.png}}
   \caption{fig05 surface energy budget.png}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig06_phase_delta_exi.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig06_phase_delta_exi.png}}
   \caption{fig06 phase delta exi.png}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig07_closure_manifold.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig07_closure_manifold.png}}
   \caption{fig07 closure manifold.png}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig07_diffusivity_vs_ri.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig07_diffusivity_vs_ri.png}}
   \caption{fig07 diffusivity vs ri.png}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig08_fold_proximity.png}}
+  \includegraphics[width=0.95\linewidth]{\detokenize{../cases99/plots/fig08_fold_proximity.png}}
   \caption{fig08 fold proximity.png}
 \end{figure}
 

@@ -1,0 +1,142 @@
+\section{Observational Manifold Reconstruction Protocol}
+\label{sec:observational_protocol}
+
+Traditional evaluation of the atmospheric stable boundary layer (SBL) relies on diagnostic scaling relations that collapse turbulent properties into single-valued functions of stability. To empirically test whether the nocturnal SBL behaves as a folded, singularly perturbed dynamical system, we introduce an un-circularized observational reconstruction protocol. This framework extracts the latent equilibrium manifold, tests for saddle-node bifurcation scaling, and quantifies hysteresis directly from tower and sonic anemometer time series.
+
+\subsection{State Projection and the Observation Operator}
+\label{subsec:obs_operator}
+
+Let the hidden, unobserved fast-slow dynamical state of the single-column atmospheric system be represented by the vector:
+\begin{equation}
+\mathbf{x}(t) = \begin{bmatrix} e(t) \\ U(t) \\ V(t) \\ T_s(t) \end{bmatrix} \in \mathbb{R}^4
+\end{equation}
+where $e(t)$ is the turbulent kinetic energy (TKE), $U(t)$ and $V(t)$ are horizontal velocity components, and $T_s(t)$ is the land-surface skin temperature. High-frequency observational instruments do not sample the phase space of $\mathbf{x}(t)$ directly; rather, tower sensors and sonic anemometers project this state onto measurable coordinates via a non-linear observation operator $\mathcal{H}: \mathbb{R}^4 \to \mathbb{R}^4$:
+
+\begin{equation}
+\mathbf{X}_{\text{obs}}(t) = \mathcal{H}\big(\mathbf{x}(t)\big) = \begin{bmatrix} Ri_b(t) \\ e(t) \\ \dot{e}(t) \\ R_{\text{net}}(t) \end{bmatrix} \in \mathbb{R}^4
+\end{equation}
+
+Here, $Ri_b$ is the local bulk Richardson number across vertical levels $z_1$ and $z_2$:
+\begin{equation}
+Ri_b(t) = \frac{g}{\theta_0} \Delta z \frac{\theta(z_2) - \theta(z_1)}{\left[ U(z_2) - U(z_1) \right]^2 + \left[ V(z_2) - V(z_1) \right]^2}
+\end{equation}
+and $R_{\text{net}}(t)$ is the net surface radiative flux. Reframing $Ri_b$ as a derived diagnostic coordinate acknowledges that the extinction boundary (the fold locus) is a 3D hypersurface in $\mathbf{x}$-space, rather than a fixed 1D threshold in $Ri_b$--$e$ space.
+
+\subsection{Time-Scale Separation and Window Hierarchy}
+\label{subsec:timescale_hierarchy}
+
+To isolate fast turbulent adjustments from slow thermodynamic forcing without violating singular perturbation assumptions, the sampling window width $\tau_w$ must be selected within the spectral gap:
+\begin{equation}
+\tau_{\text{turb}} \ll \tau_w \ll \tau_{\text{macro}}
+\end{equation}
+where $\tau_{\text{turb}} \sim 10^1\text{--}10^2\,\text{s}$ is the eddy turnover timescale and $\tau_{\text{macro}} \sim 10^3\text{--}10^4\,\text{s}$ represents slow radiative cooling and geostrophic acceleration. We set $\tau_w \in [300, 600]\,\text{s}$ ($5\text{--}10\text{ min}$), yielding a singular perturbation parameter $\epsilon = \tau_{\text{turb}} / \tau_{\text{macro}} \sim \mathcal{O}(10^{-2}) \ll 1$.
+
+To compute non-stationary state derivatives without amplifying high-frequency noise:
+1. Primary turbulence statistics ($e, Ri_b$) are evaluated over sliding sub-windows $\tau_{\text{sub}} = 60\,\text{s}$.
+2. A third-order Savitzky--Golay filter is applied across the macro-window $\tau_w$ to evaluate smooth temporal derivatives $\dot{e} = de/dt$ and $\dot{Ri}_b = dRi_b/dt$.
+
+\subsection{Un-circularized Bootstrap Manifold Reconstruction}
+\label{subsec:bootstrap_reconstruction}
+
+Classification of system trajectories into extinction and ignition branches must avoid circular logic. We construct the manifold surface prior to computing trajectory orientation vectors through an iterative bootstrapping procedure:
+
+1. **Observation Cloud Assembly:** Construct the scatter cloud of states in the projected coordinate system $\mathcal{X}_{\text{obs}} = \left\{ \mathbf{X}_{\text{obs}}(t_k) \right\}_{k=1}^N$.
+2. **Initial Envelope Estimation ($\hat{F}^{(0)}$):** Calculate an un-oriented, first-pass lower envelope $\hat{F}^{(0)}(e, Ri_b) = 0$ by performing local $10\text{th}$-percentile quantile slicing across $Ri_b$ bins on the entire data cloud.
+3. **Surface Normal Computation:** Evaluate local normal vectors $\mathbf{n}_{\mathcal{M}} = \nabla \hat{F}^{(0)}(e, Ri_b)$ along the initial envelope using local polynomial spline smoothing.
+4. **Directional Branch Classification:** Project the local trajectory tangent velocity $\mathbf{v}(t) = [dRi_b/dt, de/dt]^T$ onto the manifold normal:
+\begin{equation}
+\eta(t) = \mathbf{n}_{\mathcal{M}} \cdot \mathbf{v}(t)
+\end{equation}
+Trajectories are partitioned into distinct dynamical branches based on the sign of $\eta(t)$:
+\begin{equation}
+\begin{cases}
+\mathbf{X}_{\text{obs}}(t) \in \mathcal{B}_{\text{ext}} & \text{if } \eta(t) < 0 \text{ and } e(t) > e_{\text{noise}} \quad \text{(Extinction Branch)} \\
+\mathbf{X}_{\text{obs}}(t) \in \mathcal{B}_{\text{ign}} & \text{if } \eta(t) > 0 \text{ or } e(t) \le e_{\text{noise}} \quad \text{(Ignition Branch)}
+\end{cases}
+\end{equation}
+where $e_{\text{noise}} \approx 0.01\,\text{m}^2/\text{s}^2$ represents the instrument noise floor.
+
+\subsection{Fold Identification and Saddle-Node Hypothesis Testing}
+\label{subsec:fold_identification}
+
+Because standard mean-binning mixes active and laminar states, the extinction boundary $Ri_{\text{fold}}$ is isolated by applying quantile regression $Q_{q}(e \mid Ri_b)$ (with $q = 0.10$) exclusively to the extinction branch $\mathcal{B}_{\text{ext}}$.
+
+Near a generic saddle-node bifurcation (fold catastrophe), local TKE obeys the canonical normal-form scaling:
+\begin{equation}
+Q_{0.10}(e \mid Ri_b) = c \cdot \max\left(0,\, Ri_{\text{fold}} - Ri_b\right)^\gamma
+\label{eq:saddle_node_scaling}
+\end{equation}
+Parameters $[Ri_{\text{fold}}, c, \gamma]$ are estimated via non-linear least squares fitting to the binned quantile envelope. To test whether the observed boundary represents a true folded catastrophe, we define a confidence-interval hypothesis test for the algebraic scaling exponent $\gamma$:
+\begin{equation}
+H_0: \gamma \in [0.45, 0.55] \quad \text{vs.} \quad H_1: \gamma \notin [0.45, 0.55]
+\end{equation}
+If the $95\%$ confidence interval of the estimated exponent $\hat{\gamma}$ overlaps $[0.45, 0.55]$, the extinction transition is statistically consistent with a saddle-node fold.
+
+\subsection{Hysteresis Diagnostics and Re-ignition Distribution}
+\label{subsec:hysteresis_diagnostics}
+
+The re-ignition threshold $Ri_{\text{trans}}$ on the ignition branch $\mathcal{B}_{\text{ign}}$ is governed by shear accumulation aloft during quiescent periods. Because re-coupling events exhibit stochastic variance, $Ri_{\text{trans}}$ is defined as the median of the empirical cumulative distribution function ($F_{\text{ign}}$) evaluated at burst onset times $t^*$:
+\begin{equation}
+F_{\text{ign}}(Ri) = P\left( Ri_b(t^*) \le Ri \;\Big|\; \eta(t^*) > 0,\; e(t^*) \le e_{\text{noise}},\; \frac{de}{dt}\Big|_{t^*} > 0 \right)
+\end{equation}
+\begin{equation}
+Ri_{\text{trans}} = Q_{0.50}(F_{\text{ign}})
+\end{equation}
+
+The dimensionless hysteresis width $\Delta Ri_H$ is given by:
+\begin{equation}
+\Delta Ri_H = Ri_{\text{fold}} - Ri_{\text{trans}}
+\end{equation}
+A value of $\Delta Ri_H \to 0$ signifies a brittle, weakly hysteretic boundary layer, whereas $\Delta Ri_H \gg 0$ indicates a rubbery regime capable of supporting prolonged, decoupled inversions prior to intermittent bursting.
+
+\subsection{Radiative Conditioning and Manifold Families}
+\label{subsec:radiative_conditioning}
+
+To demonstrate that $Ri_{\text{fold}}$ is an emergent surface coordinate rather than a universal scalar constant, the protocol conditions quantile extraction on net surface energy forcing $R_{\text{net}}$. Partitioning $\mathcal{B}_{\text{ext}}$ into radiative forcing cohorts $R_{\text{net}} \in [R_1, R_2]$ yields a parameterized family of manifolds:
+\begin{equation}
+Ri_{\text{fold}}(R_{\text{net}}) = \alpha \cdot |R_{\text{net}}|^\beta + Ri_0
+\label{eq:radiative_fold_scaling}
+\end{equation}
+This establishes $Ri_{\text{fold}}$ as a moving threshold controlled by land-surface energy exchange, directly connecting observational field data to the singular perturbation framework.
+
+\subsection{Algorithm Specification}
+\label{subsec:algorithm_spec}
+
+The complete un-circularized manifold reconstruction procedure is detailed in Algorithm~\ref{alg:manifold_reconstruction}.
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwIn{High-frequency time series $(u, v, w, T)$, tower profiles $(U, \theta)$, net radiation $R_{\text{net}}$, window $\tau_w = 300\,\text{s}$}
+\KwOut{Extinction threshold $Ri_{\text{fold}}$, ignition threshold $Ri_{\text{trans}}$, hysteresis gap $\Delta Ri_H$, scaling exponent $\hat{\gamma}$}
+
+\BlankLine
+\tcp{Step 1: Compute State Variables \& Derivatives}
+Compute sliding sub-window statistics $e(t)$ and $Ri_b(t)$ over $\tau_{\text{sub}} = 60\,\text{s}$\;
+Apply Savitzky--Golay filter across $\tau_w$ to evaluate smooth derivatives $\dot{Ri}_b(t)$ and $\dot{e}(t)$\;
+Construct state vector cloud $\mathbf{X}_{\text{obs}}(t) = [Ri_b(t), e(t), \dot{e}(t), R_{\text{net}}(t)]^T$\;
+
+\BlankLine
+\tcp{Step 2: Un-circularized Envelope Initialisation}
+Compute initial lower envelope $\hat{F}^{(0)}(e, Ri_b)$ via $10\text{th}$-percentile quantile binning on full data cloud\;
+Estimate local surface normals $\mathbf{n}_{\mathcal{M}} = \nabla \hat{F}^{(0)}(e, Ri_b)$ using spline regression\;
+
+\BlankLine
+\tcp{Step 3: Tangential Orientation \& Branch Classification}
+Evaluate trajectory orientation scalar $\eta(t) = \mathbf{n}_{\mathcal{M}} \cdot [dRi_b/dt, de/dt]^T$\;
+Assign states to extinction branch $\mathcal{B}_{\text{ext}}$ ($\eta < 0, e > e_{\text{noise}}$) or ignition branch $\mathcal{B}_{\text{ign}}$ ($\eta > 0 \text{ or } e \le e_{\text{noise}}$)\;
+
+\BlankLine
+\tcp{Step 4: Quantile Regression \& Saddle-Node Fitting}
+Extract lower quantile envelope $Q_{0.10}(e \mid Ri_b)$ across $Ri_b$ bins on $\mathcal{B}_{\text{ext}}$\;
+Fit non-linear model $Q_{0.10}(e) = c \cdot \max(0, Ri_{\text{fold}} - Ri_b)^\gamma$ to determine $Ri_{\text{fold}}$, $c$, and $\hat{\gamma}$\;
+Construct $95\%$ confidence interval for $\hat{\gamma}$ and evaluate hypothesis $H_0: \gamma \in [0.45, 0.55]$\;
+
+\BlankLine
+\tcp{Step 5: Ignition Distribution \& Hysteresis Extraction}
+Construct empirical distribution $F_{\text{ign}}(Ri)$ from re-coupling events on $\mathcal{B}_{\text{ign}}$\;
+Extract nominal ignition threshold $Ri_{\text{trans}} = Q_{0.50}(F_{\text{ign}})$\;
+Compute hysteresis width $\Delta Ri_H = Ri_{\text{fold}} - Ri_{\text{trans}}$\;
+
+\Caption{Un-circularized GSPT Observational Manifold Reconstruction Protocol}
+\label{alg:manifold_reconstruction}
+\end{algorithm}

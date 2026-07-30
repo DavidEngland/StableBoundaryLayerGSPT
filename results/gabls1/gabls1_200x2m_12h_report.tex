@@ -10,10 +10,10 @@ and returned \texttt{ Success }.
 \begin{itemize}
   \item Case identifier: \texttt{ gabls1 }
   \item Output directory: \texttt{ results/gabls1 }
-  \item Number of saved time samples: 1441
-  \item Number of profile snapshots: 25
-  \item Solver accepted/rejected steps: 99 / 0
-  \item RHS evaluations: 60392
+  \item Number of saved time samples: 1081
+  \item Number of profile snapshots: 19
+  \item Solver accepted/rejected steps: 102 / 0
+  \item RHS evaluations: 25502
   \item Solver tolerances: $\mathrm{abstol}=1.000 \times 10^{-8}$, $\mathrm{reltol}=1.000 \times 10^{-6}$
 \end{itemize}
 
@@ -44,16 +44,36 @@ Top relaxation coefficient & $\lambda_{top}$ & 0.000000\,s$^{-1}$ \\
 \end{tabular}
 \end{table}
 
+\subsection{GSPT Bifurcation \& Manifold Calibration}
+\begin{table}[htbp]
+\centering
+\caption{GSPT Normal Form Calibration Parameters for gabls1}
+\label{tab:gspt_calibration_gabls1_gabls1_200x2m_12h_report}
+\begin{tabular}{lll}
+\hline
+{\bfseries Metric} & {\bfseries Symbol} & {\bfseries Estimated Value} \\
+\hline
+Report / Calibration Status & --- & \texttt{ invalid\_fit } \\
+Estimated Fold Richardson Number & $\hat{Ri}_{\mathrm{fold}}$ & NA \\
+95\% MBB Confidence Interval & CI$_{95}$ & [NA, NA] \\
+Transcritical Ignition Proxy & $\hat{Ri}_{\mathrm{critical}}$ & 0.000000 \\
+Hysteresis Width & $\Delta Ri_H$ & NA \\
+Scaling Exponent & $\hat{\gamma}$ & NA \\
+Normal Form Amplitude & $\hat{c}$ & NA \\
+\hline
+\end{tabular}
+\end{table}
+
 \subsection{Numerical Verification}
 \begin{itemize}
   \item Maximum surface energy closure error:
   $0\,\mathrm{W\,m^{-2}}$
   \item Fold-proximity fraction:
-  $0.000000\%$
+  $94.819611\%$
   \item Diffusivity bounds:
-  $K_m \in [3.844877,\,78.288180]~\mathrm{m^2\,s^{-1}}$
+  $K_m \in [11.165528,\,78.288199]~\mathrm{m^2\,s^{-1}}$
   \item Richardson number bounds:
-  $Ri \in [6.468 \times 10^{-9},\,843.105654]$
+  $Ri \in [-2.750 \times 10^{-7},\,1888.099836]$
 \end{itemize}
 
 \subsection{Generated Artifacts}
@@ -71,7 +91,7 @@ Top relaxation coefficient & $\lambda_{top}$ & 0.000000\,s$^{-1}$ \\
   \item Vertical profiles of U, theta, and Km at representative times
   \item Surface energy budget components (R\_n, H, G, storage)
   \item Phase portrait on regularized manifold (Delta vs e\_xi)
-  \item Eddy diffusivity response (Km, Kh) versus stability/Richardson number
+  \item Closure manifold diagnostics (Km vs Ri\_g and Km vs Delta)
   \item Fold proximity diagnostics versus time
 \end{enumerate}
 
@@ -116,7 +136,7 @@ Top relaxation coefficient & $\lambda_{top}$ & 0.000000\,s$^{-1}$ \\
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig03c_qnorm_startup_zoom.png}}
-  \caption{Eddy diffusivity response (Km, Kh) versus stability/Richardson number}
+  \caption{Closure manifold diagnostics (Km vs Ri\_g and Km vs Delta)}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -129,6 +149,12 @@ Top relaxation coefficient & $\lambda_{top}$ & 0.000000\,s$^{-1}$ \\
   \centering
   \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig03c_wind_startup_zoom.png}}
   \caption{fig03c wind startup zoom.png}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig03d_triheight_timeseries.png}}
+  \caption{fig03d triheight timeseries.png}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -147,6 +173,12 @@ Top relaxation coefficient & $\lambda_{top}$ & 0.000000\,s$^{-1}$ \\
   \centering
   \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig06_phase_delta_exi.png}}
   \caption{fig06 phase delta exi.png}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{\detokenize{plots/fig07_closure_manifold.png}}
+  \caption{fig07 closure manifold.png}
 \end{figure}
 
 \begin{figure}[htbp]

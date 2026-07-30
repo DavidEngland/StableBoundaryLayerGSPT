@@ -87,6 +87,16 @@ function fmt_num(x)
     return @sprintf("%.6f", Float64(x))
 end
 
+function fmt_cal_num(x; default::String="NA")
+    x isa Number || return default
+    xf = Float64(x)
+    isfinite(xf) || return default
+    if abs(xf) >= 1e4 || (abs(xf) > 0 && abs(xf) < 1e-3)
+        return @sprintf("%.3e", xf)
+    end
+    return @sprintf("%.6f", xf)
+end
+
 function fmt_tex_num(x; force_sci::Bool=false)
     x isa Number || return string(x)
     xf = Float64(x)
@@ -168,6 +178,50 @@ function read_text(path::String)
     return read(path, String)
 end
 
+function load_gspt_calibration(outdir::String)
+    cal_path = joinpath(outdir, "calibration_summary.json")
+    if !isfile(cal_path)
+        return Dict{String,String}(
+            "gspt_report_status" => latex_escape("not_available"),
+            "gspt_Ri_fold_hat" => "NA",
+            "gspt_Ri_fold_ci_low" => "NA",
+            "gspt_Ri_fold_ci_high" => "NA",
+            "gspt_Ri_critical_proxy" => "NA",
+            "gspt_Delta_Ri_H_hat" => "NA",
+            "gspt_gamma_hat" => "NA",
+            "gspt_c_hat" => "NA",
+            "gspt_calibration_summary_json" => "n/a",
+        )
+    end
+
+    cal_raw = read_text(cal_path)
+    cal = JSON3.read(cal_raw)
+
+    metrics = getnested(cal, ["metrics"], nothing)
+
+    ri_fold_hat = metrics === nothing ? "NA" : fmt_cal_num(getnested(metrics, ["Ri_fold_hat"], nothing))
+    ri_fold_ci_low = metrics === nothing ? "NA" : fmt_cal_num(getnested(metrics, ["Ri_fold_ci_low"], nothing))
+    ri_fold_ci_high = metrics === nothing ? "NA" : fmt_cal_num(getnested(metrics, ["Ri_fold_ci_high"], nothing))
+    ri_critical_proxy = metrics === nothing ? "NA" : fmt_cal_num(getnested(metrics, ["Ri_critical_proxy"], nothing))
+    delta_ri_h_hat = metrics === nothing ? "NA" : fmt_cal_num(getnested(metrics, ["Delta_Ri_H_hat"], nothing))
+    gamma_hat = metrics === nothing ? "NA" : fmt_cal_num(getnested(metrics, ["gamma_hat"], nothing))
+    c_hat = metrics === nothing ? "NA" : fmt_cal_num(getnested(metrics, ["c_hat"], nothing))
+
+    report_status = string(getnested(cal, ["report_status"], "not_available"))
+
+    return Dict{String,String}(
+        "gspt_report_status" => latex_escape(report_status),
+        "gspt_Ri_fold_hat" => ri_fold_hat,
+        "gspt_Ri_fold_ci_low" => ri_fold_ci_low,
+        "gspt_Ri_fold_ci_high" => ri_fold_ci_high,
+        "gspt_Ri_critical_proxy" => ri_critical_proxy,
+        "gspt_Delta_Ri_H_hat" => delta_ri_h_hat,
+        "gspt_gamma_hat" => gamma_hat,
+        "gspt_c_hat" => c_hat,
+        "gspt_calibration_summary_json" => latex_escape(cal_path),
+    )
+end
+
 function main(args)
     cfg = parse_args(args)
 
@@ -200,6 +254,7 @@ function main(args)
     payload_path = string(getnested(summary, ["artifacts", "payload_jld2"], "not generated"))
     plot_dir = joinpath(outdir, "plots")
     plot_blocks = build_plot_blocks(plot_dir, dirname(out_path), figure_manifest)
+    gspt_ctx = load_gspt_calibration(outdir)
 
     p_base = ["parameters"]
     fold_near = getnested(summary, ["verification", "fold_near_fraction"], 0.0)
@@ -264,6 +319,8 @@ function main(args)
         "figure_manifest_items" => join(figure_items, "\n"),
         "plots_include_blocks" => plot_blocks,
     )
+
+    merge!(context, gspt_ctx)
 
     template = read_text(template_path)
     rendered = render_template(template, context)
