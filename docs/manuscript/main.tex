@@ -1,0 +1,147 @@
+\documentclass[11pt,letterpaper]{article}
+
+% --- Layout & Geometry ---
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\singlespacing
+
+% --- Essential Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools} % For \coloneqq
+\usepackage{booktabs}  % For professional tables (\toprule, \midrule, etc.)
+\usepackage{microtype} % For optimal typographic spacing
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{siunitx}
+
+% --- Citation Engine (Author-Year Style) ---
+\usepackage[round,authoryear]{natbib}
+\usepackage[pagebackref=false,breaklinks=true,colorlinks,citecolor=blue,urlcolor=blue,linkcolor=blue,bookmarks=false]{hyperref}
+
+% --- Generated Parameter Macros ---
+\input{parameters/parameters_all.tex}
+
+% --- Custom Mathematical Commands and Operators ---
+\DeclareMathOperator{\TKE}{e}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ddt}[1]{\frac{d#1}{dt}}
+\newcommand{\partialderiv}[2]{\frac{\partial #1}{\partial #2}}
+
+% --- Theorem and Remark Environments ---
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{corollary}{Corollary}
+\newtheorem{remark}{Remark}
+
+% --- Document Metadata ---
+\title{\textbf{Dynamics of the Stable Boundary Layer: A Geometric Singular Perturbation Framework for Fold Characterization and Regime Transitions}\\
+\large Part 1: Mathematical Foundations and Observational Resolution}
+
+\author{
+    \textbf{David E. England, PhD} \\
+    \small Research Engineer III \\
+    \small University of Alabama in Huntsville (UAH) \\
+    \small \href{mailto:david.england@uah.edu}{david.england@uah.edu}
+}
+\date{\small\itshape Manuscript prepared for SBL-GSPT collaborative research project stack. \\ Last compiled: \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Observed critical Richardson thresholds vary widely across field campaigns (e.g., CASES-99 and SHEBA), yielding the long-standing Richardson threshold paradox. We show that this variability is not evidence of incompatible physics, but rather the projection of a multidimensional folded critical manifold onto scalar diagnostics. To formalize this mechanism, we construct a multiscale fast-slow model of the stable boundary layer using Geometric Singular Perturbation Theory (GSPT) on a desingularized coordinate chart. The framework yields a sequence of structural results: existence and smoothness of the critical manifold, fold characterization through fast-Jacobian degeneracy, and a constant-rank projection theorem linking invariant state-space geometry to campaign-dependent observational thresholds. Within this geometry, we define an analytical sensible heat-flux turning-capacity limiter, $H_{\max}$, and a pathway toward dynamic threshold parameterization. Part~1 establishes the mathematical foundations and observational resolution needed for closure development and data-assimilative validation in Parts~2--3.
+\end{abstract}
+
+% --- Main Body Sections ---
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Crisis of Stability Thresholds in Boundary-Layer Meteorology}
+
+\subsection{The Closure Trilemma in Atmospheric Modeling}
+
+\subsection{Objectives and Scope of Part~1}
+
+\section{Multi-Scale Governing Equations and Chart Regularization}
+\label{sec:governing}
+\include{Multi-Scale Governing Equations and Chart Regularization}
+
+\section{Critical Manifold $\mathcal{S}_0$ and Fold Characterization}
+\label{sec:critical-manifold}
+
+\subsection{Theorem 1: Existence and Smoothness of the Critical Manifold}
+
+\subsection{Theorem 2: Fold Characterization Theorem}
+
+\subsection{The Fold Illusion versus Emergent Coupled Catastrophes}
+
+\section{Projection Theorem and Resolution of the Richardson Paradox}
+\label{sec:projection}
+
+\subsection{Diagnostic Projection Mapping $\pi_{Ri}$}
+
+\subsection{Theorem 3: Projection Theorem}
+
+\subsection{Environmental Constraint Manifolds $\Sigma_{\text{site}}$ and Site Profiles}
+
+\subsection{Proposition 3.2: Observational Identifiability}
+
+\subsection{Reconciling Field-Campaign Observations}
+
+\section{Geometric Taxonomy of Regime Transitions and Nocturnal Lifecycles}
+\label{sec:taxonomy}
+
+\subsection{Dimensional-Reduction Hierarchy}
+
+\subsection{Canonical Singularities and Intermittency}
+
+\subsection{Four-Phase Nocturnal Relaxation Oscillation}
+
+\section{Framework for Next-Generation Model Closures}
+\label{sec:closures}
+
+\subsection{Analytical $H_{\max}$ Sensible Heat-Flux Limiter}
+
+\subsection{Dynamic Threshold Parameterization $Ri_{\text{fold}}(T_s, T_g)$}
+
+\subsection{Adaptive Boundary-Layer Scale Heights $h_{\text{eff}}$}
+
+\section{Conclusions and Roadmap}
+\label{sec:conclusion}
+
+\subsection{Summary of Theoretical Contributions}
+
+\subsection{Roadmap for Parts~2 and~3}
+
+\appendix
+
+\section{Explicit Determinant Derivation of the Fast Jacobian $J_f$}
+\label{app:jacobian}
+
+\section{Derivation of the $H_{\max}$ Heat-Flux Turning Capacity Formula}
+\label{app:hmax}
+
+\section{Proof of Transversality for Environmental Constraint Manifolds}
+\label{app:transversality}
+
+% ------------------------------------------------------------------
+% BIBLIOGRAPHY SECTION
+% ------------------------------------------------------------------
+\clearpage
+
+% --- Reference Display Control ---
+\nocite{*}
+
+% --- Bibliography Style Selection ---
+\bibliographystyle{unsrtnat}
+
+% Points to 'refs.bib' file (do NOT include .bib extension)
+\bibliography{paper1_references}
+
+\end{document}

@@ -1,4 +1,4 @@
-\section{Governing Equations, Chart Regularization, and Diagnostic Functionals}
+\section{Multi-Scale Governing Equations and Chart Regularization}
 
 This section defines the smooth fast-slow architecture for the stable boundary layer (SBL) model. We introduce the regularized state space, state the standing assumptions used in the geometric analysis, derive the desingularized fast chart, and define the observation map that connects invariant-manifold structure to atmospheric diagnostics.
 
@@ -52,6 +52,8 @@ is positively invariant under the flow.
 \end{equation}
 with fast dynamics on $O(1)$ time, slow dynamics on $O(\epsilon_1^{-1})$ time, and super-slow dynamics on $O((\epsilon_1\epsilon_2)^{-1})$ time.
 \end{enumerate}
+Unless otherwise stated, we use $\Omega_0$ to denote the full mathematical chart domain and $\Omega_{\mathrm{phys}}$ to denote the positively invariant physical region used for geometric analysis.
+We further assume that $\Omega_0$ extends across $\partial\Omega_{\mathrm{phys}}$ to include a neighborhood of $\tilde e = 0$, so that $\mathcal S_0$ and $\mathcal C_{\mathrm{fold}}$ can be analyzed as smooth embedded submanifolds near the laminar boundary.
 
 \subsection{Chart Regularization and Desingularization}
 
@@ -64,13 +66,15 @@ To restore smoothness, introduce the regularized chart map
 \end{equation}
 We formulate the geometric analysis on the regularized chart and use the limit $\delta \to 0^+$ as the asymptotic interpretation of the physical system. To desingularize the fast dynamics, use the positive time reparameterization
 \begin{equation}
-d\tau = \left(\frac{\tilde e}{\epsilon_1}\right) dt.
+d\tau = \frac{dt}{\epsilon_1\tilde e}
+\qquad\Longleftrightarrow\qquad
+\frac{dt}{d\tau} = \epsilon_1\tilde e.
 \end{equation}
 
 \begin{proposition}[Regularization and diffeomorphic equivalence]
 On the physical domain $e > 0$, the map $\phi_\delta$ is a $C^\infty$ diffeomorphism onto its image. Under the positive time change
 \begin{equation}
-d\tau = \frac{\tilde e}{\epsilon_1} dt,
+d\tau = \frac{dt}{\epsilon_1\tilde e},
 \end{equation}
 the fast subsystem extends to a smooth vector field in the chart variable $\tilde e$, while preserving phase trajectories, equilibrium sets, and the signs of eigenvalues transverse to normally hyperbolic branches of the critical manifold.
 \end{proposition}
@@ -99,13 +103,13 @@ and hence
 \begin{equation}
 \frac{d\tilde e}{d\tau}
 = \frac{dt}{d\tau}\frac{d\tilde e}{dt}
-= \frac{\epsilon_1}{\tilde e}\cdot \frac{1}{2\tilde e}\frac{de}{dt}
-= \frac{\epsilon_1}{2\tilde e^2}\frac{de}{dt}.
+= \epsilon_1\tilde e \cdot \frac{1}{2\tilde e}\frac{1}{\epsilon_1}\frac{de}{dt}
+= \frac{1}{2}\frac{de}{dt}.
 \end{equation}
 Substituting the physical equation and using $e = \tilde e^2 - \delta$ yields
 \begin{equation}
 \frac{d\tilde e}{d\tau}
-= \frac{1}{2\tilde e^2}
+= \frac{1}{2}
 \left(
 c_m \ell \sqrt{\tilde e^2 - \delta}\,S^2
 - \frac{g}{\theta_0} q_\theta
@@ -145,12 +149,12 @@ The slow subsystem $F_{\mathrm{slow}}(\mathbf{x}) = (F_S(\mathbf{x}), F_{T_s}(\m
 \begin{equation}
 F_{\mathrm{slow}}(\mathbf{x})
 = \begin{pmatrix}
-\frac{1}{\tilde e}\left[\mathcal{F}_{\mathrm{ls}} - \frac{\partial}{\partial z}\big(c_m \ell \tilde e S\big)\right] \\
-\frac{1}{\tilde e C_s}\left[R_{\mathrm{net}}(T_s) + \rho c_p q_\theta + \frac{k_g}{d_g}(T_g - T_s)\right]
+\tilde e\left[\mathcal{F}_{\mathrm{ls}} - \frac{\partial}{\partial z}\big(c_m \ell \tilde e S\big)\right] \\
+\frac{\tilde e}{C_s}\left[R_{\mathrm{net}}(T_s) + \rho c_p q_\theta + \frac{k_g}{d_g}(T_g - T_s)\right]
 \end{pmatrix},
 \end{equation}
-where the factors $1/\tilde e$ arise from the positive time reparameterization and do not introduce singularities on the positively invariant domain $\Omega_{\mathrm{phys}}$.
-where
+where the factors $\tilde e$ arise from the positive time reparameterization, so the slow tendencies freeze in fast time as $\tilde e \to 0^+$.
+The corresponding net radiation closure is
 \begin{equation}
 R_{\mathrm{net}}(T_s)
 = R_{\mathrm{sw}}^{\downarrow} + \epsilon_a \sigma T_a^4 - \epsilon_s \sigma T_s^4.
@@ -160,8 +164,9 @@ R_{\mathrm{net}}(T_s)
 The super-slow subsystem governs deep-soil heat conduction:
 \begin{equation}
 F_{\mathrm{superslow}}(\mathbf{x})
-= \frac{1}{\tilde e}\frac{k_g}{d_g^2}(T_s - T_g).
+= \tilde e\,\frac{k_g}{d_g^2}(T_s - T_g).
 \end{equation}
+As in the slow subsystem, the prefactor $\tilde e$ is induced by the positive time change; all geometric arguments in subsequent sections are restricted to $\Omega_{\mathrm{phys}}$.
 
 \subsection{Observation Mapping and Diagnostic Functionals}
 
@@ -169,8 +174,7 @@ To connect the internal state $\mathbf{x} \in \Omega_0$ to observable diagnostic
 \begin{equation}
 \boldsymbol{\Pi}_{\mathrm{obs}} : \Omega_0 \to \mathcal O \subset \mathbb{R}^3,
 \end{equation}
-where $\mathcal O$ denotes the space of smooth diagnostic quantities accessible from field observations or numerical model output,
-with components
+where $\mathcal O$ denotes the space of smooth diagnostic quantities accessible from field observations or numerical model output. Its components are
 \begin{equation}
 \boldsymbol{\Pi}_{\mathrm{obs}}(\mathbf{x})
 = \begin{pmatrix}
@@ -188,14 +192,12 @@ S
 These functionals represent the gradient Richardson diagnostic, the sensible heat flux, and the wind-shear coordinate, respectively.
 
 \paragraph{Differential structure of $\pi_{Ri}$.}
-The differential of the Richardson functional is
+The differential covector of the Richardson functional is
 \begin{equation}
 D\pi_{Ri}(\mathbf{x})
-= 0\,d\tilde e
-+ 0\,dq_\theta
-- \left(\frac{2g\,\theta_z(T_s)}{\theta_0 S^3}\right)dS
-+ \left(\frac{g}{\theta_0 S^2}\frac{\partial \theta_z}{\partial T_s}\right)dT_s
-+ 0\,dT_g.
+= \begin{pmatrix}
+0 & 0 & -\dfrac{2g\,\theta_z(T_s)}{\theta_0 S^3} & \dfrac{g}{\theta_0 S^2}\dfrac{\partial \theta_z}{\partial T_s} & 0
+\end{pmatrix}.
 \end{equation}
 Hence $D\pi_{Ri}$ lies entirely in the slow cotangent subspace $\operatorname{span}\{dS,dT_s\}$, so the Richardson diagnostic is insensitive, at first order, to perturbations in the fast turbulent directions $(\tilde e,q_\theta)$.
 

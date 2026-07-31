@@ -1,0 +1,302 @@
+\begin{thebibliography}{37}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Fenichel(1979)]{Fenichel1979}
+Neil Fenichel.
+\newblock Geometric singular perturbation theory for ordinary differential
+  equations.
+\newblock \emph{Journal of Differential Equations}, 31\penalty0 (1):\penalty0
+  53--98, 1979.
+\newblock \doi{10.1016/0022-0396(79)90152-9}.
+
+\bibitem[Jones(1995)]{Jones1995}
+Christopher K. R.~T. Jones.
+\newblock Geometric singular perturbation theory.
+\newblock In Italy Montecatini~Terme, editor, \emph{Dynamical Systems: Lectures
+  Given at the 2nd Session of the Centro Internazionale Matematico Estivo
+  (C.I.M.E.)}, volume 1609 of \emph{Lecture Notes in Mathematics}, pages
+  44--118. Springer, Berlin, Heidelberg, 1995.
+\newblock \doi{10.1007/BFb0094293}.
+
+\bibitem[Krupa and Szmolyan(2001)]{krupa2001extending}
+Martin Krupa and Peter Szmolyan.
+\newblock Extending geometric singular perturbation theory to nonhyperbolic
+  points---{Fold} and canard points in two dimensions.
+\newblock \emph{SIAM Journal on Mathematical Analysis}, 33\penalty0
+  (2):\penalty0 286--314, 2001.
+\newblock \doi{10.1137/S0036141099360919}.
+
+\bibitem[Berglund and Gentz(2003)]{Berglund2003}
+Nils Berglund and Barbara Gentz.
+\newblock Geometric singular perturbation theory for stochastic differential
+  equations.
+\newblock \emph{Journal of Differential Equations}, 191\penalty0 (1):\penalty0
+  1--54, 2003.
+\newblock \doi{10.1016/S0022-0396(03)00020-2}.
+
+\bibitem[Lorenz(1986)]{Lorenz1986}
+Edward~N. Lorenz.
+\newblock On the existence of a slow manifold.
+\newblock \emph{Journal of the Atmospheric Sciences}, 43\penalty0
+  (15):\penalty0 1547--1558, 1986.
+\newblock \doi{10.1175/1520-0469(1986)043<1547:OTEOAS>2.0.CO;2}.
+
+\bibitem[De~Maesschalck and Desroches(2013)]{desroches2012canards}
+Peter De~Maesschalck and Mathieu Desroches.
+\newblock Numerical continuation techniques for planar slow-fast systems.
+\newblock \emph{SIAM Journal on Applied Dynamical Systems}, 12\penalty0
+  (3):\penalty0 1159--1180, 2013.
+\newblock \doi{10.1137/120877386}.
+
+\bibitem[Kuehn(2015)]{Kuehn2015}
+Christian Kuehn.
+\newblock \emph{Multiple Time Scale Dynamics: An Introduction Specializing to
+  Differential Equations}, volume 191 of \emph{Applied Mathematical Sciences}.
+\newblock Springer International Publishing, Cham, Switzerland, 2015.
+\newblock ISBN 978-3-319-12315-8.
+\newblock \doi{10.1007/978-3-319-12315-8}.
+
+\bibitem[Jelbart and Kuehn(2023)]{jelbart2022}
+Samuel Jelbart and Christian Kuehn.
+\newblock Discrete geometric singular perturbation theory.
+\newblock \emph{Discrete and Continuous Dynamical Systems - Series A},
+  43\penalty0 (1):\penalty0 57--120, 2023.
+\newblock \doi{10.3934/dcds.2022142}.
+
+\bibitem[Kristiansen(2024)]{Kristiansen2024}
+Kristian~Uldall Kristiansen.
+\newblock A review of multiple-time-scale dynamics: Fundamental phenomena and
+  mathematical methods.
+\newblock In Bernhelm Boo{\ss}-Bavnbek, Jens Christensen, Katherine Richardson,
+  and Oriol Codina, editors, \emph{Multiplicity of Time Scales in Complex
+  Systems: Challenges for Sciences and Communication II}, pages 309--363.
+  Springer Nature Switzerland, Cham, 2024.
+\newblock ISBN 978-3-031-45105-8.
+\newblock \doi{10.1007/16618_2023_75}.
+
+\bibitem[McNider and Pielke(1981)]{McNider1981}
+Richard~T. McNider and Roger~A. Pielke.
+\newblock Diurnal boundary-layer development over sloping terrain.
+\newblock \emph{Journal of the Atmospheric Sciences}, 38\penalty0
+  (10):\penalty0 2198--2212, 1981.
+\newblock \doi{10.1175/1520-0469(1981)038<2198:DBLDOS>2.0.CO;2}.
+
+\bibitem[Mellor and Yamada(1982)]{MellorYamada1982}
+George~L. Mellor and Tetsuji Yamada.
+\newblock Development of a turbulence closure model for geophysical fluid
+  problems.
+\newblock \emph{Reviews of Geophysics}, 20\penalty0 (4):\penalty0 851--875,
+  1982.
+\newblock \doi{10.1029/RG020i004p00851}.
+
+\bibitem[Nieuwstadt(1984)]{nieuwstadt1984}
+F.~T.~M. Nieuwstadt.
+\newblock The turbulent structure of the stable atmospheric boundary layer.
+\newblock \emph{Journal of the Atmospheric Sciences}, 41\penalty0
+  (14):\penalty0 2202--2216, 1984.
+\newblock \doi{10.1175/1520-0469(1984)041<2202:TTSOTS>2.0.CO;2}.
+
+\bibitem[England and McNider(1995)]{England1995}
+David~E. England and Richard~T. McNider.
+\newblock Stability functions based upon shear functions.
+\newblock \emph{Boundary-Layer Meteorology}, 74\penalty0 (1-2):\penalty0
+  113--130, 1995.
+\newblock \doi{10.1007/BF00715713}.
+
+\bibitem[McNider et~al.(1995)McNider, England, et~al.]{mcnider1995}
+Richard~T. McNider, David~E. England, et~al.
+\newblock Predictability of the stable atmospheric boundary layer.
+\newblock \emph{Journal of the Atmospheric Sciences}, 52\penalty0
+  (10):\penalty0 1602--1614, 1995.
+\newblock \doi{10.1175/1520-0469(1995)052<1602:POTSAB>2.0.CO;2}.
+
+\bibitem[Shi et~al.(2005)Shi, McNider, et~al.]{shi2005}
+X.~Shi, Richard~T. McNider, et~al.
+\newblock On the behavior of the stable boundary layer and role of initial
+  conditions.
+\newblock \emph{Pure and Applied Geophysics}, 162\penalty0 (10):\penalty0
+  1811--1829, 2005.
+\newblock \doi{10.1007/S00024-005-2694-7}.
+
+\bibitem[Cuxart et~al.(2006)Cuxart, Holtslag, et~al.]{cuxart2006gabls1}
+J.~Cuxart, A.~A.~M. Holtslag, et~al.
+\newblock Single-column model intercomparison for a stably stratified
+  atmospheric boundary layer.
+\newblock \emph{Boundary-Layer Meteorology}, 118\penalty0 (2):\penalty0
+  273--303, 2006.
+\newblock \doi{10.1007/s10546-005-3780-1}.
+
+\bibitem[Zilitinkevich et~al.(2007)Zilitinkevich, Elperin, Kleeorin, and
+  Rogachevskii]{zilitinkevich2007}
+Sergej Zilitinkevich, Tov Elperin, Nathan Kleeorin, and Igor Rogachevskii.
+\newblock Energy- and flux-budget ({EFB}) turbulence closure model for stably
+  stratified flows. {Part I}: {Steady-state}, homogeneous regimes.
+\newblock \emph{Boundary-Layer Meteorology}, 125\penalty0 (2):\penalty0
+  167--192, 2007.
+\newblock \doi{10.1007/s10546-007-9189-2}.
+
+\bibitem[Basu et~al.(2008)Basu, Holtslag, van~de Wiel, et~al.]{basu2008}
+Sukanta Basu, A.~A.~M. Holtslag, B.~J.~H. van~de Wiel, et~al.
+\newblock Evaluating the performance of large-eddy simulations in stably
+  stratified boundary layers.
+\newblock \emph{Boundary-Layer Meteorology}, 128\penalty0 (1):\penalty0
+  117--135, 2008.
+\newblock \doi{10.1007/s10546-008-9271-x}.
+
+\bibitem[van~de Wiel et~al.(2012)van~de Wiel, Moene, et~al.]{VanDeWiel2012}
+B.~J.~H. van~de Wiel, A.~F. Moene, et~al.
+\newblock The minimum wind speed for sustainable turbulence in the nocturnal
+  boundary layer.
+\newblock \emph{Journal of the Atmospheric Sciences}, 69\penalty0
+  (11):\penalty0 3116--3127, 2012.
+\newblock \doi{10.1175/JAS-D-12-0107.1}.
+
+\bibitem[Grachev et~al.(2013)Grachev, Andreas, et~al.]{Grachev2013}
+Andrey~A. Grachev, Edgar~L. Andreas, et~al.
+\newblock The critical {Richardson} number and turbulence in stably stratified
+  boundary layers.
+\newblock \emph{Boundary-Layer Meteorology}, 147\penalty0 (1):\penalty0 23--42,
+  2013.
+\newblock \doi{10.1007/s10546-012-9772-8}.
+
+\bibitem[Mahrt(2014)]{mahrt2014}
+Larry Mahrt.
+\newblock Stably stratified atmospheric boundary layers.
+\newblock \emph{Annual Review of Fluid Mechanics}, 46\penalty0 (1):\penalty0
+  23--45, 2014.
+\newblock \doi{10.1146/annurev-fluid-010313-141354}.
+
+\bibitem[Monahan et~al.(2015)Monahan, Rees, He, and McFarlane]{Monahan2015}
+Adam~H. Monahan, T.~Rees, Yanping He, and Norman~A. McFarlane.
+\newblock Multiple regimes of wind, stratification, and turbulence in the
+  stable boundary layer.
+\newblock \emph{Journal of the Atmospheric Sciences}, 72\penalty0 (8):\penalty0
+  3178--3198, 2015.
+\newblock \doi{10.1175/JAS-D-14-0311.1}.
+
+\bibitem[van~de Wiel et~al.(2017)van~de Wiel, Vignon, Baas,
+  et~al.]{vanDeWiel2017}
+B.~J.~H. van~de Wiel, {\'E}.~Vignon, Peter Baas, et~al.
+\newblock Regime transitions in near-surface temperature inversions: A
+  conceptual model.
+\newblock \emph{Journal of the Atmospheric Sciences}, 74\penalty0 (4):\penalty0
+  1057--1073, 2017.
+\newblock \doi{10.1175/JAS-D-16-0180.1}.
+
+\bibitem[van Hooft et~al.(2019)van Hooft, Baas, van Tiggelen, Ansorge, and
+  van~de Wiel]{VanHooft2019}
+J.~van Hooft, P.~Baas, M.~van Tiggelen, C.~Ansorge, and B.~J.~H. van~de Wiel.
+\newblock An idealized description for the diurnal cycle of the dry atmospheric
+  boundary layer.
+\newblock \emph{Journal of the Atmospheric Sciences}, 76\penalty0
+  (12):\penalty0 3717--3736, 2019.
+\newblock \doi{10.1175/JAS-D-19-0023.1}.
+
+\bibitem[Ramsey and Monahan(2022)]{Ramsey2022}
+Elizabeth Ramsey and Adam~H. Monahan.
+\newblock Empirical low-dimensional dynamics of atmospheric stable boundary
+  layer temperature inversions.
+\newblock \emph{Journal of the Atmospheric Sciences}, 79\penalty0 (7):\penalty0
+  1965--1984, 2022.
+\newblock \doi{10.1175/JAS-D-21-0205.1}.
+
+\bibitem[Shaw et~al.(2022)Shaw, Berg, Debnath, et~al.]{Shaw2022}
+W.~Shaw, L.~Berg, M.~Debnath, et~al.
+\newblock Scientific challenges to characterizing the wind resource in the
+  marine atmospheric boundary layer.
+\newblock \emph{Wind Energy Science}, 7\penalty0 (6):\penalty0 2307--2334,
+  2022.
+\newblock \doi{10.5194/wes-2021-156}.
+
+\bibitem[He and Li(2025)]{He2025}
+Jun-Yi He and Qiu-Sheng Li.
+\newblock \emph{Winds in the Atmospheric Boundary Layer}.
+\newblock Springer Nature Singapore, Singapore, 2025.
+\newblock ISBN 978-981-95-1516-5.
+\newblock \doi{10.1007/978-981-95-1517-2}.
+
+\bibitem[Acevedo and Mahrt(2010)]{acevedo2010systematic}
+Ot{\'a}vio Acevedo and Larry Mahrt.
+\newblock Systematic vertical variation of mesoscale fluxes in the nocturnal
+  boundary layer.
+\newblock \emph{Boundary-Layer Meteorology}, 135\penalty0 (1):\penalty0 19--30,
+  2010.
+\newblock \doi{10.1007/s10546-010-9465-4}.
+
+\bibitem[Poulos et~al.(2002)Poulos, Blumen, Fritts, et~al.]{poulos2002cases99}
+Gregory~S. Poulos, William Blumen, David~C. Fritts, et~al.
+\newblock {CASES-99}: A comprehensive investigation of the stable atmospheric
+  boundary layer.
+\newblock \emph{Bulletin of the American Meteorological Society}, 83\penalty0
+  (4):\penalty0 555--581, 2002.
+\newblock \doi{10.1175/1520-0477(2002)083<0555:CACIOT>2.3.CO;2}.
+
+\bibitem[Grachev et~al.(2005)Grachev, Fairall, et~al.]{Grachev2005}
+Andrey~A. Grachev, Christopher~W. Fairall, et~al.
+\newblock Stable boundary-layer scaling regimes: {The SHEBA data}.
+\newblock \emph{Boundary-Layer Meteorology}, 116\penalty0 (2):\penalty0
+  201--235, 2005.
+\newblock \doi{10.1007/s10546-004-2729-0}.
+
+\bibitem[Vignon et~al.(2017)Vignon, Hourdin, Genthon, et~al.]{Vignon2017}
+{\'E}.~Vignon, F.~Hourdin, C.~Genthon, et~al.
+\newblock Antarctic boundary layer parametrization in a general circulation
+  model: 1-{D} simulations facing summer observations at {Dome C}.
+\newblock \emph{Journal of Geophysical Research: Atmospheres}, 122\penalty0
+  (13):\penalty0 6818--6843, 2017.
+\newblock \doi{10.1002/2017JD026802}.
+
+\bibitem[Su et~al.(2024)Su, Lu, Yuan, Wang, He, and Xia]{Su2024}
+Lian Su, Chunsong Lu, Jinlong Yuan, Xiaofei Wang, Qing He, and Haiyun Xia.
+\newblock Measurement report: {The} promotion of the low-level jet and thermal
+  effects on the development of the deep convective boundary layer at the
+  southern edge of the {Taklimakan Desert}.
+\newblock \emph{Atmospheric Chemistry and Physics}, 24\penalty0 (18):\penalty0
+  10947--10963, 2024.
+\newblock \doi{10.5194/acp-24-10947-2024}.
+
+\bibitem[Zhang et~al.(2024)Zhang, Zhang, Cai, Song, and
+  Zhang]{Zhang2024Taklimakan}
+Lu~Zhang, Hongsheng Zhang, Xuhui Cai, Yu~Song, and Xiaoye Zhang.
+\newblock Characteristics of turbulence intermittency, fine structure, and flux
+  correction in the {Taklimakan} desert.
+\newblock \emph{Journal of the Atmospheric Sciences}, 81\penalty0 (2):\penalty0
+  459--475, 2024.
+\newblock \doi{10.1175/JAS-D-23-0107.1}.
+
+\bibitem[Hairer and Wanner(2010)]{HairerWanner1996}
+Ernst Hairer and Gerhard Wanner.
+\newblock \emph{Solving Ordinary Differential Equations {II}: Stiff and
+  Differential-Algebraic Problems}.
+\newblock Springer Series in Computational Mathematics. Springer-Verlag,
+  Berlin, 2nd edition, 2010.
+\newblock \doi{10.1007/978-3-642-05221-7}.
+
+\bibitem[Krauskopf et~al.(2007)Krauskopf, Osinga, and
+  Gal{\'a}n-Vioque]{krauskopf2007continuation}
+Bernd Krauskopf, Hinke Osinga, and Jorge Gal{\'a}n-Vioque.
+\newblock \emph{Numerical Continuation Methods for Dynamical Systems:
+  Path-Following and Boundary Value Problems}.
+\newblock Springer, 2007.
+\newblock \doi{10.1007/978-1-4020-6356-5}.
+
+\bibitem[Rackauckas and Nie(2017)]{Rackauckas2017DifferentialEquations}
+Christopher Rackauckas and Qing Nie.
+\newblock {DifferentialEquations.jl} -- {A} performant and feature-rich
+  ecosystem for solving differential equations in {Julia}.
+\newblock \emph{Journal of Open Research Software}, 5\penalty0 (1):\penalty0
+  15, 2017.
+\newblock \doi{10.5334/jors.151}.
+
+\bibitem[Steinebach(2023)]{Steinebach2023Rodas5P}
+Gerd Steinebach.
+\newblock Construction of {Rosenbrock–Wanner} method {Rodas5P} and numerical
+  benchmarks within the {Julia Differential Equations} package.
+\newblock \emph{BIT Numerical Mathematics}, 63\penalty0 (2):\penalty0 27, 2023.
+\newblock \doi{10.1007/s10543-023-00967-x}.
+
+\end{thebibliography}

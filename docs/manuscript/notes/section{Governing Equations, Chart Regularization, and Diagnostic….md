@@ -1,3 +1,4 @@
+```
 \section{Governing Equations, Chart Regularization, and Diagnostic Functionals}
 
 This section defines the smooth fast-slow architecture for the stable boundary layer (SBL) model. We introduce the regularized state space, state the standing assumptions used in the geometric analysis, derive the desingularized fast chart, and define the observation map that connects invariant-manifold structure to atmospheric diagnostics.
@@ -62,7 +63,7 @@ To restore smoothness, introduce the regularized chart map
 \phi_\delta : e \mapsto \tilde e = \sqrt{e + \delta},
 \qquad \delta > 0.
 \end{equation}
-We formulate the geometric analysis on the regularized chart and use the limit $\delta \to 0^+$ as the asymptotic interpretation of the physical system. To desingularize the fast dynamics, use the positive time reparameterization
+We analyze the dynamics on the regularized chart and then interpret the resulting geometry in the limit $\delta \to 0^+$. To desingularize the fast dynamics, use the positive time reparameterization
 \begin{equation}
 d\tau = \left(\frac{\tilde e}{\epsilon_1}\right) dt.
 \end{equation}
@@ -72,7 +73,7 @@ On the physical domain $e > 0$, the map $\phi_\delta$ is a $C^\infty$ diffeomorp
 \begin{equation}
 d\tau = \frac{\tilde e}{\epsilon_1} dt,
 \end{equation}
-the fast subsystem extends to a smooth vector field in the chart variable $\tilde e$, while preserving phase trajectories, equilibrium sets, and the signs of eigenvalues transverse to normally hyperbolic branches of the critical manifold.
+the fast subsystem extends to a smooth vector field in the chart variable $\tilde e$, while preserving phase trajectories, equilibrium sets, and the signs of transverse eigenvalues along the critical manifold.
 \end{proposition}
 
 \begin{proof}
@@ -119,7 +120,7 @@ In the limiting chart $\delta \to 0^+$ this becomes
 - \frac{g}{2\theta_0} q_\theta
 - \frac{1}{2\ell} \tilde e^3,
 \end{equation}
-which is polynomial in $\tilde e$. Because $d\tau/dt = \tilde e/\epsilon_1 > 0$ on $\Omega_{\mathrm{phys}}$, the reparameterization is orientation preserving. Standard results for positive time changes then imply preservation of orbits, equilibria, and the signs of eigenvalues transverse to normally hyperbolic branches.
+which is polynomial in $\tilde e$. Because $d\tau/dt = \tilde e/\epsilon_1 > 0$ on $\Omega_{\mathrm{phys}}$, the reparameterization is orientation preserving. Standard results for positive time changes then imply preservation of orbits, equilibria, and transverse stability signatures.
 \end{proof}
 
 \subsection{Subsystem Vector Field Components}
@@ -149,7 +150,6 @@ F_{\mathrm{slow}}(\mathbf{x})
 \frac{1}{\tilde e C_s}\left[R_{\mathrm{net}}(T_s) + \rho c_p q_\theta + \frac{k_g}{d_g}(T_g - T_s)\right]
 \end{pmatrix},
 \end{equation}
-where the factors $1/\tilde e$ arise from the positive time reparameterization and do not introduce singularities on the positively invariant domain $\Omega_{\mathrm{phys}}$.
 where
 \begin{equation}
 R_{\mathrm{net}}(T_s)
@@ -169,7 +169,6 @@ To connect the internal state $\mathbf{x} \in \Omega_0$ to observable diagnostic
 \begin{equation}
 \boldsymbol{\Pi}_{\mathrm{obs}} : \Omega_0 \to \mathcal O \subset \mathbb{R}^3,
 \end{equation}
-where $\mathcal O$ denotes the space of smooth diagnostic quantities accessible from field observations or numerical model output,
 with components
 \begin{equation}
 \boldsymbol{\Pi}_{\mathrm{obs}}(\mathbf{x})
@@ -211,11 +210,6 @@ Each component of $\boldsymbol{\Pi}_{\mathrm{obs}}$ is a composition of smooth a
 never vanishes. The remaining components are linear in $q_\theta$ and $S$, and $\theta_z(T_s)$ is smooth by construction. Therefore $\boldsymbol{\Pi}_{\mathrm{obs}} \in C^\infty(\Omega_0, \mathcal O)$.
 \end{proof}
 
-\paragraph{Remark 2.2 (Geometry versus observation).}
-The dynamical system evolves on the five-dimensional state manifold $\Omega_0$, whereas atmospheric diagnostics are represented in observation space through the smooth map
-\begin{equation}
-\boldsymbol{\Pi}_{\mathrm{obs}} : \Omega_0 \to \mathcal O.
-\end{equation}
-Consequently, invariant geometric objects in state space need not appear as invariant objects in observation space.
-
 Section~2 now provides a smooth desingularized dynamical system, an explicit regularized chart, and a diagnostic observation framework suitable for the invariant-manifold results developed in the subsequent sections.
+
+```
