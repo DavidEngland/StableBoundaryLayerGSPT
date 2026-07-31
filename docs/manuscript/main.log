@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.22)  31 JUL 2026 09:17
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.22)  31 JUL 2026 09:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -591,37 +591,45 @@ File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 
 {/usr/local/texlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/loc
 al/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}]
+\openout2 = `intro.aux'.
+
+ (./intro.tex
+[2
+
+]) [3{/usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.
+enc}] [4
+
+
+]
 \openout2 = `"Multi-Scale Governing Equations and Chart Regularization.aux"'.
 
+ (./Multi-Scale Governing Equations and Chart Regularization.tex
+[5
 
-(./Multi-Scale Governing Equations and Chart Regularization.tex [2
-
-] [3]
-[4]) [5] [6
+] [6] [7]) [8] [9
 
 
-] (./main.bbl [7
+] (./main.bbl [10
 
-] [8]) [9] (./main.aux
-(./Multi-Scale Governing Equations and Chart Regularization.aux)
-
-Package natbib Warning: Citation(s) may have changed.
-(natbib)                Rerun to get citations correct.
-
-)
+] [11]) [12] (./main.aux (./intro.aux)
+(./Multi-Scale Governing Equations and Chart Regularization.aux))
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
  ) 
 Here is how much of TeX's memory you used:
- 18442 strings out of 467525
- 348060 string characters out of 5418982
- 775728 words of memory out of 5000000
- 46798 multiletter control sequences out of 15000+600000
- 659651 words of font info for 217 fonts, out of 8000000 for 9000
+ 18505 strings out of 467525
+ 349067 string characters out of 5418982
+ 777508 words of memory out of 5000000
+ 46825 multiletter control sequences out of 15000+600000
+ 662122 words of font info for 230 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,12n,80p,1175b,1214s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,12n,80p,1175b,1215s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 ></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb>
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><
@@ -643,15 +651,16 @@ e/2026/texmf-dist/fonts/type1/public/cm-super/sfbx0800.pfb></usr/local/texlive/
 /texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2026/t
 exmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/local/texlive/2026/tex
 mf-dist/fonts/type1/public/cm-super/sfbx1728.pfb></usr/local/texlive/2026/texmf
--dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2026/texmf-d
-ist/fonts/type1/public/cm-super/sfrm1095.pfb></usr/local/texlive/2026/texmf-dis
-t/fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/texlive/2026/texmf-dist/
-fonts/type1/public/cm-super/sfti1000.pfb></usr/local/texlive/2026/texmf-dist/fo
-nts/type1/public/cm-super/sfti1095.pfb>
-Output written on main.pdf (9 pages, 428886 bytes).
+-dist/fonts/type1/public/cm-super/sfrm0800.pfb></usr/local/texlive/2026/texmf-d
+ist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2026/texmf-dis
+t/fonts/type1/public/cm-super/sfrm1095.pfb></usr/local/texlive/2026/texmf-dist/
+fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/texlive/2026/texmf-dist/fo
+nts/type1/public/cm-super/sfti1000.pfb></usr/local/texlive/2026/texmf-dist/font
+s/type1/public/cm-super/sfti1095.pfb>
+Output written on main.pdf (12 pages, 458813 bytes).
 PDF statistics:
- 314 PDF objects out of 1000 (max. 8388607)
- 248 compressed objects within 3 object streams
- 119 named destinations out of 1000 (max. 500000)
- 59393 words of extra memory for PDF output out of 61914 (max. 10000000)
+ 363 PDF objects out of 1000 (max. 8388607)
+ 291 compressed objects within 3 object streams
+ 126 named destinations out of 1000 (max. 500000)
+ 65537 words of extra memory for PDF output out of 74296 (max. 10000000)
 
