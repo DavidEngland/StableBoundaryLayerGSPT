@@ -5,6 +5,68 @@
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
 
+\bibitem[Nieuwstadt(1984)]{nieuwstadt1984}
+F.~T.~M. Nieuwstadt.
+\newblock The turbulent structure of the stable atmospheric boundary layer.
+\newblock \emph{Journal of the Atmospheric Sciences}, 41\penalty0
+  (14):\penalty0 2202--2216, 1984.
+\newblock \doi{10.1175/1520-0469(1984)041<2202:TTSOTS>2.0.CO;2}.
+
+\bibitem[Mahrt(2014)]{mahrt2014}
+Larry Mahrt.
+\newblock Stably stratified atmospheric boundary layers.
+\newblock \emph{Annual Review of Fluid Mechanics}, 46\penalty0 (1):\penalty0
+  23--45, 2014.
+\newblock \doi{10.1146/annurev-fluid-010313-141354}.
+
+\bibitem[van~de Wiel et~al.(2017)van~de Wiel, Vignon, Baas,
+  et~al.]{vanDeWiel2017}
+B.~J.~H. van~de Wiel, {\'E}.~Vignon, Peter Baas, et~al.
+\newblock Regime transitions in near-surface temperature inversions: A
+  conceptual model.
+\newblock \emph{Journal of the Atmospheric Sciences}, 74\penalty0 (4):\penalty0
+  1057--1073, 2017.
+\newblock \doi{10.1175/JAS-D-16-0180.1}.
+
+\bibitem[Grachev et~al.(2013)Grachev, Andreas, et~al.]{Grachev2013}
+Andrey~A. Grachev, Edgar~L. Andreas, et~al.
+\newblock The critical {Richardson} number and turbulence in stably stratified
+  boundary layers.
+\newblock \emph{Boundary-Layer Meteorology}, 147\penalty0 (1):\penalty0 23--42,
+  2013.
+\newblock \doi{10.1007/s10546-012-9772-8}.
+
+\bibitem[Monahan et~al.(2015)Monahan, Rees, He, and McFarlane]{Monahan2015}
+Adam~H. Monahan, T.~Rees, Yanping He, and Norman~A. McFarlane.
+\newblock Multiple regimes of wind, stratification, and turbulence in the
+  stable boundary layer.
+\newblock \emph{Journal of the Atmospheric Sciences}, 72\penalty0 (8):\penalty0
+  3178--3198, 2015.
+\newblock \doi{10.1175/JAS-D-14-0311.1}.
+
+\bibitem[Poulos et~al.(2002)Poulos, Blumen, Fritts, et~al.]{poulos2002cases99}
+Gregory~S. Poulos, William Blumen, David~C. Fritts, et~al.
+\newblock {CASES-99}: A comprehensive investigation of the stable atmospheric
+  boundary layer.
+\newblock \emph{Bulletin of the American Meteorological Society}, 83\penalty0
+  (4):\penalty0 555--581, 2002.
+\newblock \doi{10.1175/1520-0477(2002)083<0555:CACIOT>2.3.CO;2}.
+
+\bibitem[Grachev et~al.(2005)Grachev, Fairall, et~al.]{Grachev2005}
+Andrey~A. Grachev, Christopher~W. Fairall, et~al.
+\newblock Stable boundary-layer scaling regimes: {The SHEBA data}.
+\newblock \emph{Boundary-Layer Meteorology}, 116\penalty0 (2):\penalty0
+  201--235, 2005.
+\newblock \doi{10.1007/s10546-004-2729-0}.
+
+\bibitem[Mellor and Yamada(1982)]{MellorYamada1982}
+George~L. Mellor and Tetsuji Yamada.
+\newblock Development of a turbulence closure model for geophysical fluid
+  problems.
+\newblock \emph{Reviews of Geophysics}, 20\penalty0 (4):\penalty0 851--875,
+  1982.
+\newblock \doi{10.1029/RG020i004p00851}.
+
 \bibitem[Fenichel(1979)]{Fenichel1979}
 Neil Fenichel.
 \newblock Geometric singular perturbation theory for ordinary differential
@@ -12,6 +74,22 @@ Neil Fenichel.
 \newblock \emph{Journal of Differential Equations}, 31\penalty0 (1):\penalty0
   53--98, 1979.
 \newblock \doi{10.1016/0022-0396(79)90152-9}.
+
+\bibitem[Kuehn(2015)]{Kuehn2015}
+Christian Kuehn.
+\newblock \emph{Multiple Time Scale Dynamics: An Introduction Specializing to
+  Differential Equations}, volume 191 of \emph{Applied Mathematical Sciences}.
+\newblock Springer International Publishing, Cham, Switzerland, 2015.
+\newblock ISBN 978-3-319-12315-8.
+\newblock \doi{10.1007/978-3-319-12315-8}.
+
+\bibitem[van~de Wiel et~al.(2012)van~de Wiel, Moene, et~al.]{VanDeWiel2012}
+B.~J.~H. van~de Wiel, A.~F. Moene, et~al.
+\newblock The minimum wind speed for sustainable turbulence in the nocturnal
+  boundary layer.
+\newblock \emph{Journal of the Atmospheric Sciences}, 69\penalty0
+  (11):\penalty0 3116--3127, 2012.
+\newblock \doi{10.1175/JAS-D-12-0107.1}.
 
 \bibitem[Jones(1995)]{Jones1995}
 Christopher K. R.~T. Jones.
@@ -52,14 +130,6 @@ Peter De~Maesschalck and Mathieu Desroches.
   (3):\penalty0 1159--1180, 2013.
 \newblock \doi{10.1137/120877386}.
 
-\bibitem[Kuehn(2015)]{Kuehn2015}
-Christian Kuehn.
-\newblock \emph{Multiple Time Scale Dynamics: An Introduction Specializing to
-  Differential Equations}, volume 191 of \emph{Applied Mathematical Sciences}.
-\newblock Springer International Publishing, Cham, Switzerland, 2015.
-\newblock ISBN 978-3-319-12315-8.
-\newblock \doi{10.1007/978-3-319-12315-8}.
-
 \bibitem[Jelbart and Kuehn(2023)]{jelbart2022}
 Samuel Jelbart and Christian Kuehn.
 \newblock Discrete geometric singular perturbation theory.
@@ -84,21 +154,6 @@ Richard~T. McNider and Roger~A. Pielke.
 \newblock \emph{Journal of the Atmospheric Sciences}, 38\penalty0
   (10):\penalty0 2198--2212, 1981.
 \newblock \doi{10.1175/1520-0469(1981)038<2198:DBLDOS>2.0.CO;2}.
-
-\bibitem[Mellor and Yamada(1982)]{MellorYamada1982}
-George~L. Mellor and Tetsuji Yamada.
-\newblock Development of a turbulence closure model for geophysical fluid
-  problems.
-\newblock \emph{Reviews of Geophysics}, 20\penalty0 (4):\penalty0 851--875,
-  1982.
-\newblock \doi{10.1029/RG020i004p00851}.
-
-\bibitem[Nieuwstadt(1984)]{nieuwstadt1984}
-F.~T.~M. Nieuwstadt.
-\newblock The turbulent structure of the stable atmospheric boundary layer.
-\newblock \emph{Journal of the Atmospheric Sciences}, 41\penalty0
-  (14):\penalty0 2202--2216, 1984.
-\newblock \doi{10.1175/1520-0469(1984)041<2202:TTSOTS>2.0.CO;2}.
 
 \bibitem[England and McNider(1995)]{England1995}
 David~E. England and Richard~T. McNider.
@@ -147,46 +202,6 @@ Sukanta Basu, A.~A.~M. Holtslag, B.~J.~H. van~de Wiel, et~al.
   117--135, 2008.
 \newblock \doi{10.1007/s10546-008-9271-x}.
 
-\bibitem[van~de Wiel et~al.(2012)van~de Wiel, Moene, et~al.]{VanDeWiel2012}
-B.~J.~H. van~de Wiel, A.~F. Moene, et~al.
-\newblock The minimum wind speed for sustainable turbulence in the nocturnal
-  boundary layer.
-\newblock \emph{Journal of the Atmospheric Sciences}, 69\penalty0
-  (11):\penalty0 3116--3127, 2012.
-\newblock \doi{10.1175/JAS-D-12-0107.1}.
-
-\bibitem[Grachev et~al.(2013)Grachev, Andreas, et~al.]{Grachev2013}
-Andrey~A. Grachev, Edgar~L. Andreas, et~al.
-\newblock The critical {Richardson} number and turbulence in stably stratified
-  boundary layers.
-\newblock \emph{Boundary-Layer Meteorology}, 147\penalty0 (1):\penalty0 23--42,
-  2013.
-\newblock \doi{10.1007/s10546-012-9772-8}.
-
-\bibitem[Mahrt(2014)]{mahrt2014}
-Larry Mahrt.
-\newblock Stably stratified atmospheric boundary layers.
-\newblock \emph{Annual Review of Fluid Mechanics}, 46\penalty0 (1):\penalty0
-  23--45, 2014.
-\newblock \doi{10.1146/annurev-fluid-010313-141354}.
-
-\bibitem[Monahan et~al.(2015)Monahan, Rees, He, and McFarlane]{Monahan2015}
-Adam~H. Monahan, T.~Rees, Yanping He, and Norman~A. McFarlane.
-\newblock Multiple regimes of wind, stratification, and turbulence in the
-  stable boundary layer.
-\newblock \emph{Journal of the Atmospheric Sciences}, 72\penalty0 (8):\penalty0
-  3178--3198, 2015.
-\newblock \doi{10.1175/JAS-D-14-0311.1}.
-
-\bibitem[van~de Wiel et~al.(2017)van~de Wiel, Vignon, Baas,
-  et~al.]{vanDeWiel2017}
-B.~J.~H. van~de Wiel, {\'E}.~Vignon, Peter Baas, et~al.
-\newblock Regime transitions in near-surface temperature inversions: A
-  conceptual model.
-\newblock \emph{Journal of the Atmospheric Sciences}, 74\penalty0 (4):\penalty0
-  1057--1073, 2017.
-\newblock \doi{10.1175/JAS-D-16-0180.1}.
-
 \bibitem[van Hooft et~al.(2019)van Hooft, Baas, van Tiggelen, Ansorge, and
   van~de Wiel]{VanHooft2019}
 J.~van Hooft, P.~Baas, M.~van Tiggelen, C.~Ansorge, and B.~J.~H. van~de Wiel.
@@ -226,21 +241,6 @@ Ot{\'a}vio Acevedo and Larry Mahrt.
 \newblock \emph{Boundary-Layer Meteorology}, 135\penalty0 (1):\penalty0 19--30,
   2010.
 \newblock \doi{10.1007/s10546-010-9465-4}.
-
-\bibitem[Poulos et~al.(2002)Poulos, Blumen, Fritts, et~al.]{poulos2002cases99}
-Gregory~S. Poulos, William Blumen, David~C. Fritts, et~al.
-\newblock {CASES-99}: A comprehensive investigation of the stable atmospheric
-  boundary layer.
-\newblock \emph{Bulletin of the American Meteorological Society}, 83\penalty0
-  (4):\penalty0 555--581, 2002.
-\newblock \doi{10.1175/1520-0477(2002)083<0555:CACIOT>2.3.CO;2}.
-
-\bibitem[Grachev et~al.(2005)Grachev, Fairall, et~al.]{Grachev2005}
-Andrey~A. Grachev, Christopher~W. Fairall, et~al.
-\newblock Stable boundary-layer scaling regimes: {The SHEBA data}.
-\newblock \emph{Boundary-Layer Meteorology}, 116\penalty0 (2):\penalty0
-  201--235, 2005.
-\newblock \doi{10.1007/s10546-004-2729-0}.
 
 \bibitem[Vignon et~al.(2017)Vignon, Hourdin, Genthon, et~al.]{Vignon2017}
 {\'E}.~Vignon, F.~Hourdin, C.~Genthon, et~al.

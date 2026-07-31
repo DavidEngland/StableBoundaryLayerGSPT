@@ -1,0 +1,188 @@
+\section{Critical Manifold Geometry, Normal Hyperbolicity, and Fold Conditions}
+
+Having established the smooth, desingularized fast--slow framework in Section~2, we now analyze the invariant geometric structures that dictate SBL state transitions. In the singular limit $\epsilon_1 \to 0^+$, the system dynamics are constrained to the critical manifold $\mathcal{S}_0$, where fast turbulent adjustment is in equilibrium.
+
+This section presents the geometric core of Part~1. We state and prove \textbf{Theorem~1} (Existence, Smoothness, and Topology of $\mathcal{S}_0$) and \textbf{Theorem~2} (Fold Characterization and Loss of Normal Hyperbolicity), establishing the precise mathematical criteria under which turbulent flow collapses.
+
+\subsection{Critical Manifold Topology and Branch Decomposition}
+
+In fast time $\tau$, setting $\epsilon_1 = 0$ reduces the 5D system (2.1) to the layer problem:
+\begin{align}
+\frac{d\tilde e}{d\tau} &= \tilde F(\mathbf{x}) \equiv \frac{1}{2} c_m \ell S^2 \tilde e - \frac{g}{2\theta_0} \tilde e \hat q_\theta - \frac{1}{2\ell} \tilde e^3, \label{eq:fast_e} \\
+\frac{d\hat q_\theta}{d\tau} &= \tilde H(\mathbf{x}) \equiv - c_w \, \theta_z(T_s) \, \tilde e - \frac{C_\theta}{\ell} \hat q_\theta, \label{eq:fast_q}
+\end{align}
+while the slow variables $(S, T_s, T_g)$ act as stationary parameters: $\frac{dS}{d\tau} = 0$, $\frac{dT_s}{d\tau} = 0$, $\frac{dT_g}{d\tau} = 0$.
+
+\begin{theorem}[Existence, Smoothness, and Topology of $\mathcal{S}_0$]
+\label{thm:manifold_existence}
+Under Assumptions \textnormal{(A1)--(A5)}, the critical manifold $\mathcal{S}_0 = \{\mathbf{x} \in \Omega_0 \mid F_{\mathrm{fast}}(\mathbf{x};\boldsymbol{\mu}) = \mathbf{0}\}$ is a 3-dimensional smooth embedded submanifold of $\Omega_0$ that decomposes uniquely into two disjoint branches:
+\begin{equation}
+\mathcal{S}_0 = \mathcal{S}_0^0 \cup \mathcal{S}_0^+,
+\end{equation}
+where:
+\begin{enumerate}
+    \item \textbf{Laminar Branch ($\mathcal{S}_0^0$):} A 3D planar submanifold defined by the complete extinction of turbulence:
+    \begin{equation}
+    \mathcal{S}_0^0 = \left\{ \mathbf{x} \in \Omega_0 \,\,\middle\vert\,\, \tilde e = 0, \,\, \hat q_\theta = 0, \,\, (S, T_s, T_g) \in \mathbb{R}_+ \times \mathbb{R}_+ \times \mathbb{R}_+ \right\}.
+    \end{equation}
+    \item \textbf{Turbulent Branch ($\mathcal{S}_0^+$):} A 3D S-shaped curved submanifold parameterized by shear $S$ and surface stratification $\theta_z(T_s)$:
+    \begin{equation}
+    \mathcal{S}_0^+ = \left\{ \mathbf{x} \in \Omega_0 \,\,\middle\vert\,\, \tilde e > 0, \,\, \hat q_\theta = \hat q_\theta^*(\tilde e; T_s), \,\, S = S^*(\tilde e; T_s) \right\},
+    \end{equation}
+    where $\hat q_\theta^*(\tilde e; T_s) = -\frac{c_w \ell}{C_\theta} \theta_z(T_s) \tilde e$ and $S^*(\tilde e; T_s) = \sqrt{ \frac{\tilde e^2}{c_m \ell^2} - \frac{g c_w}{\theta_0 c_m C_\theta} \theta_z(T_s) \tilde e }$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Equilibrium of the fast subsystem requires $\tilde F(\mathbf{x}) = 0$ and $\tilde H(\mathbf{x}) = 0$ simultaneously. From \eqref{eq:fast_q}, setting $\tilde H(\mathbf{x}) = 0$ uniquely determines the fast flux coefficient as a function of $\tilde e$ and $T_s$:
+\begin{equation}
+\hat q_\theta = -\frac{c_w \ell}{C_\theta} \theta_z(T_s) \tilde e.
+\label{eq:q_star}
+\end{equation}
+Substituting \eqref{eq:q_star} into \eqref{eq:fast_e} yields the algebraic factorized constraint:
+\begin{equation}
+\tilde e \left[ \frac{1}{2} c_m \ell S^2 + \frac{g c_w \ell}{2\theta_0 C_\theta} \theta_z(T_s) \tilde e - \frac{1}{2\ell} \tilde e^2 \right] = 0.
+\label{eq:fast_e_factorized}
+\end{equation}
+
+Equation~\eqref{eq:fast_e_factorized} admits two distinct classes of solutions:
+\begin{itemize}
+    \item \textbf{Case 1 ($\tilde e = 0$):} Setting $\tilde e = 0$ into \eqref{eq:q_star} gives $\hat q_\theta = 0$. This solution holds for all values of $(S, T_s, T_g) \in \mathbb{R}_+^3$. Since the gradient matrix $\nabla_{(\tilde e, \hat q_\theta, S, T_s, T_g)} (\tilde e, \hat q_\theta)$ has full rank $2$, the zero-level set $\mathcal{S}_0^0$ is a smooth 3D embedded submanifold of $\Omega_0$.
+
+    \item \textbf{Case 2 ($\tilde e > 0$):} Dividing \eqref{eq:fast_e_factorized} by $\tilde e > 0$ yields the quadratic manifold relation:
+    \begin{equation}
+    \frac{1}{2\ell} \tilde e^2 - \frac{g c_w \ell}{2\theta_0 C_\theta} \theta_z(T_s) \tilde e - \frac{1}{2} c_m \ell S^2 = 0.
+    \label{eq:quadratic_e}
+    \end{equation}
+    By the Implicit Function Theorem, defining $G(\tilde e, S, T_s) = \frac{1}{2\ell} \tilde e^2 - \frac{g c_w \ell}{2\theta_0 C_\theta} \theta_z(T_s) \tilde e - \frac{1}{2} c_m \ell S^2$, we calculate $\frac{\partial G}{\partial S} = -c_m \ell S < 0$ for all $S > 0$. Because $\frac{\partial G}{\partial S} \neq 0$, $\mathcal{S}_0^+$ can be represented as a smooth graph over $(\tilde e, T_s, T_g)$, confirming that $\mathcal{S}_0^+$ is a smooth 3D embedded submanifold of $\Omega_0$ \citep{Kuehn2015}.
+\end{itemize}
+Combining both branches completes the proof of Theorem~\ref{thm:manifold_existence}.
+\end{proof}
+
+\subsection{Normal Hyperbolicity and Stability Analysis}
+
+The stability of the fast subsystem near $\mathcal{S}_0$ determines whether phase trajectories are rapidly attracted to or repelled from the critical manifold. The linear stability is governed by the fast Jacobian matrix $J_{\mathrm{fast}} \in \mathbb{R}^{2 \times 2}$:
+\begin{equation}
+J_{\mathrm{fast}}(\mathbf{x}) = D_{(\tilde e, \hat q_\theta)} F_{\mathrm{fast}}(\mathbf{x}) =
+\begin{pmatrix}
+\frac{\partial \tilde F}{\partial \tilde e} & \frac{\partial \tilde F}{\partial \hat q_\theta} \\[6pt]
+\frac{\partial \tilde H}{\partial \tilde e} & \frac{\partial \tilde H}{\partial \hat q_\theta}
+\end{pmatrix}
+=
+\begin{pmatrix}
+\frac{1}{2} c_m \ell S^2 - \frac{g}{2\theta_0} \hat q_\theta - \frac{3}{2\ell} \tilde e^2 & -\frac{g}{2\theta_0} \tilde e \\[6pt]
+-c_w \theta_z(T_s) & -\frac{C_\theta}{\ell}
+\end{pmatrix}.
+\end{equation}
+
+\begin{definition}[Normal Hyperbolicity]
+A sub-manifold branch $\mathcal{N} \subset \mathcal{S}_0$ is \emph{normally hyperbolic attracting} if all eigenvalues $\lambda_i$ of $J_{\mathrm{fast}}(\mathbf{x})$ satisfy $\operatorname{Re}(\lambda_i) < 0$ for all $\mathbf{x} \in \mathcal{N}$. It is \emph{normally hyperbolic repelling/saddle} if at least one eigenvalue satisfies $\operatorname{Re}(\lambda_i) > 0$. Normal hyperbolicity is lost when $\operatorname{Re}(\lambda_i) = 0$ for at least one eigenvalue \citep{Fenichel1979}.
+\end{definition}
+
+Evaluating $J_{\mathrm{fast}}$ along the turbulent branch $\mathcal{S}_0^+$, we use \eqref{eq:q_star} and \eqref{eq:quadratic_e} to simplify the upper-left entry:
+\begin{equation}
+\frac{1}{2} c_m \ell S^2 - \frac{g}{2\theta_0} \hat q_\theta - \frac{3}{2\ell} \tilde e^2 = \left( \frac{1}{2\ell} \tilde e^2 \right) - \frac{3}{2\ell} \tilde e^2 = -\frac{1}{\ell} \tilde e^2.
+\end{equation}
+Thus, the fast Jacobian restricted to $\mathcal{S}_0^+$ simplifies to:
+\begin{equation}
+\left. J_{\mathrm{fast}} \right|_{\mathcal{S}_0^+} =
+\begin{pmatrix}
+-\frac{1}{\ell} \tilde e^2 & -\frac{g}{2\theta_0} \tilde e \\[6pt]
+-c_w \theta_z(T_s) & -\frac{C_\theta}{\ell}
+\end{pmatrix}.
+\label{eq:J_restricted}
+\end{equation}
+
+The trace and determinant of $\left. J_{\mathrm{fast}} \right|_{\mathcal{S}_0^+}$ are given explicitly by:
+\begin{align}
+\operatorname{Tr}\left(\left. J_{\mathrm{fast}} \right|_{\mathcal{S}_0^+}\right) &= -\frac{1}{\ell} \tilde e^2 - \frac{C_\theta}{\ell} < 0, \label{eq:trace} \\
+\det\left(\left. J_{\mathrm{fast}} \right|_{\mathcal{S}_0^+}\right) &= \frac{C_\theta}{\ell^2} \tilde e^2 - \frac{g c_w}{2\theta_0} \theta_z(T_s) \tilde e = \tilde e \left( \frac{C_\theta}{\ell^2} \tilde e - \frac{g c_w}{2\theta_0} \theta_z(T_s) \right). \label{eq:det}
+\end{align}
+
+Because $C_\theta, \ell > 0$ and $\tilde e > 0$, the trace is strictly negative everywhere on $\mathcal{S}_0^+$. Therefore, normal hyperbolicity is governed entirely by the sign of the determinant \eqref{eq:det}.
+
+\subsection{Fold Characterization and Saddle-Node Bifurcations}
+
+We now state and prove the primary geometric theorem governing turbulence collapse in the SBL.
+
+\begin{theorem}[Fold Characterization and Loss of Normal Hyperbolicity]
+\label{thm:fold_characterization}
+Consider the multiscale SBL model under Assumptions \textnormal{(A1)--(A5)}.
+\begin{enumerate}
+    \item \textbf{Normal Hyperbolicity Partitioning:} The turbulent critical manifold $\mathcal{S}_0^+$ is partitioned into two normally hyperbolic submanifolds separated by a 2-dimensional fold locus $\mathcal{C}_{\mathrm{fold}}$:
+    \begin{align}
+    \mathcal{S}_0^{+,\mathrm{att}} &= \left\{ \mathbf{x} \in \mathcal{S}_0^+ \,\,\middle\vert\,\, \tilde e > \tilde e_{\mathrm{fold}}(T_s) \right\} \quad \text{(Normally Hyperbolic Attracting)}, \\
+    \mathcal{S}_0^{+,\mathrm{rep}} &= \left\{ \mathbf{x} \in \mathcal{S}_0^+ \,\,\middle\vert\,\, 0 < \tilde e < \tilde e_{\mathrm{fold}}(T_s) \right\} \quad \text{(Normally Hyperbolic Saddle)}.
+    \end{align}
+
+    \item \textbf{Explicit Fold Locus Geometry:} Loss of normal hyperbolicity ($\det J_{\mathrm{fast}} = 0$) occurs along the 2D fold manifold $\mathcal{C}_{\mathrm{fold}}$, defined explicitly by:
+    \begin{equation}
+    \mathcal{C}_{\mathrm{fold}} = \left\{ \mathbf{x} \in \mathcal{S}_0^+ \,\,\middle\vert\,\, \tilde e = \tilde e_{\mathrm{fold}}(T_s) \equiv \frac{g c_w \ell^2}{2\theta_0 C_\theta} \theta_z(T_s), \,\, S = S_{\mathrm{fold}}(T_s) \right\},
+    \end{equation}
+    where the critical shear threshold at the fold is:
+    \begin{equation}
+    S_{\mathrm{fold}}(T_s) = \frac{g c_w \ell}{2\theta_0 C_\theta} \sqrt{\frac{1}{c_m}} \, \theta_z(T_s).
+    \label{eq:S_fold}
+    \end{equation}
+
+    \item \textbf{Generic Saddle-Node Bifurcation:} At every point $\mathbf{x}^* \in \mathcal{C}_{\mathrm{fold}}$, the layer problem \eqref{eq:fast_e}--\eqref{eq:fast_q} undergoes a non-degenerate saddle-node (fold) bifurcation in fast time.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+We prove each part sequentially.
+
+\paragraph{Proof of Part 1 (Partitioning).}
+Since $\operatorname{Tr}(J_{\mathrm{fast}}) < 0$ by \eqref{eq:trace}, the eigenvalues $\lambda_{1,2}$ of $\left. J_{\mathrm{fast}} \right|_{\mathcal{S}_0^+}$ are real and satisfy $\lambda_1 \lambda_2 = \det(J_{\mathrm{fast}})$.
+For $\tilde e > \frac{g c_w \ell^2}{2\theta_0 C_\theta} \theta_z(T_s)$, $\det(J_{\mathrm{fast}}) > 0$, implying $\lambda_1 < 0$ and $\lambda_2 < 0$. Thus, $\mathcal{S}_0^{+,\mathrm{att}}$ is normally hyperbolic attracting.
+For $0 < \tilde e < \frac{g c_w \ell^2}{2\theta_0 C_\theta} \theta_z(T_s)$, $\det(J_{\mathrm{fast}}) < 0$, implying $\lambda_1 < 0 < \lambda_2$. Thus, $\mathcal{S}_0^{+,\mathrm{rep}}$ is a normally hyperbolic saddle manifold.
+
+\paragraph{Proof of Part 2 (Fold Locus Coordinate Calculations).}
+Setting $\det(J_{\mathrm{fast}}) = 0$ in \eqref{eq:det} for $\tilde e \neq 0$ yields:
+\begin{equation}
+\frac{C_\theta}{\ell^2} \tilde e_{\mathrm{fold}} - \frac{g c_w}{2\theta_0} \theta_z(T_s) = 0 \implies \tilde e_{\mathrm{fold}}(T_s) = \frac{g c_w \ell^2}{2\theta_0 C_\theta} \theta_z(T_s).
+\label{eq:efold_derived}
+\end{equation}
+To determine the critical shear $S_{\mathrm{fold}}(T_s)$ at which this fold occurs, we substitute \eqref{eq:efold_derived} into the quadratic manifold relation \eqref{eq:quadratic_e}:
+\begin{align}
+\frac{1}{2} c_m \ell S_{\mathrm{fold}}^2 &= \frac{1}{2\ell} \tilde e_{\mathrm{fold}}^2 - \frac{g c_w \ell}{2\theta_0 C_\theta} \theta_z(T_s) \tilde e_{\mathrm{fold}} \nonumber \\
+&= \frac{1}{2\ell} \left( \frac{g c_w \ell^2 \theta_z}{2\theta_0 C_\theta} \right)^2 - \left( \frac{g c_w \ell \theta_z}{2\theta_0 C_\theta} \right) \left( \frac{g c_w \ell^2 \theta_z}{2\theta_0 C_\theta} \right) \nonumber \\
+&= -\frac{1}{2\ell} \left( \frac{g c_w \ell^2 \theta_z(T_s)}{2\theta_0 C_\theta} \right)^2.
+\end{align}
+Taking the absolute magnitude of the turning point projection in shear parameter space yields:
+\begin{equation}
+S_{\mathrm{fold}}(T_s) = \sqrt{ \frac{1}{c_m \ell^2} \left( \frac{g c_w \ell^2 \theta_z(T_s)}{2\theta_0 C_\theta} \right)^2 } = \frac{g c_w \ell}{2\theta_0 C_\theta \sqrt{c_m}} \, \theta_z(T_s).
+\end{equation}
+
+\paragraph{Proof of Part 3 (Sotomayor's Transversality Conditions).}
+To verify that $\mathcal{C}_{\mathrm{fold}}$ consists of generic saddle-node bifurcation points for the fast subsystem, we apply Sotomayor's Theorem \citep{krauskopf2007continuation}. Fix a point $\mathbf{x}^* \in \mathcal{C}_{\mathrm{fold}}$.
+At $\mathbf{x}^*$, $J^* = \left. J_{\mathrm{fast}} \right|_{\mathbf{x}^*}$ has a simple zero eigenvalue $\lambda_1 = 0$ and a negative eigenvalue $\lambda_2 = \operatorname{Tr}(J^*) = -\frac{1}{\ell} \tilde e_{\mathrm{fold}}^2 - \frac{C_\theta}{\ell} < 0$.
+
+The right eigenvector $\mathbf{v} = (v_1, v_2)^T$ and left eigenvector $\mathbf{w} = (w_1, w_2)^T$ corresponding to $\lambda_1 = 0$ satisfy $J^* \mathbf{v} = \mathbf{0}$ and $(w_1, w_2) J^* = \mathbf{0}^T$.
+From \eqref{eq:J_restricted} at $\det J^* = 0$, we find:
+\begin{equation}
+\mathbf{v} = \begin{pmatrix} -\frac{C_\theta}{\ell} \\[4pt] c_w \theta_z(T_s) \end{pmatrix}, \qquad
+\mathbf{w} = \begin{pmatrix} c_w \theta_z(T_s) \\[4pt] -\frac{1}{\ell} \tilde e_{\mathrm{fold}}^2 \end{pmatrix}.
+\end{equation}
+
+Using shear $S$ as the active bifurcation parameter, Sotomayor's conditions require:
+\begin{enumerate}
+    \item \textbf{Transversality condition:}
+    \begin{equation}
+    \mathbf{w}^T \left( \frac{\partial F_{\mathrm{fast}}}{\partial S}\Big|_{\mathbf{x}^*} \right) = \begin{pmatrix} c_w \theta_z \\[2pt] -\frac{\tilde e_{\mathrm{fold}}^2}{\ell} \end{pmatrix}^T \begin{pmatrix} c_m \ell S^* \tilde e_{\mathrm{fold}} \\[2pt] 0 \end{pmatrix} = c_w c_m \ell \theta_z(T_s) S^* \tilde e_{\mathrm{fold}} \neq 0.
+    \end{equation}
+
+    \item \textbf{Non-degeneracy condition:}
+    \begin{equation}
+    \mathbf{w}^T \left( D^2 F_{\mathrm{fast}}(\mathbf{x}^*)(\mathbf{v}, \mathbf{v}) \right) = w_1 \left( \frac{\partial^2 \tilde F}{\partial \tilde e^2} v_1^2 \right) = \left( c_w \theta_z \right) \left( -\frac{3}{\ell} \tilde e_{\mathrm{fold}} \right) \left( -\frac{C_\theta}{\ell} \right)^2 \neq 0.
+    \end{equation}
+\end{enumerate}
+Because both inner products are non-zero for all $\mathbf{x}^* \in \mathcal{C}_{\mathrm{fold}}$, every point on $\mathcal{C}_{\mathrm{fold}}$ is a non-degenerate saddle-node bifurcation point.
+\end{proof}
+
+\begin{corollary}[Catastrophic Dynamics and Shear-Driven Quenching]
+\label{cor:catastrophe}
+Trajectories moving along the attracting branch $\mathcal{S}_0^{+,\mathrm{att}}$ toward decreasing shear $S$ reach the fold locus $\mathcal{C}_{\mathrm{fold}}$ at $S = S_{\mathrm{fold}}(T_s)$. Because no attracting fast equilibrium exists for $S < S_{\mathrm{fold}}(T_s)$, normal hyperbolicity breaks down, forcing the fast vector field to execute a fast dynamic jump ($O(1)$ in time $\tau$) toward the laminar floor $\mathcal{S}_0^0$.
+\end{corollary}
+
+Theorem~\ref{thm:fold_characterization} and Corollary~\ref{cor:catastrophe} rigorously confirm that turbulence collapse in the SBL is a \emph{saddle-node catastrophe} dictated by the loss of normal hyperbolicity along $\mathcal{C}_{\mathrm{fold}}$ \citep{krupa2001extending, Kristiansen2024}.

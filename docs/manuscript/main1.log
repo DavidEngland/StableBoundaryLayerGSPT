@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.22)  31 JUL 2026 09:28
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.22)  31 JUL 2026 09:56
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**main
-(./main.tex
+**main1
+(./main1.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/local/texlive/2026/texmf-dist/tex/latex/base/article.cls
@@ -463,8 +463,9 @@ h' as default language. on input line 53.
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count340
 )
-(./main.aux (./Multi-Scale Governing Equations and Chart Regularization.aux))
-\openout1 = `main.aux'.
+(./main1.aux (./intro.aux)
+(./Multi-Scale Governing Equations and Chart Regularization.aux))
+\openout1 = `main1.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 53.
 LaTeX Font Info:    ... okay on input line 53.
@@ -606,61 +607,126 @@ enc}] [4
  (./Multi-Scale Governing Equations and Chart Regularization.tex
 [5
 
-] [6] [7]) [8] [9
+]
+Package microtype Info: Loading generic protrusion settings for font family
+(microtype)             `cmtt' (encoding: T1).
+(microtype)             For optimal results, create family-specific settings.
+(microtype)             See the microtype manual for details.
+ [6]
+
+! LaTeX Error: Environment definition undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.137 \begin{definition}
+                        [Critical Manifold $\mathcal{S}_0$]
+? 
+[7]
+
+! LaTeX Error: \begin{document} ended by \end{definition}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.143 \end{definition}
+                      
+? 
+
+! LaTeX Error: Environment definition undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.145 \begin{definition}
+                        [Fold Locus $\mathcal{C}_{\mathrm{fold}}$]
+? 
+
+! LaTeX Error: \begin{document} ended by \end{definition}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.150 \end{definition}
+                      
+? 
+
+! LaTeX Error: Environment definition undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.152 \begin{definition}
+                        [Observed Threshold Image $\Gamma_{\mathrm{fold}}$]
+? 
+
+! LaTeX Error: \begin{document} ended by \end{definition}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.157 \end{definition}
+                      
+? 
+) [8] [9
 
 
-] (./main.bbl [10
+] (./main1.bbl [10
 
-] [11]) [12] (./main.aux (./intro.aux)
+] [11]) [12] (./main1.aux (./intro.aux)
 (./Multi-Scale Governing Equations and Chart Regularization.aux))
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
  ) 
 Here is how much of TeX's memory you used:
- 18505 strings out of 467525
- 349067 string characters out of 5418982
- 777508 words of memory out of 5000000
- 46825 multiletter control sequences out of 15000+600000
- 662122 words of font info for 230 fonts, out of 8000000 for 9000
+ 18512 strings out of 467525
+ 349310 string characters out of 5418982
+ 782820 words of memory out of 5000000
+ 46839 multiletter control sequences out of 15000+600000
+ 664052 words of font info for 233 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,12n,80p,1175b,1215s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,13n,80p,1176b,1215s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
-></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb>
-</usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><
-/usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></
-usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></us
-r/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/
-local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb></usr/
-local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/lo
-cal/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/loca
-l/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/t
-exlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texl
-ive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive
-/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/
-2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/20
-26/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texliv
-e/2026/texmf-dist/fonts/type1/public/cm-super/sfbx0800.pfb></usr/local/texlive/
-2026/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/20
-26/texmf-dist/fonts/type1/public/cm-super/sfbx1095.pfb></usr/local/texlive/2026
-/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2026/t
-exmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/local/texlive/2026/tex
-mf-dist/fonts/type1/public/cm-super/sfbx1728.pfb></usr/local/texlive/2026/texmf
--dist/fonts/type1/public/cm-super/sfrm0800.pfb></usr/local/texlive/2026/texmf-d
-ist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2026/texmf-dis
-t/fonts/type1/public/cm-super/sfrm1095.pfb></usr/local/texlive/2026/texmf-dist/
-fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/texlive/2026/texmf-dist/fo
-nts/type1/public/cm-super/sfti1000.pfb></usr/local/texlive/2026/texmf-dist/font
-s/type1/public/cm-super/sfti1095.pfb>
-Output written on main.pdf (12 pages, 458813 bytes).
+></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb><
+/usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></
+usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></u
+sr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></us
+r/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/
+local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/lo
+cal/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb></usr/lo
+cal/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/loca
+l/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/
+texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/tex
+live/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texliv
+e/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2
+026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/20
+26/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2026
+/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/
+2026/texmf-dist/fonts/type1/public/cm-super/sfbx0800.pfb></usr/local/texlive/20
+26/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/2026
+/texmf-dist/fonts/type1/public/cm-super/sfbx1095.pfb></usr/local/texlive/2026/t
+exmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2026/tex
+mf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/local/texlive/2026/texmf
+-dist/fonts/type1/public/cm-super/sfbx1728.pfb></usr/local/texlive/2026/texmf-d
+ist/fonts/type1/public/cm-super/sfrm0800.pfb></usr/local/texlive/2026/texmf-dis
+t/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2026/texmf-dist/
+fonts/type1/public/cm-super/sfrm1095.pfb></usr/local/texlive/2026/texmf-dist/fo
+nts/type1/public/cm-super/sfrm1200.pfb></usr/local/texlive/2026/texmf-dist/font
+s/type1/public/cm-super/sfti1000.pfb></usr/local/texlive/2026/texmf-dist/fonts/
+type1/public/cm-super/sfti1095.pfb></usr/local/texlive/2026/texmf-dist/fonts/ty
+pe1/public/cm-super/sftt1095.pfb>
+Output written on main1.pdf (12 pages, 491179 bytes).
 PDF statistics:
- 363 PDF objects out of 1000 (max. 8388607)
- 291 compressed objects within 3 object streams
- 126 named destinations out of 1000 (max. 500000)
- 65537 words of extra memory for PDF output out of 74296 (max. 10000000)
+ 376 PDF objects out of 1000 (max. 8388607)
+ 300 compressed objects within 3 object streams
+ 114 named destinations out of 1000 (max. 500000)
+ 70145 words of extra memory for PDF output out of 74296 (max. 10000000)
 
