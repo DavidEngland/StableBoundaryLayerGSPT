@@ -1,0 +1,127 @@
+\begin{thebibliography}{xx}
+
+\harvarditem{Fenichel}{1979}{Fenichel1979}
+Fenichel, N.  \harvardyearleft 1979\harvardyearright , `Geometric singular
+  perturbation theory for ordinary differential equations', {\em Journal of
+  Differential Equations} {\bf 31}(1),~53--98.
+
+\harvarditem{Garratt}{1992}{Garratt1992}
+Garratt, J.~R.  \harvardyearleft 1992\harvardyearright , {\em The Atmospheric
+  Boundary Layer}, Cambridge University Press, Cambridge.
+
+\harvarditem[Grachev et~al.]{Grachev, Andreas, Fairall, Guest \harvardand\
+  Edson}{2013}{Grachev2013}
+Grachev, A.~A., Andreas, E.~L., Fairall, C.~W., Guest, P.~S. \harvardand\
+  Edson, J.~B.  \harvardyearleft 2013\harvardyearright , `The critical
+  {Richardson} number and turbulence in stably stratified boundary layers',
+  {\em Boundary-Layer Meteorology} {\bf 147}(1),~23--42.
+
+\harvarditem[Grachev et~al.]{Grachev, Fairall, Persson, Andreas \harvardand\
+  Guest}{2005}{Grachev2005}
+Grachev, A., Fairall, C., Persson, P., Andreas, E.~L. \harvardand\ Guest, P.
+  \harvardyearleft 2005\harvardyearright , `Stable boundary-layer scaling
+  regimes: {The SHEBA data}', {\em Boundary-Layer Meteorology} {\bf
+  116}(2),~201--235.
+
+\harvarditem[Krauskopf et~al.]{Krauskopf, Osinga \harvardand\
+  Galán-Vioque}{2007}{krauskopf2007continuation}
+Krauskopf, B., Osinga, H. \harvardand\ Galán-Vioque, J.  \harvardyearleft
+  2007\harvardyearright , {\em Numerical Continuation Methods for Dynamical
+  Systems: Path-Following and Boundary Value Problems}, Springer Science \&
+  Business Media, Dordrecht.
+
+\harvarditem{Kristiansen}{2023}{Kristiansen2024}
+Kristiansen, K.~U.  \harvardyearleft 2023\harvardyearright , A review of
+  multiple-time-scale dynamics: Fundamental phenomena and mathematical methods,
+  {\em in} `Mathematics Online First Collections', Springer Nature Switzerland,
+  Cham, pp.~309--363.
+
+\harvarditem{Krupa \harvardand\ Szmolyan}{2001}{krupa2001extending}
+Krupa, M. \harvardand\ Szmolyan, P.  \harvardyearleft 2001\harvardyearright ,
+  `Extending geometric singular perturbation theory to nonhyperbolic
+  points---{Fold} and canard points in two dimensions', {\em SIAM Journal on
+  Mathematical Analysis} {\bf 33}(2),~286--314.
+
+\harvarditem{Kuehn}{2015}{Kuehn2015}
+Kuehn, C.  \harvardyearleft 2015\harvardyearright , {\em Multiple Time Scale
+  Dynamics: An Introduction Specializing to Differential Equations}, Vol. 191
+  of {\em Applied Mathematical Sciences}, Springer International Publishing,
+  Cham, Switzerland.
+
+\harvarditem{Maesschalck \harvardand\ Desroches}{2013}{desroches2012canards}
+Maesschalck, P. \harvardand\ Desroches, M.  \harvardyearleft
+  2013\harvardyearright , `Numerical continuation techniques for planar
+  slow-fast systems', {\em SIAM Journal on Applied Dynamical Systems} {\bf
+  12}(3),~1159--1180.
+
+\harvarditem{Mahrt}{2014}{mahrt2014}
+Mahrt, L.  \harvardyearleft 2014\harvardyearright , `Stably stratified
+  atmospheric boundary layers', {\em Annual Review of Fluid Mechanics} {\bf
+  46}(1),~23--45.
+
+\harvarditem{Mellor \harvardand\ Yamada}{1982}{MellorYamada1982}
+Mellor, G.~L. \harvardand\ Yamada, T.  \harvardyearleft 1982\harvardyearright ,
+  `Development of a turbulence closure model for geophysical fluid problems',
+  {\em Reviews of Geophysics} {\bf 20}(4),~851--875.
+
+\harvarditem[Monahan et~al.]{Monahan, Rees, He \harvardand\
+  McFarlane}{2015}{Monahan2015}
+Monahan, A.~H., Rees, T., He, Y. \harvardand\ McFarlane, N.~A.
+  \harvardyearleft 2015\harvardyearright , `Multiple regimes of wind,
+  stratification, and turbulence in the stable boundary layer', {\em Journal of
+  the Atmospheric Sciences} {\bf 72}(8),~3178--3198.
+
+\harvarditem{Nieuwstadt}{1984}{nieuwstadt1984}
+Nieuwstadt, F. T.~M.  \harvardyearleft 1984\harvardyearright , `The turbulent
+  structure of the stable atmospheric boundary layer', {\em Journal of the
+  Atmospheric Sciences} {\bf 41}(14),~2202--2216.
+
+\harvarditem[Poulos et~al.]{Poulos, Blumen, Fritts, Lundquist, Sun, Burns,
+  Nappo, Banta, Newsom, Cuxart et~al.}{2002}{poulos2002cases99}
+Poulos, G., Blumen, W., Fritts, D., Lundquist, J., Sun, J., Burns, S., Nappo,
+  C., Banta, R., Newsom, R., Cuxart, J. et~al.  \harvardyearleft
+  2002\harvardyearright , `{CASES-99}: A comprehensive investigation of the
+  stable atmospheric boundary layer', {\em Bulletin of the American
+  Meteorological Society} {\bf 83}(4),~555--581.
+
+\harvarditem{Rackauckas \harvardand\
+  Nie}{2017}{Rackauckas2017DifferentialEquations}
+Rackauckas, C. \harvardand\ Nie, Q.  \harvardyearleft 2017\harvardyearright ,
+  `{DifferentialEquations.jl} -- {A} performant and feature-rich ecosystem for
+  solving differential equations in {Julia}', {\em Journal of Open Research
+  Software} {\bf 5}(1),~15.
+
+\harvarditem{Steinebach}{2023}{Steinebach2023Rodas5P}
+Steinebach, G.  \harvardyearleft 2023\harvardyearright , `Construction of
+  {Rosenbrock–Wanner} method {Rodas5P} and numerical benchmarks within the
+  {Julia Differential Equations} package', {\em BIT Numerical Mathematics} {\bf
+  63}(2),~27.
+
+\harvarditem{Stull}{1988}{Stull1988}
+Stull, R.~B.  \harvardyearleft 1988\harvardyearright , {\em An Introduction to
+  Boundary Layer Meteorology}, Kluwer Academic Publishers, Dordrecht.
+
+\harvarditem[Wiel et~al.]{Wiel, Moene, Jonker, Baas, Basu, Donda, Sun
+  \harvardand\ Holtslag}{2012}{VanDeWiel2012}
+Wiel, B. V.~D., Moene, A., Jonker, H., Baas, P., Basu, S., Donda, J. M. M.~J.,
+  Sun, J. \harvardand\ Holtslag, A.  \harvardyearleft 2012\harvardyearright ,
+  `The minimum wind speed for sustainable turbulence in the nocturnal boundary
+  layer', {\em Journal of the Atmospheric Sciences} {\bf 69}(11),~3116--3127.
+
+\harvarditem[Wiel et~al.]{Wiel, Vignon, Baas, Hooijdonk, Linden, Hooft,
+  Bosveld, Roode, Moene \harvardand\ Genthon}{2017}{vanDeWiel2017}
+Wiel, B. V.~D., Vignon, �., Baas, P., Hooijdonk, I. G. S.~v., Linden, S. V.~D.,
+  Hooft, J., Bosveld, F., Roode, S. R.~D., Moene, A. \harvardand\ Genthon, C.
+  \harvardyearleft 2017\harvardyearright , `Regime transitions in near-surface
+  temperature inversions: A conceptual model', {\em Journal of the Atmospheric
+  Sciences} {\bf 74}(4),~1057--1073.
+
+\harvarditem[Zilitinkevich et~al.]{Zilitinkevich, Elperin, Kleeorin
+  \harvardand\ Rogachevskii}{2007}{Zilitinkevich2007}
+Zilitinkevich, S., Elperin, T., Kleeorin, N. \harvardand\ Rogachevskii, I.
+  \harvardyearleft 2007\harvardyearright , `Energy- and flux-budget ({EFB})
+  turbulence closure model for stably stratified flows. {Part I}:
+  {Steady-state}, homogeneous regimes', {\em Boundary-Layer Meteorology} {\bf
+  125}(2),~167--192.
+
+\end{thebibliography}

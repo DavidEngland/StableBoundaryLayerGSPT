@@ -1,0 +1,96 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- Essential Packages ---
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{natbib}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+
+% --- Hyperlink Setup (Loaded last for package compatibility) ---
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% --- Custom Operators and Commands ---
+\DeclareMathOperator{\TKE}{e}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ddt}[1]{\frac{d#1}{dt}}
+\newcommand{\partialderiv}[2]{\frac{\partial #1}{\partial #2}}
+
+% --- Theorem, Definition, and Remark Environments ---
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+% --- Document Metadata ---
+\title{\textbf{Geometric Singular Perturbation Theory of the Stable Boundary Layer:\\ Invariant Fold Geometry, Relaxation Oscillations, and Model Closures}\\
+\large Part 1: Mathematical Foundations and Observational Resolution}
+
+\author{
+    \textbf{David E. England, PhD}\thanks{Corresponding author: \href{mailto:david.england@uah.edu}{david.england@uah.edu}} \\
+    \small Research Engineer III \\
+    \small University of Alabama in Huntsville (UAH)
+}
+
+\date{\small\itshape Manuscript prepared for SBL-GSPT collaborative research project stack. \\ Last compiled: \today}
+
+% ==============================================================================
+% DOCUMENT BODY
+% ==============================================================================
+
+\begin{document}
+
+\maketitle
+
+% --- Abstract ---
+\begin{abstract}
+Traditional turbulence closures in numerical weather prediction (NWP) models rely on single-valued stability functions $f(Ri)$ or $f(\zeta)$ that treat the nocturnal stable boundary layer (SBL) as a continuous, quasi-equilibrium process. Consequently, operational models struggle under clear, calm conditions—either overestimating turbulent mixing or triggering runaway radiative collapse. In this work, we present a mathematically rigorous dynamical systems framework for the SBL using Geometric Singular Perturbation Theory (GSPT).
+
+By formulating a five-dimensional fast-slow atmospheric boundary layer system $(\tilde e, q_\theta, S, T_s, T_g)$, we prove via Fenichel theory that the fast turbulent dynamics collapse onto a three-dimensional, normally hyperbolic critical manifold $\mathcal{S}_0^+$. Environmental boundary conditions define a three-dimensional site constraint manifold $\Sigma_{\mathrm{site}}$, which intersects $\mathcal{S}_0^+$ transversally ($\mathcal{S}_0^+ \pitchfork \Sigma_{\mathrm{site}}$) to form a smooth one-dimensional physical site trajectory $\gamma_{\mathrm{site}}$.
+
+We show that when surface radiative cooling exceeds the maximum turbulent heat transport capacity ($Q_{\mathrm{rad}} > H_{\max}$), normal hyperbolicity breaks down along a two-dimensional fold locus $\mathcal{C}_{\mathrm{fold}}$. This loss of stability drives the system into a singular four-phase relaxation cycle $\Gamma_{\mathrm{rel}}$, providing a unified topological origin for intermittent turbulent bursting, nocturnal low-level jet acceleration, and sudden regime transitions between Weakly Stable (wSBL), Very Stable (vSBL), and Intermittent (IBL) states.
+
+Finally, we translate these invariant geometric bounds into three operational model closures: an $H_{\max}$ sensible heat flux capacity limiter, a dynamic critical Richardson threshold $Ri_{\mathrm{fold}}(T_s, T_g)$ coupled to soil thermal inertia, and a dynamic scale height contraction formula $h_{\mathrm{eff}}$. This framework provides a path toward eliminating systemic nocturnal forecast biases in weather and climate models.
+\end{abstract}
+
+\noindent\textbf{Keywords:} Stable Boundary Layer, Geometric Singular Perturbation Theory, Invariant Manifolds, Fold Catastrophe, Intermittent Turbulence, Turbulence Closure Scheme
+
+\newpage
+
+% --- Main Body Sections ---
+\input{intro}
+\input{2}
+\input{3}
+\input{4}
+\input{5}
+\input{6}
+\input{ConclusionsRoadMap}
+
+% --- Appendices ---
+\appendix
+\input{A}
+\input{B}
+\input{C}
+
+% --- Bibliography ---
+\bibliographystyle{agsm}
+\bibliography{paper1_references}
+
+\end{document}

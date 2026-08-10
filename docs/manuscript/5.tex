@@ -1,0 +1,123 @@
+\section{Geometric Taxonomy of Regime Transitions and Nocturnal Lifecycles}
+\label{sec:taxonomy}
+
+Field observations of the nocturnal stable boundary layer (SBL) traditionally classify atmospheric states into three empirical regimes: the Weakly Stable Boundary Layer (wSBL), the Very Stable Boundary Layer (vSBL), and the Intermittent Boundary Layer (IBL) \citep{Mahrt1998, Acevedo2006, Sun2012}. However, traditional bulk Richardson number classifications fail to explain why nocturnal transitions between these states occur as abrupt, non-linear bifurcations rather than smooth continuous adjustments \citep{Banta2007}.
+
+In this section, we use the singular perturbation framework established in Sections~2--4 to replace heuristic classifications with a rigorous geometric taxonomy. We demonstrate that nocturnal boundary-layer regimes correspond to distinct topological configurations between physical site trajectories $\gamma_{\mathrm{site}}$ and the critical manifold sheets $(\mathcal{S}_0^+, \mathcal{S}_0^0)$, and we formalize the four-phase fast-slow hysteresis cycle governing turbulent collapse and recovery.
+
+\subsection{Geometric Classification of Nocturnal Regimes}
+
+Recall from Section~4 that the site trajectory $\gamma_{\mathrm{site}} = \mathcal{S}_0 \cap \Sigma_{\mathrm{site}}$ is a 1-dimensional curve embedded in state space $\Omega_0 \subset \mathbb{R}^5$. The geometric classification of nocturnal boundary layers depends entirely on whether $\gamma_{\mathrm{site}}$ intersects the fold surface $\mathcal{C}_{\mathrm{fold}}$ under given geostrophic shear $S_{\mathrm{ext}}$ and surface cooling forcing $Q_{\mathrm{rad}}$ \citep{VanDeWiel2007, VanDeWiel2012}.
+
+\begin{definition}[Geometric Taxonomy of SBL Regimes]
+Let $\mathcal{S}_0^{+,\mathrm{att}}$ denote the attracting turbulent sheet, $\mathcal{C}_{\mathrm{fold}}$ the 2D fold locus, and $\mathcal{S}_0^0$ the laminar extinction sheet. Nocturnal regimes are topologically classified as follows:
+\begin{enumerate}
+    \item \textbf{Weakly Stable Regime (wSBL):} The site constraint manifold $\Sigma_{\mathrm{site}}$ intersects $\mathcal{S}_0^{+,\mathrm{att}}$ strictly away from $\mathcal{C}_{\mathrm{fold}}$. The physical trajectory $\gamma_{\mathrm{site}}$ possesses a globally attracting stationary point $\mathbf{x}^* \in \mathcal{S}_0^{+,\mathrm{att}}$. Turbulence remains continuous and well-behaved throughout the night.
+
+    \item \textbf{Very Stable / Radiative Collapse Regime (vSBL):} Radiative cooling exceeds maximum turbulent heat flux capacity ($Q_{\mathrm{rad}} > H_{\max}(S)$). The trajectory $\gamma_{\mathrm{site}}$ intersects $\mathcal{C}_{\mathrm{fold}}$ and undergoes a fast jump across the state space to the laminar extinction sheet $\mathcal{S}_0^0$, leading to runaway surface cooling and near-surface wind decoupling.
+
+    \item \textbf{Intermittent / Bursting Regime (IBL):} The site constraint manifold $\Sigma_{\mathrm{site}}$ contains no stable equilibria on either $\mathcal{S}_0^+$ or $\mathcal{S}_0^0$. The system forms a fast-slow relaxation limit cycle $\Gamma_{\mathrm{rel}}$, causing periodic collapse and explosive re-ignition of turbulence \citep{Acevedo2006, VanHooijdonk2015}.
+\end{enumerate}
+\end{definition}
+
+\subsection{The Four-Phase Fast-Slow Hysteresis Cycle}
+
+When background shear is insufficient to maintain continuous turbulence ($Q_{\mathrm{rad}} > H_{\max}$), the nocturnal SBL executes a singular hysteresis loop $\Gamma_{\mathrm{rel}}$ governed by alternating fast and slow dynamics.
+
+\begin{theorem}[Four-Phase Nocturnal Relaxation Oscillation]
+\label{thm:relaxation_cycle}
+In the singular limit $\epsilon_1 \to 0^+$, the intermittent nocturnal trajectory $\Gamma_{\mathrm{rel}}$ consists of four distinct topological phases alternating between fast layer problems ($\tau = t / \epsilon_1$) and slow reduced vector fields ($t$):
+\begin{align}
+\text{Phase 1 (Slow Drift):} &\quad \mathbf{x}(t) \in \mathcal{S}_0^{+,\mathrm{att}}, \quad \det J_{\mathrm{fast}} > 0, \quad \frac{d\mathbf{x}}{dt} = \mathbf{F}_{\mathrm{slow}}\vert_{\mathcal{S}_0^+} \\[4pt]
+\text{Phase 2 (Fast Collapse):} &\quad \mathbf{x}(\tau) \text{ jumps from } \mathcal{C}_{\mathrm{fold}} \text{ to } \mathcal{S}_0^0, \quad \frac{d\mathbf{y}}{d\tau} = \mathbf{F}_{\mathrm{fast}}(\mathbf{y}; \mathbf{x}_{\mathrm{slow}}) \\[4pt]
+\text{Phase 3 (Slow Laminar Accumulation):} &\quad \mathbf{x}(t) \in \mathcal{S}_0^0, \quad \tilde e = 0, \quad \frac{d\mathbf{x}}{dt} = \mathbf{F}_{\mathrm{slow}}\vert_{\mathcal{S}_0^0} \\[4pt]
+\text{Phase 4 (Fast Turbulent Bursting):} &\quad \mathbf{x}(\tau) \text{ jumps from } \mathbf{x}_{\mathrm{ignite}} \in \mathcal{S}_0^0 \text{ to } \mathcal{S}_0^{+,\mathrm{att}}
+\end{align}
+\end{theorem}
+
+\begin{proof}[Proof Sketch]
+We trace the four phases along the desingularized flow chart:
+\paragraph{Phase 1: Slow Quasi-Equilibrium Adjustment.}
+The system begins on the attracting turbulent sheet $\mathcal{S}_0^{+,\mathrm{att}}$. As surface radiative cooling $Q_{\mathrm{rad}}$ lowers skin temperature $T_s$, thermal stratification $\theta_z(T_s)$ increases. The state drifts slowly along $\mathcal{S}_0^{+,\mathrm{att}}$ toward lower TKE values $\tilde e$ according to the slow reduced vector field $\mathbf{F}_{\mathrm{slow}}\vert_{\mathcal{S}_0^+}$.
+
+\paragraph{Phase 2: Dynamic Loss of Hyperbolicity and Fast Collapse.}
+At time $t_{\mathrm{fold}}$, the slow trajectory reaches the fold locus $\mathcal{C}_{\mathrm{fold}}$ where $\det J_{\mathrm{fast}}(\mathbf{x}_{\mathrm{fold}}) = 0$. Because $\mathcal{S}_0^+$ fails to be normally hyperbolic at $\mathcal{C}_{\mathrm{fold}}$, slow flow cannot be sustained. On the fast time scale $\tau = t / \epsilon_1$, the fast subsystem vector field becomes non-zero:
+\begin{equation}
+\frac{d\tilde e}{d\tau} = -\tilde e^2 + c_m \ell^2 S^2 + \frac{g\ell}{\theta_0}q_\theta < 0.
+\end{equation}
+The fast trajectory jumps along heteroclinic orbits of the fast subsystem, collapsing TKE ($\tilde e \to 0$) and heat flux ($q_\theta \to 0$) on a time scale of minutes ($O(\epsilon_1)$), arriving at the laminar extinction sheet $\mathcal{S}_0^0 = \{(\tilde e, q_\theta) = (0,0)\}$.
+
+\paragraph{Phase 3: Laminar Cooling and Shear Building.}
+On $\mathcal{S}_0^0$, turbulent heat transport is zero ($H = 0$). Surface radiative cooling accelerates, strongly suppressing $T_s$ while the decoupled geostrophic wind aloft accelerates due to the absence of turbulent drag, building low-level jet shear $S(t)$ according to:
+\begin{equation}
+\frac{dS}{dt} = f_c (U_g - U_{\mathrm{sbl}}) > 0,
+\end{equation}
+where $f_c$ is the Coriolis parameter and $U_g$ is geostrophic wind speed \citep{Blackadar1957, VanDeWiel2010}.
+
+\paragraph{Phase 4: Critical Shear Ignition and Fast Re-ignition.}
+Shear accumulates on $\mathcal{S}_0^0$ until reaching the inflection boundary $\mathbf{x}_{\mathrm{ignite}}$, where hydrodynamic shear instability is re-triggered ($S > S_{\mathrm{ignite}}$). The system executes a fast jump back to the attracting turbulent sheet $\mathcal{S}_0^{+,\mathrm{att}}$, generating a turbulent burst that rapidly warms the surface and restores downward heat flux, completing the closed limit cycle $\Gamma_{\mathrm{rel}}$.
+\end{proof}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[x=1.1cm, y=1.1cm, >=Stealth]
+
+    % Background Axes
+    \draw[->, thick, gray] (0,0) -- (10.5,0) node[right, font=\small] {Wind Shear $S$};
+    \draw[->, thick, gray] (0,0) -- (0,6.0) node[above, font=\small] {Sensible Heat Flux $|H|$};
+
+    % Turbulent Critical Sheet S_0^+
+    \draw[top color=blue!25, bottom color=blue!5, opacity=0.7]
+        (1.5,1.0) to[out=20,in=190] (9.5,4.8) -- (9.5,5.5) to[out=190,in=20] (1.5,1.7) -- cycle;
+    \node[blue!80!black, font=\small\bfseries] at (6.5,4.5) {Attracting Turbulent Sheet $\mathcal{S}_0^{+,\mathrm{att}}$};
+
+    % Fold Locus C_fold (Red boundary curve)
+    \draw[red, ultra thick] (1.5,1.0) to[out=20,in=190] (9.5,4.8);
+    \node[red!90!black, font=\small\bfseries, anchor=north west] at (5.0,2.2) {Fold Locus $\mathcal{C}_{\mathrm{fold}}$ ($H_{\max}(S)$)};
+
+    % Laminar Extinction Sheet S_0^0 (Along S-axis)
+    \draw[black!80, line width=2.5pt] (0.5,0) -- (9.5,0);
+    \node[black, font=\small\bfseries, anchor=north] at (5.0,-0.2) {Laminar Extinction Sheet $\mathcal{S}_0^0$ ($H = 0$)};
+
+    % --- RELAXATION LIMIT CYCLE \Gamma_{rel} ---
+    % Phase 1: Slow Drift along S_0^+ (Blue arrow)
+    \draw[blue!90!black, line width=1.8pt, ->] (8.5,4.2) -- (4.2,2.3);
+    \node[blue!90!black, font=\xs, font=\bfseries, above, rotate=22] at (6.5,3.3) {Phase 1: Slow Thermal Drift};
+
+    % Phase 2: Fast Collapse (Red double arrow down)
+    \draw[red!80!black, line width=2pt, ->>] (3.8,2.1) -- (3.8,0.1);
+    \node[red!80!black, font=\xs, font=\bfseries, right] at (3.9,1.1) {Phase 2: Fast Collapse ($\tau$)};
+    \filldraw[red] (3.8,2.1) circle (2.5pt) node[anchor=south east, font=\tiny\bfseries] {Fold Drop};
+
+    % Phase 3: Slow Shear Build along S_0^0 (Black/Orange arrow)
+    \draw[orange!90!black, line width=1.8pt, ->] (3.8,0) -- (8.2,0);
+    \node[orange!90!black, font=\xs, font=\bfseries, below] at (6.0,-0.5) {Phase 3: Slow Shear Build ($S \uparrow$)};
+
+    % Phase 4: Fast Bursting (Green double arrow up)
+    \draw[green!60!black, line width=2pt, ->>] (8.2,0.1) -- (8.2,4.0);
+    \node[green!60!black, font=\xs, font=\bfseries, left] at (8.1,2.0) {Phase 4: Fast Burst ($\tau$)};
+    \filldraw[green!50!black] (8.2,0) circle (2.5pt) node[anchor=north west, font=\tiny\bfseries] {Ignition $S_{\mathrm{ignite}}$};
+
+\end{tikzpicture}
+\caption{\textbf{Geometric Structure of the Four-Phase Nocturnal Relaxation Oscillation $\Gamma_{\mathrm{rel}}$.} The cycle alternates between slow drift along quasi-equilibrium sheets and fast transitions across un-stratified layer problems. Phase 1: Slow thermal drift along the attracting turbulent sheet $\mathcal{S}_0^{+,\mathrm{att}}$ toward lower heat capacity. Phase 2: Loss of hyperbolicity at $\mathcal{C}_{\mathrm{fold}}$ triggers a fast jump ($\tau$) down to the laminar sheet $\mathcal{S}_0^0$. Phase 3: In the laminar state, zero turbulent drag allows geostrophic acceleration to build shear $S$. Phase 4: Reaching critical shear $S_{\mathrm{ignite}}$ triggers a fast turbulent burst ($\tau$) back to $\mathcal{S}_0^{+,\mathrm{att}}$.}
+\label{fig:relaxation_cycle}
+\end{figure}
+
+\subsection{Bifurcation Thresholds and Predictability Horizons}
+
+The transition between continuous turbulence (wSBL) and intermittent bursting (IBL) or runaway collapse (vSBL) is controlled by the non-dimensional ratio of radiative cooling to shear generation capacity:
+\begin{equation}
+\mathcal{R}_{\mathrm{cooling}} = \frac{Q_{\mathrm{rad}}}{H_{\max}(S_{\mathrm{ext}})} = \frac{3 g \ell \, Q_{\mathrm{rad}}}{2 \rho c_p \theta_0 c_m \ell^2 S_{\mathrm{ext}}^2}.
+\label{eq:cooling_ratio}
+\end{equation}
+
+\begin{theorem}[Nocturnal Regime Bifurcation Criteria]
+\label{thm:bifurcation_criteria}
+The topological structure of nocturnal state space undergoes global bifurcations as a function of $\mathcal{R}_{\mathrm{cooling}}$:
+\begin{itemize}
+    \item \textbf{$\mathcal{R}_{\mathrm{cooling}} < 1$ (Monostable wSBL):} A unique stable fixed point $\mathbf{x}^* \in \mathcal{S}_0^{+,\mathrm{att}}$ exists. The nocturnal SBL remains continuously turbulent.
+    \item \textbf{$\mathcal{R}_{\mathrm{cooling}} \ge 1$ (Hysteresis / Oscillatory Regime):} The fixed point on $\mathcal{S}_0^+$ vanishes via a saddle-node bifurcation of manifolds at $\mathcal{C}_{\mathrm{fold}}$. If subsurface heat flux $G = \frac{k_g}{d_g}(T_g - T_s)$ satisfies $G + H_{\max} < Q_{\mathrm{rad}}$, the system undergoes permanent radiative collapse to the vSBL regime. If geostrophic shear rebuilding is sufficiently rapid, the system enters a stable limit cycle $\Gamma_{\mathrm{rel}}$ (IBL regime).
+\end{itemize}
+\end{theorem}
+
+Theorem~\ref{thm:bifurcation_criteria} explains why classical boundary-layer schemes in numerical weather prediction models suffer from severe forecast failures under clear, calm nocturnal conditions \citep{Holtslag2013}. Traditional schemes attempt to force a continuous functional relationship $H(Ri)$ across regions where the underlying physical invariant manifold $\mathcal{S}_0^+$ contains folds and fast jump discontinuities, causing models to either underpredict nocturnal cooling or succumb to unphysical runaway collapse.

@@ -1,0 +1,106 @@
+\section*{Appendix B: Derivation of the $H_{\max}$ Heat-Flux Capacity Formula}
+\label{app:hmax_derivation}
+
+In this appendix, we prove that the maximum sustainable downward sensible heat flux $H_{\max}(S)$ along the attracting turbulent critical manifold $\mathcal{S}_0^+$ is attained precisely at the fold locus $\mathcal{C}_{\mathrm{fold}}$, and derive its explicit dependence on vertical wind shear $S$ and turbulence closure parameters \citep{VanDeWiel2007, VanDeWiel2012}.
+
+\subsection*{B.1 Mathematical Formulation on the Critical Manifold}
+
+The kinematic vertical sensible heat flux $q_\theta = \overline{w'\theta'}$ measures the turbulent transport of heat. The physical downward sensible heat flux $H$ (in $\mathrm{W\,m^{-2}}$) is defined as:
+\begin{equation}
+H = \rho c_p q_\theta,
+\label{eq:H_def_app}
+\end{equation}
+where $\rho$ is air density and $c_p$ is specific heat capacity at constant pressure. Under stable nocturnal cooling, heat is extracted from the boundary layer ($q_\theta < 0$, $H < 0$). We consider the downward heat flux magnitude $|H| = -\rho c_p q_\theta > 0$.
+
+From Appendix~A, the fast subsystem equilibrium conditions on the critical manifold $\mathcal{S}_0^+$ are:
+\begin{align}
+c_m \ell^2 S^2 + \frac{g \ell}{\theta_0} q_\theta - \tilde e^2 &= 0, \label{eq:appB_tke} \\[4pt]
+q_\theta + \frac{c_w \ell}{C_\theta} \theta_z(T_s) \tilde e &= 0. \label{eq:appB_flux}
+\end{align}
+
+Rearranging \eqref{eq:appB_tke} expresses $q_\theta$ explicitly in terms of TKE $\tilde e$ and shear $S$:
+\begin{equation}
+q_\theta^*(\tilde e; S) = \frac{\theta_0}{g \ell} \left( \tilde e^2 - c_m \ell^2 S^2 \right).
+\label{eq:q_theta_of_e}
+\end{equation}
+
+Taking the magnitude $|H| = -\rho c_p q_\theta^*$ yields:
+\begin{equation}
+|H(\tilde e; S)| = \rho c_p \frac{\theta_0}{g \ell} \left( c_m \ell^2 S^2 - \tilde e^2 \right).
+\label{eq:H_mag_e}
+\end{equation}
+
+\subsection*{B.2 Monotonicity and Boundary Optimization}
+
+To find the maximum sustainable heat flux for a given background wind shear $S$, we differentiate $|H(\tilde e; S)|$ with respect to the fast state variable $\tilde e$:
+\begin{equation}
+\frac{\partial |H|}{\partial \tilde e} = -2 \rho c_p \frac{\theta_0}{g \ell} \tilde e.
+\label{eq:dH_de_app}
+\end{equation}
+
+Because TKE is strictly positive on the turbulent manifold ($\tilde e > 0$), equation \eqref{eq:dH_de_app} establishes that $|H(\tilde e; S)|$ is a \emph{strictly decreasing} function of $\tilde e$. 
+
+The attracting turbulent critical manifold $\mathcal{S}_0^{+,\mathrm{att}}$ is defined by the normal hyperbolicity condition $\det J_{\mathrm{fast}} > 0$. From Appendix~A, this restricts the state domain to:
+\begin{equation}
+\tilde e \ge \tilde e_{\mathrm{fold}}(S).
+\end{equation}
+
+Since $|H|$ decreases monotonically with $\tilde e$, its supremum on the closed domain $\mathcal{S}_0^{+,\mathrm{att}}$ is uniquely attained at the lower boundary $\tilde e = \tilde e_{\mathrm{fold}}(S)$, which corresponds to the fold locus $\mathcal{C}_{\mathrm{fold}}$:
+\begin{equation}
+H_{\max}(S) \equiv \max_{\mathbf{x} \in \mathcal{S}_0^{+,\mathrm{att}}} |H(\mathbf{x}; S)| = |H(\tilde e_{\mathrm{fold}}(S); S)|.
+\label{eq:Hmax_boundary_cond}
+\end{equation}
+
+\subsection*{B.3 Exact Derivation of $H_{\max}(S)$}
+
+From Appendix~A, the fold locus condition $\det J_{\mathrm{fast}} = 0$ requires:
+\begin{equation}
+2\tilde e_{\mathrm{fold}} = \frac{g c_w \ell^2}{\theta_0 C_\theta} \theta_z(T_s).
+\label{eq:fold_cond_appB}
+\end{equation}
+
+Multiplying \eqref{eq:fold_cond_appB} by $\tilde e_{\mathrm{fold}}$ and substituting into \eqref{eq:appB_flux} gives the relation at the fold:
+\begin{equation}
+q_{\theta,\mathrm{fold}} = -\frac{c_w \ell}{C_\theta} \theta_z(T_s) \tilde e_{\mathrm{fold}} = -\frac{2 \theta_0}{g \ell} \tilde e_{\mathrm{fold}}^2.
+\label{eq:q_fold_rel}
+\end{equation}
+
+Substituting $q_{\theta,\mathrm{fold}}$ into the TKE equilibrium equation \eqref{eq:appB_tke} yields:
+\begin{equation}
+c_m \ell^2 S^2 + \frac{g \ell}{\theta_0} \left( -\frac{2 \theta_0}{g \ell} \tilde e_{\mathrm{fold}}^2 \right) - \tilde e_{\mathrm{fold}}^2 = 0 \implies 3 \tilde e_{\mathrm{fold}}^2 = c_m \ell^2 S^2.
+\end{equation}
+
+Solving for the fold TKE as a function of shear $S$:
+\begin{equation}
+\tilde e_{\mathrm{fold}}(S) = \sqrt{\frac{c_m}{3}} \ell S.
+\label{eq:e_fold_of_S}
+\end{equation}
+
+Substituting \eqref{eq:e_fold_of_S} back into \eqref{eq:q_fold_rel} yields the maximum kinematic heat flux magnitude:
+\begin{equation}
+|q_{\theta,\mathrm{fold}}(S)| = \frac{2 \theta_0}{g \ell} \left( \frac{c_m}{3} \ell^2 S^2 \right) = \frac{2}{3} \frac{\theta_0 c_m \ell}{g} S^2.
+\label{eq:q_max_formula}
+\end{equation}
+
+Finally, multiplying \eqref{eq:q_max_formula} by $\rho c_p$ gives the exact, closed-form formula for the maximum sustainable sensible heat flux capacity:
+\begin{equation}
+\boxed{
+H_{\max}(S) = \frac{2}{3} \rho c_p \frac{\theta_0 c_m \ell}{g} S^2
+}
+\label{eq:H_max_final_app}
+\end{equation}
+
+\subsection*{B.4 Nondimensionalization and Physical Criteria for Radiative Collapse}
+
+Introducing the characteristic velocity scale $u_0$ and non-dimensional shear $\hat S = S \ell / u_0$, formula \eqref{eq:H_max_final_app} can be written in non-dimensional grouping as:
+\begin{equation}
+H_{\max}(\hat S) = \mathcal{B}_{\mathrm{turb}} \left( \frac{\rho c_p \theta_0 u_0^2}{g \ell} \right) \hat S^2,
+\label{eq:H_max_nondim}
+\end{equation}
+where $\mathcal{B}_{\mathrm{turb}} \equiv \frac{2}{3} c_m$ is a dimensionless closure constant.
+
+Equation \eqref{eq:H_max_final_app} provides a precise physical threshold for nocturnal turbulence collapse:
+\begin{itemize}
+    \item \textbf{Sustainable Equilibrium ($Q_{\mathrm{rad}} \le H_{\max}(S)$):} When net radiative heat loss $Q_{\mathrm{rad}}$ at the surface is less than or equal to $H_{\max}(S)$, the surface energy balance manifold $\Sigma_{\mathrm{site}}$ intersects the attracting turbulent sheet $\mathcal{S}_0^{+,\mathrm{att}}$, sustaining continuous turbulence.
+    \item \textbf{Radiative Catastrophe ($Q_{\mathrm{rad}} > H_{\max}(S)$):} When radiative cooling exceeds $H_{\max}(S)$, no equilibrium exists on $\mathcal{S}_0^+$. The state trajectory is driven across $\mathcal{C}_{\mathrm{fold}}$, undergoing rapid transition toward the laminar extinction manifold $\mathcal{S}_0^0$ \citep{VanDeWiel2012, VanHooijdonk2015}.
+\end{itemize}

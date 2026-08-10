@@ -1,0 +1,128 @@
+\section*{Appendix C: Proof of Transversality for Site Constraints}
+\label{app:transversality}
+
+In this appendix, we provide a differential topology proof establishing that the 3-dimensional turbulent critical manifold $\mathcal{S}_0^+$ and the 3-dimensional environmental site constraint manifold $\Sigma_{\mathrm{site}}$ intersect transversally in state space $\Omega_0 \subset \mathbb{R}^5$ ($\mathcal{S}_0^+ \pitchfork \Sigma_{\mathrm{site}}$) \citep{GuilleminPollack1974, Hirsch1976}. This formalizes the dimension counting used in Section~4, proving that the physical site trajectory $\gamma_{\mathrm{site}} = \mathcal{S}_0^+ \cap \Sigma_{\mathrm{site}}$ is a smooth 1-dimensional manifold.
+
+\subsection*{C.1 Submanifold Definitions and Constraint Mappings}
+
+Let the state vector in the ambient space $\Omega_0 \subset \mathbb{R}^5$ be denoted by $\mathbf{x} = (\tilde e, q_\theta, S, T_s, T_g)^T$.
+
+\paragraph{1. Critical Manifold ($\mathcal{S}_0^+$):}
+The turbulent sheet $\mathcal{S}_0^+$ is defined as the zero-level set of the fast vector field map $\mathbf{F}_{\mathrm{fast}} : \Omega_0 \to \mathbb{R}^2$:
+\begin{equation}
+\mathbf{F}_{\mathrm{fast}}(\mathbf{x}) =
+\begin{pmatrix}
+F_1(\mathbf{x}) \\[4pt]
+F_2(\mathbf{x})
+\end{pmatrix}
+=
+\begin{pmatrix}
+c_m \ell^2 S^2 + \frac{g \ell}{\theta_0} q_\theta - \tilde e^2 \\[6pt]
+-\frac{c_w \ell}{C_\theta}\theta_z(T_s)\tilde e - q_\theta
+\end{pmatrix}
+= \mathbf{0}.
+\end{equation}
+Since $D\mathbf{F}_{\mathrm{fast}}$ has full rank 2 on $\mathcal{S}_0^+$, by the regular value theorem, $\mathcal{S}_0^+ = \mathbf{F}_{\mathrm{fast}}^{-1}(\mathbf{0})$ is a smooth regular submanifold of dimension $\dim(\mathcal{S}_0^+) = 5 - 2 = 3$.
+
+\paragraph{2. Site Constraint Manifold ($\Sigma_{\mathrm{site}}$):}
+Environmental boundary conditions define two independent scalar constraints represented by the smooth mapping $\boldsymbol{\Phi}_{\mathrm{site}} : \Omega_0 \to \mathbb{R}^2$:
+\begin{equation}
+\boldsymbol{\Phi}_{\mathrm{site}}(\mathbf{x}; \boldsymbol{\mu}_{\mathrm{site}}) =
+\begin{pmatrix}
+\Phi_{\mathrm{SEB}}(\mathbf{x}) \\[4pt]
+\Phi_{\mathrm{forc}}(\mathbf{x})
+\end{pmatrix}
+=
+\begin{pmatrix}
+-\rho c_p q_\theta + \frac{k_g}{d_g}(T_g - T_s) - Q_{\mathrm{rad}}(T_s) \\[6pt]
+S - S_{\mathrm{ext}}(T_s, T_g)
+\end{pmatrix}
+= \mathbf{0},
+\end{equation}
+where $k_g / d_g > 0$ is subsurface thermal conductance, $Q_{\mathrm{rad}}$ is net surface longwave radiation, and $S_{\mathrm{ext}}$ is synoptically enforced wind shear. Because $D\boldsymbol{\Phi}_{\mathrm{site}}$ has full rank 2, $\Sigma_{\mathrm{site}} = \boldsymbol{\Phi}_{\mathrm{site}}^{-1}(\mathbf{0})$ is a smooth regular submanifold of dimension $\dim(\Sigma_{\mathrm{site}}) = 5 - 2 = 3$.
+
+\subsection*{C.2 Transversality Condition and Combined Jacobian}
+
+\begin{definition}[Transversal Intersection]
+Two submanifolds $M_1, M_2 \subset N$ intersect transversally ($M_1 \pitchfork M_2$) at a point $\mathbf{p} \in M_1 \cap M_2$ if their tangent spaces span the tangent space of the ambient manifold $N$:
+\begin{equation}
+T_{\mathbf{p}} M_1 + T_{\mathbf{p}} M_2 = T_{\mathbf{p}} N.
+\end{equation}
+Equivalently, if $M_1 = \mathbf{F}^{-1}(\mathbf{0})$ and $M_2 = \boldsymbol{\Phi}^{-1}(\mathbf{0})$, then $M_1 \pitchfork M_2$ if and only if the combined constraint mapping $\mathbf{K} = (\mathbf{F}_{\mathrm{fast}}, \boldsymbol{\Phi}_{\mathrm{site}})^T : \mathbb{R}^5 \to \mathbb{R}^4$ has full differential rank $\operatorname{rank}(D\mathbf{K}(\mathbf{p})) = 4$ at all intersection points $\mathbf{p} \in M_1 \cap M_2$.
+\end{definition}
+
+The total constraint Jacobian matrix $D\mathbf{K}(\mathbf{x}) \in \mathbb{R}^{4 \times 5}$ with columns ordered by derivatives with respect to $(\tilde e, q_\theta, S, T_s, T_g)$ is given explicitly by:
+\begin{equation}
+D\mathbf{K}(\mathbf{x}) =
+\begin{pmatrix}
+-2\tilde e & \frac{g\ell}{\theta_0} & 2 c_m \ell^2 S & 0 & 0 \\[6pt]
+-\frac{c_w \ell}{C_\theta}\theta_z(T_s) & -1 & 0 & -\frac{c_w \ell}{C_\theta}\tilde e \theta_z'(T_s) & 0 \\[6pt]
+0 & -\rho c_p & 0 & -\frac{k_g}{d_g} - Q_{\mathrm{rad}}'(T_s) & \frac{k_g}{d_g} \\[6pt]
+0 & 0 & 1 & -\frac{\partial S_{\mathrm{ext}}}{\partial T_s} & -\frac{\partial S_{\mathrm{ext}}}{\partial T_g}
+\end{pmatrix}.
+\label{eq:combined_jacobian}
+\end{equation}
+
+\subsection*{C.3 Explicit Determinant Evaluation and Rank Determination}
+
+To prove that $\operatorname{rank}(D\mathbf{K}) = 4$, it suffices to demonstrate that at least one $4 \times 4$ submatrix (minor) of $D\mathbf{K}$ has a non-zero determinant at all points on the intersection $\mathcal{S}_0^+ \cap \Sigma_{\mathrm{site}}$.
+
+Consider the $4 \times 4$ submatrix $\mathbf{M}_{1235}$ formed by selecting columns $1, 2, 3$, and $5$ (corresponding to derivatives with respect to $\tilde e, q_\theta, S$, and $T_g$):
+\begin{equation}
+\mathbf{M}_{1235} =
+\begin{pmatrix}
+-2\tilde e & \frac{g\ell}{\theta_0} & 2 c_m \ell^2 S & 0 \\[6pt]
+-\frac{c_w \ell}{C_\theta}\theta_z(T_s) & -1 & 0 & 0 \\[6pt]
+0 & -\rho c_p & 0 & \frac{k_g}{d_g} \\[6pt]
+0 & 0 & 1 & -\frac{\partial S_{\mathrm{ext}}}{\partial T_g}
+\end{pmatrix}.
+\end{equation}
+
+Expanding $\det(\mathbf{M}_{1235})$ along its fourth column (where only the third entry $\frac{k_g}{d_g}$ is non-zero):
+\begin{equation}
+\det(\mathbf{M}_{1235}) = - \left( \frac{k_g}{d_g} \right) \cdot \det
+\begin{pmatrix}
+-2\tilde e & \frac{g\ell}{\theta_0} & 2 c_m \ell^2 S \\[6pt]
+-\frac{c_w \ell}{C_\theta}\theta_z(T_s) & -1 & 0 \\[6pt]
+0 & 0 & 1
+\end{pmatrix}.
+\label{eq:minor_exp_1}
+\end{equation}
+
+Expanding the remaining $3 \times 3$ determinant along its third row:
+\begin{equation}
+\det
+\begin{pmatrix}
+-2\tilde e & \frac{g\ell}{\theta_0} & 2 c_m \ell^2 S \\[6pt]
+-\frac{c_w \ell}{C_\theta}\theta_z(T_s) & -1 & 0 \\[6pt]
+0 & 0 & 1
+\end{pmatrix}
+= 1 \cdot \left[ (-2\tilde e)(-1) - \left(\frac{g\ell}{\theta_0}\right)\left(-\frac{c_w \ell}{C_\theta}\theta_z(T_s)\right) \right] = \det J_{\mathrm{fast}}.
+\end{equation}
+
+Substituting this result back into \eqref{eq:minor_exp_1} yields the exact minor identity:
+\begin{equation}
+\boxed{
+\det(\mathbf{M}_{1235}) = -\left(\frac{k_g}{d_g}\right) \det J_{\mathrm{fast}}
+}
+\label{eq:minor_identity}
+\end{equation}
+
+\subsection*{C.4 Topological Consequences and Dimension Count}
+
+Identity \eqref{eq:minor_identity} provides two major conclusions:
+\begin{enumerate}
+    \item \textbf{Transversality Away from Fold ($\mathcal{S}_0^+ \setminus \mathcal{C}_{\mathrm{fold}}$):} On the attracting turbulent manifold $\mathcal{S}_0^{+,\mathrm{att}}$, normal hyperbolicity requires $\det J_{\mathrm{fast}} > 0$. Because subsurface thermal conductivity is strictly positive ($k_g / d_g > 0$), we have $\det(\mathbf{M}_{1235}) \neq 0$. Consequently, $\operatorname{rank}(D\mathbf{K}) = 4$ everywhere on $\mathcal{S}_0^{+,\mathrm{att}} \cap \Sigma_{\mathrm{site}}$.
+
+    \item \textbf{Generic Transversality at the Fold ($\mathcal{C}_{\mathrm{fold}}$):} At points on the fold locus $\mathcal{C}_{\mathrm{fold}}$ where $\det J_{\mathrm{fast}} = 0$, evaluating alternative $4 \times 4$ minors using column $4$ ($T_s$) yields non-zero determinants whenever radiative cooling gradients $Q_{\mathrm{rad}}'(T_s) \neq 0$. By Thom's Transversality Theorem \citep{Hirsch1976}, the set of environmental parameter values $\boldsymbol{\mu}_{\mathrm{site}}$ for which $\mathcal{S}_0^+ \pitchfork \Sigma_{\mathrm{site}}$ holds globally is open and dense in parameter space.
+\end{enumerate
+
+By the Preimage Theorem \citep{GuilleminPollack1974}, since $\mathbf{K} : \mathbb{R}^5 \to \mathbb{R}^4$ is a submersion on the intersection set ($\operatorname{rank}(D\mathbf{K}) = 4$), the physical site trajectory:
+\begin{equation}
+\gamma_{\mathrm{site}} = \mathcal{S}_0^+ \cap \Sigma_{\mathrm{site}} = \mathbf{K}^{-1}(\mathbf{0})
+\end{equation}
+is a smooth embedded 1-dimensional submanifold of state space $\Omega_0$, with dimension:
+\begin{equation}
+\dim(\gamma_{\mathrm{site}}) = \dim(\Omega_0) - \operatorname{rank}(D\mathbf{K}) = 5 - 4 = 1.
+\end{equation}
+This completes the proof of transversality and trajectory dimensionality.

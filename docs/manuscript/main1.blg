@@ -1,16 +1,11 @@
 This is BibTeX, Version 0.99e (TeX Live 2026)
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: main1.aux
-A level-1 auxiliary file: intro.aux
-White space in argument---line 9 of file main1.aux
- : \@input{Multi-Scale
- :                     Governing Equations and Chart Regularization.aux}
-I'm skipping whatever remains of this command
 The style file: unsrtnat.bst
 Database file #1: paper1_references.bib
 You've used 37 entries,
             2481 wiz_defined-function locations,
-            855 strings with 12565 characters,
+            854 strings with 12556 characters,
 and the built_in function-call counts, 15524 in all, are:
 = -- 1436
 > -- 695
@@ -49,4 +44,3 @@ warning$ -- 0
 while$ -- 142
 width$ -- 0
 write$ -- 575
-(There was 1 error message)

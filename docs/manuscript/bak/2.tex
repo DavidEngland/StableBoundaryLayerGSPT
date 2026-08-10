@@ -1,0 +1,146 @@
+\section{Multi-Scale Governing Equations and Chart Regularization}
+
+This section defines the smooth fast--slow architecture for the stable boundary layer (SBL) model. We introduce the regularized state space, state the standing assumptions used in the geometric analysis, derive the desingularized fast chart, and define the observation map that connects invariant-manifold structure to atmospheric diagnostics.
+
+\subsection{System Definition and Standing Assumptions}
+
+We work with a multiscale autonomous system written in the desingularized time variable $\tau$ on an open chart domain $\Omega_0 \subset \mathbb{R}^5$:
+\begin{equation}
+\frac{d\mathbf{x}}{d\tau}
+= \mathbf{F}(\mathbf{x};\boldsymbol{\mu},\epsilon_1,\epsilon_2)
+\equiv
+\begin{pmatrix}
+F_{\mathrm{fast}}(\mathbf{x};\boldsymbol{\mu}) \\
+\epsilon_1 F_{\mathrm{slow}}(\mathbf{x};\boldsymbol{\mu}) \\
+\epsilon_1\epsilon_2 F_{\mathrm{superslow}}(\mathbf{x};\boldsymbol{\mu})
+\end{pmatrix}.
+\end{equation}
+
+The state vector is
+\begin{equation}
+\mathbf{x}
+= \begin{pmatrix}
+\tilde e \\
+q_\theta \\
+S \\
+T_s \\
+T_g
+\end{pmatrix}
+\in \Omega_0
+\subset \mathbb{R} \times \mathbb{R} \times \mathbb{R}_+ \times \mathbb{R}_+ \times \mathbb{R}_+.
+\end{equation}
+
+Its components are interpreted as follows: $\tilde e \in \mathbb{R}$ is the desingularized turbulent kinetic energy (TKE) coordinate, $q_\theta \in \mathbb{R}$ is the kinematic turbulent heat flux $\overline{w'\theta'}$, $S \in \mathbb{R}_+$ is the bulk vertical wind shear $\lVert \partial \mathbf{u}/\partial z \rVert$, $T_s \in \mathbb{R}_+$ is the surface skin temperature, and $T_g \in \mathbb{R}_+$ is the deep-soil temperature.
+
+\paragraph{Standing Assumptions.}
+Throughout this manuscript we assume:
+\begin{enumerate}
+\item[\textbf{(A1)}] \textbf{Domain regularity.} The chart domain $\Omega_0 \subset \mathbb{R}^5$ is open and connected, extending across the laminar boundary $\tilde e = 0$, and the vector field $\mathbf{F}$ is of class $C^\infty$ on $\Omega_0$.
+\item[\textbf{(A2)}] \textbf{Parameter domain.} The parameter vector $\boldsymbol{\mu} \in \mathcal{P}$ belongs to an open bounded set of physically admissible coefficients containing the turbulence closure, radiative, and thermodynamic constants.
+\item[\textbf{(A3)}] \textbf{Positive invariance.} The physical domain
+\begin{equation}
+\Omega_{\mathrm{phys}} = \{\mathbf{x} \in \Omega_0 \mid \tilde e > 0,\; S > 0,\; T_s > 0,\; T_g > 0\}
+\end{equation}
+is positively invariant under the physical flow \citep{vanDeWiel2017}.
+\item[\textbf{(A4)}] \textbf{Local well-posedness.} For each initial state $\mathbf{x}(0) \in \Omega_0$, there exists a unique local trajectory $\mathbf{x}(\tau) \in C^\infty((-\delta_t, \delta_t), \Omega_0)$.
+\item[\textbf{(A5)}] \textbf{Timescale separation.} The singular perturbation parameters satisfy
+\begin{equation}
+0 < \epsilon_1 \ll 1, \qquad 0 < \epsilon_2 \ll 1,
+\end{equation}
+separating fast turbulent adjustment ($O(1)$ time $\tau$), slow boundary-layer shear and thermal evolution ($O(\epsilon_1^{-1})$ time), and super-slow deep-soil heat conduction ($O((\epsilon_1\epsilon_2)^{-1})$ time) \citep{Kuehn2015, Kristiansen2024}.
+\end{enumerate}
+
+\subsection{Chart Regularization and Desingularization}
+
+In the physical TKE coordinate $e$, the fast subsystem contains non-smooth fractional exponents ($e^{1/2}$ shear production and $e^{3/2}$ Kolmogorov dissipation) that cause non-differentiability as $e \to 0^+$. This poses severe challenges for both geometric analysis and numerical continuation \citep{desroches2012canards, Steinebach2023Rodas5P}.
+
+To restore $C^\infty$ smoothness and enable automatic differentiation via tools like \texttt{ForwardDiff.jl} \citep{Rackauckas2017DifferentialEquations}, we define the regularized chart map:
+\begin{equation}
+\phi_\delta : e \mapsto \tilde e = \sqrt{e + \delta}, \qquad \delta > 0.
+\end{equation}
+
+\begin{proposition}[Desingularization and smooth extension]
+Under the positive time change
+\begin{equation}
+d\tau = \frac{dt}{\epsilon_1 \tilde e}, \qquad \text{i.e.,} \quad \frac{dt}{d\tau} = \epsilon_1 \tilde e,
+\end{equation}
+the physical TKE equation transformed via $\phi_\delta$ in the asymptotic limit $\delta \to 0^+$ extends to a smooth polynomial vector field on $\Omega_0$. Furthermore, on $\Omega_{\mathrm{phys}}$ this transformation is an orientation-preserving diffeomorphic time rescaling that preserves phase trajectories, equilibrium sets, and the signs of transverse eigenvalues along normally hyperbolic manifold branches.
+\end{proposition}
+
+\begin{proof}
+For $\delta > 0$ and $e > 0$, differentiating $\tilde e^2 = e + \delta$ with respect to physical time $t$ yields $2\tilde e \frac{d\tilde e}{dt} = \frac{de}{dt}$. Substituting the physical TKE evolution equation $\epsilon_1 \frac{de}{dt} = c_m \ell e^{1/2} S^2 - \frac{g}{\theta_0} q_\theta - \frac{1}{\ell} e^{3/2}$ gives:
+\begin{equation}
+\frac{d\tilde e}{dt} = \frac{1}{2\tilde e \epsilon_1} \left( c_m \ell \sqrt{\tilde e^2 - \delta}\,S^2 - \frac{g}{\theta_0} q_\theta - \frac{1}{\ell}(\tilde e^2 - \delta)^{3/2} \right).
+\end{equation}
+Applying the time transformation $\frac{d\tilde e}{d\tau} = \frac{dt}{d\tau}\frac{d\tilde e}{dt} = (\epsilon_1 \tilde e)\frac{d\tilde e}{dt}$ eliminates $\epsilon_1 \tilde e$ in the denominator:
+\begin{equation}
+\frac{d\tilde e}{d\tau} = \frac{1}{2}\left( c_m \ell \sqrt{\tilde e^2 - \delta}\,S^2 - \frac{g}{\theta_0} q_\theta - \frac{1}{\ell}(\tilde e^2 - \delta)^{3/2} \right).
+\end{equation}
+Taking the regularizing limit $\delta \to 0^+$ yields:
+\begin{equation}
+\frac{d\tilde e}{d\tau} = \frac{1}{2} c_m \ell S^2 \tilde e - \frac{g}{2\theta_0} q_\theta - \frac{1}{2\ell} \tilde e^3,
+\end{equation}
+which is $C^\infty$ polynomial in $\tilde e$. Because $\frac{dt}{d\tau} = \epsilon_1 \tilde e > 0$ on $\Omega_{\mathrm{phys}}$, the time transformation is strictly orientation-preserving. Standard GSPT results \citep{Fenichel1979, Kuehn2015} confirm the preservation of topological orbit structures and normal hyperbolicity.
+\end{proof}
+
+\subsection{Subsystem Vector Field Components}
+
+Under Assumptions~(A1)--(A5) and Proposition~2.1, the complete desingularized vector field $\mathbf{F}(\mathbf{x})$ is defined explicitly as follows.
+
+\paragraph{Fast subsystem.}
+The fast subsystem $F_{\mathrm{fast}}(\mathbf{x}) = (\tilde F(\mathbf{x}), \tilde H(\mathbf{x}))^T$ governs fast turbulent adjustment:
+\begin{align}
+\tilde F(\mathbf{x}) &= \frac{1}{2} c_m \ell S^2 \tilde e - \frac{g}{2\theta_0} q_\theta - \frac{1}{2\ell} \tilde e^3, \\
+\tilde H(\mathbf{x}) &= - c_w \, \theta_z(T_s) \, \tilde e^3 - \frac{g}{\theta_0} c_\theta \ell q_\theta^2 - \frac{C_\theta}{\ell} \tilde e^2 q_\theta.
+\end{align}
+The thermal stratification is given by the smooth diagnostic map $\theta_z(T_s) = \frac{\theta_{\mathrm{top}} - \Pi_s T_s}{\Delta z}$.
+
+\paragraph{Slow subsystem.}
+The slow subsystem $F_{\mathrm{slow}}(\mathbf{x}) = (F_S(\mathbf{x}), F_{T_s}(\mathbf{x}))^T$ governs shear production and skin-temperature thermal relaxation:
+\begin{align}
+F_S(\mathbf{x}) &= \tilde e \left[ \mathcal{F}_{\mathrm{ls}} - \frac{\partial}{\partial z}\big(c_m \ell \tilde e S\big) \right], \\
+F_{T_s}(\mathbf{x}) &= \frac{\tilde e}{C_s} \left[ R_{\mathrm{net}}(T_s) + \rho c_p q_\theta + \frac{k_g}{d_g}(T_g - T_s) \right],
+\end{align}
+where $R_{\mathrm{net}}(T_s) = R_{\mathrm{sw}}^{\downarrow} + \epsilon_a \sigma T_a^4 - \epsilon_s \sigma T_s^4$. The regularizing prefactor $\tilde e$ causes slow processes to dynamically ``freeze'' as the system approaches the laminar boundary ($\tilde e \to 0$).
+
+\paragraph{Super-slow subsystem.}
+The super-slow subsystem governs soil heat storage evolution:
+\begin{equation}
+F_{\mathrm{superslow}}(\mathbf{x}) = \tilde e \left[ \frac{k_g}{d_g^2}(T_s - T_g) \right].
+\end{equation}
+
+\subsection{Observation Mapping and Diagnostic Functionals}
+
+To project full state space dynamics onto observational coordinates, we define the smooth observation operator
+\begin{equation}
+\boldsymbol{\Pi}_{\mathrm{obs}} : \Omega_0 \to \mathcal O \subset \mathbb{R}^3,
+\end{equation}
+given by
+\begin{equation}
+\boldsymbol{\Pi}_{\mathrm{obs}}(\mathbf{x})
+= \begin{pmatrix}
+\pi_{Ri}(\mathbf{x}) \\
+\pi_H(\mathbf{x}) \\
+\pi_S(\mathbf{x})
+\end{pmatrix}
+= \begin{pmatrix}
+\frac{g}{\theta_0}\frac{\theta_z(T_s)}{S^2} \\[4pt]
+\rho c_p q_\theta \\[2pt]
+S
+\end{pmatrix}.
+\end{equation}
+
+\paragraph{Differential structure of $\pi_{Ri}$.}
+In the state space cotangent basis $\{d\tilde e, dq_\theta, dS, dT_s, dT_g\}$, the differential Jacobian of the Richardson functional is represented by the row vector:
+\begin{equation}
+D\pi_{Ri}(\mathbf{x}) = \begin{pmatrix} 0 & 0 & -\frac{2g\,\theta_z(T_s)}{\theta_0 S^3} & \frac{g}{\theta_0 S^2}\frac{\partial \theta_z}{\partial T_s} & 0 \end{pmatrix}.
+\end{equation}
+Because $D\pi_{Ri} \in \operatorname{span}\{dS, dT_s\}$, the Richardson diagnostic is aligned strictly with the slow cotangent subspace, making it insensitive at first order to fast turbulent fluctuations $(\tilde e, q_\theta)$.
+
+\begin{proposition}[Observation smoothness]
+Under Assumptions~(A1) and~(A3), the map $\boldsymbol{\Pi}_{\mathrm{obs}}$ is $C^\infty$ smooth on $\Omega_0$.
+\end{proposition}
+
+\begin{proof}
+Because $S > 0$ on $\Omega_{\mathrm{phys}}$, the denominator of $\pi_{Ri}$ is non-zero. The remaining components are linear or smooth algebraic compositions on $\Omega_0$, guaranteeing $\boldsymbol{\Pi}_{\mathrm{obs}} \in C^\infty(\Omega_0, \mathcal O)$.
+\end{proof}

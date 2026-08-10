@@ -91,14 +91,46 @@ B.~J.~H. van~de Wiel, A.~F. Moene, et~al.
   (11):\penalty0 3116--3127, 2012.
 \newblock \doi{10.1175/JAS-D-12-0107.1}.
 
-\bibitem[Jones(1995)]{Jones1995}
-Christopher K. R.~T. Jones.
-\newblock Geometric singular perturbation theory.
-\newblock In Italy Montecatini~Terme, editor, \emph{Dynamical Systems: Lectures
-  Given at the 2nd Session of the Centro Internazionale Matematico Estivo
-  (C.I.M.E.)}, volume 1609 of \emph{Lecture Notes in Mathematics}, pages
-  44--118. Springer, Berlin, Heidelberg, 1995.
-\newblock \doi{10.1007/BFb0094293}.
+\bibitem[Kristiansen(2024)]{Kristiansen2024}
+Kristian~Uldall Kristiansen.
+\newblock A review of multiple-time-scale dynamics: Fundamental phenomena and
+  mathematical methods.
+\newblock In Bernhelm Boo{\ss}-Bavnbek, Jens Christensen, Katherine Richardson,
+  and Oriol Codina, editors, \emph{Multiplicity of Time Scales in Complex
+  Systems: Challenges for Sciences and Communication II}, pages 309--363.
+  Springer Nature Switzerland, Cham, 2024.
+\newblock ISBN 978-3-031-45105-8.
+\newblock \doi{10.1007/16618_2023_75}.
+
+\bibitem[De~Maesschalck and Desroches(2013)]{desroches2012canards}
+Peter De~Maesschalck and Mathieu Desroches.
+\newblock Numerical continuation techniques for planar slow-fast systems.
+\newblock \emph{SIAM Journal on Applied Dynamical Systems}, 12\penalty0
+  (3):\penalty0 1159--1180, 2013.
+\newblock \doi{10.1137/120877386}.
+
+\bibitem[Steinebach(2023)]{Steinebach2023Rodas5P}
+Gerd Steinebach.
+\newblock Construction of {Rosenbrock–Wanner} method {Rodas5P} and numerical
+  benchmarks within the {Julia Differential Equations} package.
+\newblock \emph{BIT Numerical Mathematics}, 63\penalty0 (2):\penalty0 27, 2023.
+\newblock \doi{10.1007/s10543-023-00967-x}.
+
+\bibitem[Rackauckas and Nie(2017)]{Rackauckas2017DifferentialEquations}
+Christopher Rackauckas and Qing Nie.
+\newblock {DifferentialEquations.jl} -- {A} performant and feature-rich
+  ecosystem for solving differential equations in {Julia}.
+\newblock \emph{Journal of Open Research Software}, 5\penalty0 (1):\penalty0
+  15, 2017.
+\newblock \doi{10.5334/jors.151}.
+
+\bibitem[Krauskopf et~al.(2007)Krauskopf, Osinga, and
+  Gal{\'a}n-Vioque]{krauskopf2007continuation}
+Bernd Krauskopf, Hinke Osinga, and Jorge Gal{\'a}n-Vioque.
+\newblock \emph{Numerical Continuation Methods for Dynamical Systems:
+  Path-Following and Boundary Value Problems}.
+\newblock Springer, 2007.
+\newblock \doi{10.1007/978-1-4020-6356-5}.
 
 \bibitem[Krupa and Szmolyan(2001)]{krupa2001extending}
 Martin Krupa and Peter Szmolyan.
@@ -107,6 +139,15 @@ Martin Krupa and Peter Szmolyan.
 \newblock \emph{SIAM Journal on Mathematical Analysis}, 33\penalty0
   (2):\penalty0 286--314, 2001.
 \newblock \doi{10.1137/S0036141099360919}.
+
+\bibitem[Jones(1995)]{Jones1995}
+Christopher K. R.~T. Jones.
+\newblock Geometric singular perturbation theory.
+\newblock In Italy Montecatini~Terme, editor, \emph{Dynamical Systems: Lectures
+  Given at the 2nd Session of the Centro Internazionale Matematico Estivo
+  (C.I.M.E.)}, volume 1609 of \emph{Lecture Notes in Mathematics}, pages
+  44--118. Springer, Berlin, Heidelberg, 1995.
+\newblock \doi{10.1007/BFb0094293}.
 
 \bibitem[Berglund and Gentz(2003)]{Berglund2003}
 Nils Berglund and Barbara Gentz.
@@ -123,30 +164,12 @@ Edward~N. Lorenz.
   (15):\penalty0 1547--1558, 1986.
 \newblock \doi{10.1175/1520-0469(1986)043<1547:OTEOAS>2.0.CO;2}.
 
-\bibitem[De~Maesschalck and Desroches(2013)]{desroches2012canards}
-Peter De~Maesschalck and Mathieu Desroches.
-\newblock Numerical continuation techniques for planar slow-fast systems.
-\newblock \emph{SIAM Journal on Applied Dynamical Systems}, 12\penalty0
-  (3):\penalty0 1159--1180, 2013.
-\newblock \doi{10.1137/120877386}.
-
 \bibitem[Jelbart and Kuehn(2023)]{jelbart2022}
 Samuel Jelbart and Christian Kuehn.
 \newblock Discrete geometric singular perturbation theory.
 \newblock \emph{Discrete and Continuous Dynamical Systems - Series A},
   43\penalty0 (1):\penalty0 57--120, 2023.
 \newblock \doi{10.3934/dcds.2022142}.
-
-\bibitem[Kristiansen(2024)]{Kristiansen2024}
-Kristian~Uldall Kristiansen.
-\newblock A review of multiple-time-scale dynamics: Fundamental phenomena and
-  mathematical methods.
-\newblock In Bernhelm Boo{\ss}-Bavnbek, Jens Christensen, Katherine Richardson,
-  and Oriol Codina, editors, \emph{Multiplicity of Time Scales in Complex
-  Systems: Challenges for Sciences and Communication II}, pages 309--363.
-  Springer Nature Switzerland, Cham, 2024.
-\newblock ISBN 978-3-031-45105-8.
-\newblock \doi{10.1007/16618_2023_75}.
 
 \bibitem[McNider and Pielke(1981)]{McNider1981}
 Richard~T. McNider and Roger~A. Pielke.
@@ -275,28 +298,5 @@ Ernst Hairer and Gerhard Wanner.
 \newblock Springer Series in Computational Mathematics. Springer-Verlag,
   Berlin, 2nd edition, 2010.
 \newblock \doi{10.1007/978-3-642-05221-7}.
-
-\bibitem[Krauskopf et~al.(2007)Krauskopf, Osinga, and
-  Gal{\'a}n-Vioque]{krauskopf2007continuation}
-Bernd Krauskopf, Hinke Osinga, and Jorge Gal{\'a}n-Vioque.
-\newblock \emph{Numerical Continuation Methods for Dynamical Systems:
-  Path-Following and Boundary Value Problems}.
-\newblock Springer, 2007.
-\newblock \doi{10.1007/978-1-4020-6356-5}.
-
-\bibitem[Rackauckas and Nie(2017)]{Rackauckas2017DifferentialEquations}
-Christopher Rackauckas and Qing Nie.
-\newblock {DifferentialEquations.jl} -- {A} performant and feature-rich
-  ecosystem for solving differential equations in {Julia}.
-\newblock \emph{Journal of Open Research Software}, 5\penalty0 (1):\penalty0
-  15, 2017.
-\newblock \doi{10.5334/jors.151}.
-
-\bibitem[Steinebach(2023)]{Steinebach2023Rodas5P}
-Gerd Steinebach.
-\newblock Construction of {Rosenbrock–Wanner} method {Rodas5P} and numerical
-  benchmarks within the {Julia Differential Equations} package.
-\newblock \emph{BIT Numerical Mathematics}, 63\penalty0 (2):\penalty0 27, 2023.
-\newblock \doi{10.1007/s10543-023-00967-x}.
 
 \end{thebibliography}

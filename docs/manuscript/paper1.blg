@@ -1,0 +1,92 @@
+This is BibTeX, Version 0.99e (TeX Live 2026)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: paper1.aux
+Case mismatch error between cite keys Poulos2002CASES99 and poulos2002cases99
+---line 56 of file paper1.aux
+ : \citation{Poulos2002CASES99
+ :                            }
+I'm skipping whatever remains of this command
+Case mismatch error between cite keys Poulos2002CASES99 and poulos2002cases99
+---line 75 of file paper1.aux
+ : \citation{Poulos2002CASES99
+ :                            }
+I'm skipping whatever remains of this command
+Case mismatch error between cite keys Mahrt2014 and mahrt2014
+---line 104 of file paper1.aux
+ : \citation{Steeneveld2006,Mahrt2014
+ :                                   }
+I'm skipping whatever remains of this command
+Case mismatch error between cite keys Poulos2002CASES99 and poulos2002cases99
+---line 112 of file paper1.aux
+ : \citation{Poulos2002CASES99
+ :                            ,Uttal2002SHEBA}
+I'm skipping whatever remains of this command
+Case mismatch error between cite keys Poulos2002CASES99 and poulos2002cases99
+---line 122 of file paper1.aux
+ : \citation{Poulos2002CASES99
+ :                            ,Uttal2002SHEBA}
+I'm skipping whatever remains of this command
+The style file: agsm.bst
+Database file #1: paper1_references.bib
+Warning--I didn't find a database entry for "Miles1961"
+Warning--I didn't find a database entry for "Howard1961"
+Warning--I didn't find a database entry for "Uttal2002SHEBA"
+Warning--I didn't find a database entry for "Grachev2007"
+Warning--I didn't find a database entry for "Mahrt1998"
+Warning--I didn't find a database entry for "Acevedo2006"
+Warning--I didn't find a database entry for "Sun2012"
+Warning--I didn't find a database entry for "Banta2007"
+Warning--I didn't find a database entry for "VanDeWiel2007"
+Warning--I didn't find a database entry for "VanHooijdonk2015"
+Warning--I didn't find a database entry for "Blackadar1957"
+Warning--I didn't find a database entry for "VanDeWiel2010"
+Warning--I didn't find a database entry for "Holtslag2013"
+Warning--I didn't find a database entry for "Hong2006"
+Warning--I didn't find a database entry for "Nakanishi2004"
+Warning--I didn't find a database entry for "Louis1979"
+Warning--I didn't find a database entry for "Steeneveld2006"
+Warning--I didn't find a database entry for "VanDeWiel2002"
+Warning--I didn't find a database entry for "GuilleminPollack1974"
+Warning--I didn't find a database entry for "Hirsch1976"
+You've used 20 entries,
+            2909 wiz_defined-function locations,
+            823 strings with 9253 characters,
+and the built_in function-call counts, 106231 in all, are:
+= -- 17378
+> -- 1486
+< -- 1
++ -- 8492
+- -- 462
+* -- 9430
+:= -- 20971
+add.period$ -- 20
+call.type$ -- 20
+change.case$ -- 276
+chr.to.int$ -- 20
+cite$ -- 20
+duplicate$ -- 331
+empty$ -- 700
+format.name$ -- 526
+if$ -- 19058
+int.to.chr$ -- 5
+int.to.str$ -- 0
+missing$ -- 24
+newline$ -- 63
+num.names$ -- 208
+pop$ -- 75
+preamble$ -- 1
+purify$ -- 300
+quote$ -- 0
+skip$ -- 263
+stack$ -- 0
+substring$ -- 24971
+swap$ -- 60
+text.length$ -- 281
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 72
+warning$ -- 0
+while$ -- 451
+width$ -- 0
+write$ -- 266
+(There were 5 error messages)

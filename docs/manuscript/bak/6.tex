@@ -1,0 +1,95 @@
+\section{Framework for Next-Generation Model Closures}
+\label{sec:closures}
+
+Conventional planetary boundary layer (PBL) parameterization schemes in regional and global numerical weather prediction (NWP) models—such as the Yonsei University (YSU) scheme \citep{Hong2006}, the Mellor--Yamada--Nakanishi--Niino (MYNN) scheme \citep{Nakanishi2004}, and classical Louis-type local closures \citep{Louis1979}—rely on smooth, continuous Monin--Obukhov stability functions $f(Ri)$ or $f(\zeta)$. Because these operational formulations enforce a single-valued relationship between turbulent exchange coefficients and local gradient Richardson numbers, they cannot accommodate the manifold folds, hysteresis, and fast-slow jump dynamics inherent to the stable boundary layer (SBL) \citep{Holtslag2013, VanDeWiel2012}.
+
+Consequently, NWP models routinely exhibit severe systemic biases under clear, calm nocturnal conditions: either overestimating turbulent mixing (destroying surface temperature inversions and misrepresenting nocturnal low-level jets) or underestimating mixing (triggering runaway surface cooling and spurious decouplings) \citep{Steeneveld2006, Mahrt2014}.
+
+In this section, we translate the invariant geometric results from Sections~2--5 into a self-consistent closure framework for single-column (SCM) and 3D NWP models (e.g., WRF, MPAS). The framework replaces heuristic bulk Richardson thresholds with three fold-aware parameterizations: an $H_{\max}$ heat flux capacity limiter, a state-dependent dynamic Richardson threshold $Ri_{\mathrm{fold}}(T_s, T_g)$, and a geometric scale height collapse formulation $h_{\mathrm{eff}}$.
+
+\subsection{The Dynamic Heat Flux Capacity Limiter ($H_{\max}$)}
+
+In standard local and non-local PBL schemes, kinematic turbulent heat flux $q_\theta = \overline{w'\theta'}$ is parameterized via eddy diffusivity $K_h$:
+\begin{equation}
+q_\theta = -K_h \left( \frac{\partial \theta}{\partial z} - \gamma_\theta \right),
+\label{eq:standard_heat_flux}
+\end{equation}
+where $\gamma_\theta$ represents non-local counter-gradient corrections. Under strong nocturnal cooling ($\partial \theta / \partial z \gg 0$), equation \eqref{eq:standard_heat_flux} permits unphysically large downward sensible heat fluxes if $K_h$ does not decay rapidly enough, or causes abrupt numerical instabilities if $K_h$ drops to zero.
+
+To align model physics with the attracting critical manifold $\mathcal{S}_0^{+,\mathrm{att}}$, we introduce the \emph{Fold Heat Flux Capacity Limiter}. Using equation \eqref{eq:H_max_final_app} derived in Appendix~B, the downward sensible heat flux magnitude $|H| = -\rho c_p q_\theta$ is constrained by a smooth, state-dependent capacity function:
+
+\begin{equation}
+\boxed{
+H_{\mathrm{limiter}}(S) = H_{\max}(S) \cdot \tanh\left( \frac{|H_{\mathrm{uncourt}}|}{H_{\max}(S)} \right)
+}
+\label{eq:H_limiter_smooth}
+\end{equation}
+where $H_{\mathrm{uncourt}}$ is the unconstrained sensible heat flux predicted by the base PBL scheme, $S = \sqrt{(\partial U/\partial z)^2 + (\partial V/\partial z)^2}$ is local wind shear, and $H_{\max}(S)$ is defined by the invariant fold capacity:
+\begin{equation}
+H_{\max}(S) = \frac{2}{3} \rho c_p \frac{\theta_0 c_m \ell}{g} S^2.
+\label{eq:H_max_closure}
+\end{equation}
+
+\paragraph{Physical Mechanism:}
+Equation \eqref{eq:H_limiter_smooth} acts as an invariant physical cap:
+\begin{itemize}
+    \item When $|H_{\mathrm{uncourt}}| \ll H_{\max}(S)$ (wSBL regime), $\tanh(x) \approx x$, and the closure smoothly recovers standard Monin--Obukhov / eddy-diffusivity mixing.
+    \item As $|H_{\mathrm{uncourt}}| \to H_{\max}(S)$ (approaching $\mathcal{C}_{\mathrm{fold}}$), the limiter caps downward heat transport, preventing the PBL scheme from drawing unrealistic amounts of heat from the upper atmosphere when background shear is insufficient.
+\end{itemize}
+
+\subsection{State-Dependent Fold Richardson Threshold $Ri_{\mathrm{fold}}(T_s, T_g)$}
+
+Classical schemes use static critical Richardson numbers (e.g., $Ri_{\mathrm{crit}} \approx 0.25$) to extinguish turbulent diffusivities ($K_m, K_h \to 0$). However, Theorem~3 (Fold-Surface Projection Theorem) demonstrates that $Ri_{\mathrm{crit}}$ is not a constant, but a 1D scalar projection of the 2D invariant fold surface $\mathcal{C}_{\mathrm{fold}}$ influenced by soil thermal coupling.
+
+Combining the fold TKE expression $\tilde e_{\mathrm{fold}} = \sqrt{\frac{c_m}{3}} \ell S$ from Appendix~B with the vertical gradient relation on $\mathcal{S}_0^+$ gives the dynamic threshold gradient:
+\begin{equation}
+\left.\frac{\partial \theta}{\partial z}\right\vert_{\mathrm{fold}} = \frac{2 \theta_0 C_\theta \sqrt{c_m/3}}{g c_w \ell} S.
+\label{eq:grad_theta_fold}
+\end{equation}
+
+Dividing \eqref{eq:grad_theta_fold} by $S^2$ and incorporating the surface energy balance constraint $\Sigma_{\mathrm{site}}$ yields the dynamic fold Richardson threshold $Ri_{\mathrm{fold}}(T_s, T_g)$:
+
+\begin{equation}
+\boxed{
+Ri_{\mathrm{fold}}(T_s, T_g) = Ri_0 \left[ 1 + \alpha_{\mathrm{soil}} \left( \frac{T_g - T_s}{T_0} \right) \right] \left( \frac{\ell_0}{\ell(z)} \right) \frac{1}{S},
+}
+\label{eq:Ri_fold_dynamic}
+\end{equation}
+where $Ri_0 = \frac{2 C_\theta \sqrt{c_m/3}}{c_w \ell_0}$ is the baseline non-dimensional fold parameter, $T_g - T_s$ is the soil-skin temperature differential, $T_0$ is a reference temperature, and $\alpha_{\mathrm{soil}} = \frac{k_g / d_g}{\rho c_p u_*}$ represents soil-thermal coupling strength.
+
+\paragraph{Operational Utility:}
+Equation \eqref{eq:Ri_fold_dynamic} dynamically adjusts the turbulence collapse threshold at every grid cell and time step based on surface properties:
+\begin{itemize}
+    \item Over high-thermal-inertia soils (e.g., wet clay, $T_g - T_s > 0$), strong conductive heat supply expands the stable region, increasing $Ri_{\mathrm{fold}}$ and delaying turbulence collapse.
+    \item Over low-thermal-inertia surfaces (e.g., deep snow, dry sand, $T_g - T_s \approx 0$), $Ri_{\mathrm{fold}}$ drops significantly, triggering fast collapse at much lower stability levels, in exact agreement with field observations \citep{Poulos2002CASES99, Uttal2002SHEBA}.
+\end{itemize}
+
+\subsection{Geometric Scale Height Collapse ($h_{\mathrm{eff}}$)}
+
+In non-local schemes like YSU \citep{Hong2006}, the boundary-layer height $h$ determines the spatial profile of mixing lengths $\ell(z) = k z (1 - z/h)^2$. In standard formulations, $h$ is calculated using bulk Richardson numbers over the entire column:
+\begin{equation}
+Ri_{\mathrm{bulk}}(z) = \frac{g}{\theta_{v0}} \frac{[\theta_v(z) - \theta_{v0}] z}{U(z)^2 + V(z)^2} = Ri_{\mathrm{crit}}.
+\end{equation}
+
+Because standard bulk methods cannot account for singular fast-slow collapse, they over-predict boundary layer height under strongly stable conditions, maintaining turbulent mixing through excessively deep layers ($h \sim 100\text{--}200\,\mathrm{m}$).
+
+To resolve this, we formulate an effective scale height $h_{\mathrm{eff}}$ that contracts dynamically as state trajectories approach the fold surface $\mathcal{C}_{\mathrm{fold}}$:
+
+\begin{equation}
+\boxed{
+h_{\mathrm{eff}} = h_0 \cdot \exp\left[ -\beta \left( \frac{Ri_{\mathrm{local}}}{Ri_{\mathrm{fold}}(T_s, T_g)} \right)^2 \right] + h_{\mathrm{min}},
+}
+\label{eq:h_eff_closure}
+\end{equation}
+where $h_0$ is the unstratified boundary layer scale height, $h_{\mathrm{min}} \approx 10\,\mathrm{m}$ is a residual laminar layer thickness, and $\beta > 0$ is a non-dimensional steepness parameter governing fast contraction near the fold.
+
+\subsection{Summary of NWP Implementation Architecture}
+
+The full fold-aware parameterization suite is integrated into a 1D column or 3D NWP framework using the following algorithmic sequence at each time step $t^n \to t^{n+1}$:
+
+\begin{enumerate}
+    \item \textbf{State Evaluation:} Compute wind shear $S$, vertical potential temperature gradient $\partial \theta / \partial z$, and soil-skin thermal difference $\Delta T_{sg} = T_g - T_s$.
+    \item \textbf{Dynamic Threshold Update:} Calculate $Ri_{\mathrm{fold}}(T_s^n, T_g^n)$ using equation \eqref{eq:Ri_fold_dynamic} and update the effective scale height $h_{\mathrm{eff}}$ via equation \eqref{eq:h_eff_closure}.
+    \item \textbf{Flux Capacity Capping:} Evaluate unconstrained heat flux $H_{\mathrm{uncourt}}$ from standard mixing profiles and apply the invariant capacity limiter $H_{\mathrm{limiter}}(S)$ via equation \eqref{eq:H_limiter_smooth}.
+    \item \textbf{State Tendency Integration:} Advance state variables $(\mathbf{u}, \theta, T_s)$ using capped fluxes, guaranteeing that state trajectories remain bounded within the physically attracting sheet $\mathcal{S}_0^{+,\mathrm{att}}$ or undergo controlled fast jumps to $\mathcal{S}_0^0$.
+\end{enumerate}

@@ -1,0 +1,93 @@
+\section*{Appendix A: Explicit Determinant Derivation of the Fast Jacobian $J_{\mathrm{fast}}$}
+\label{app:fast_jacobian}
+
+In this appendix, we present the explicit derivation of the fast Jacobian matrix $J_{\mathrm{fast}}$, its trace and determinant, and the spectral conditions governing the loss of normal hyperbolicity along the turbulent critical manifold $\mathcal{S}_0^+$.
+
+\subsection*{A.1 Governing Fast Subsystem}
+
+In the fast timescale $\tau = t / \epsilon_1$, setting $\epsilon_1 = 0$ reduces the full 5D boundary-layer system to the 2D layer problem, where the slow thermal states $(S, T_s, T_g)$ act as stationary parameters \citep{Fenichel1979, Kuehn2015}. The fast state vector $\mathbf{y} = (\tilde e, q_\theta)^T \in \mathbb{R}_+ \times \mathbb{R}$ evolves according to:
+\begin{align}
+\frac{d\tilde e}{d\tau} &= \tilde{F}(\tilde e, q_\theta; S, T_s) = c_m \ell^2 S^2 + \frac{g \ell}{\theta_0} q_\theta - \tilde e^2, \label{eq:fast_e_app} \\[4pt]
+\frac{d q_\theta}{d\tau} &= \tilde{H}(\tilde e, q_\theta; T_s) = -\frac{c_w \ell}{C_\theta} \theta_z(T_s) \tilde e - q_\theta, \label{eq:fast_q_app}
+\end{align}
+where $\tilde e$ is the scaled turbulent kinetic energy (TKE), $q_\theta = \overline{w'\theta'}$ is the kinematic vertical sensible heat flux, $S$ is the vertical wind shear, $\theta_z(T_s) = \partial \theta / \partial z$ is the surface temperature gradient, $\ell$ is the master turbulent mixing length, and $\{c_m, c_w, C_\theta\}$ are non-dimensional closure constants \citep{Stull1988, Garratt1992}.
+
+\subsection*{A.2 Computation of Partial Derivatives and Matrix Assembly}
+
+The fast Jacobian matrix $J_{\mathrm{fast}}(\mathbf{x}) \in \mathbb{R}^{2 \times 2}$ represents the linear differential operator of the fast vector field $\mathbf{F}_{\mathrm{fast}} = (\tilde{F}, \tilde{H})^T$ with respect to the fast state variables $(\tilde e, q_\theta)$:
+\begin{equation}
+J_{\mathrm{fast}}(\mathbf{x}) = 
+\begin{pmatrix}
+\frac{\partial \tilde{F}}{\partial \tilde e} & \frac{\partial \tilde{F}}{\partial q_\theta} \\[8pt]
+\frac{\partial \tilde{H}}{\partial \tilde e} & \frac{\partial \tilde{H}}{\partial q_\theta}
+\end{pmatrix}.
+\label{eq:j_fast_def}
+\end{equation}
+
+Evaluating the partial derivatives from \eqref{eq:fast_e_app} and \eqref{eq:fast_q_app} directly yields:
+\begin{align}
+\frac{\partial \tilde{F}}{\partial \tilde e} &= -2\tilde e, \label{eq:dF_de} \\[4pt]
+\frac{\partial \tilde{F}}{\partial q_\theta} &= \frac{g \ell}{\theta_0}, \label{eq:dF_dq} \\[4pt]
+\frac{\partial \tilde{H}}{\partial \tilde e} &= -\frac{c_w \ell}{C_\theta} \theta_z(T_s), \label{eq:dH_de} \\[4pt]
+\frac{\partial \tilde{H}}{\partial q_\theta} &= -1. \label{eq:dH_dq}
+\end{align}
+
+Substituting equations \eqref{eq:dF_de}--\eqref{eq:dH_dq} into \eqref{eq:j_fast_def} yields the explicit matrix structure:
+\begin{equation}
+J_{\mathrm{fast}}(\tilde e, q_\theta; T_s) = 
+\begin{pmatrix}
+-2\tilde e & \frac{g \ell}{\theta_0} \\[6pt]
+-\frac{c_w \ell}{C_\theta} \theta_z(T_s) & -1
+\end{pmatrix}.
+\label{eq:j_fast_explicit}
+\end{equation}
+
+\subsection*{A.3 Trace, Determinant, and Normal Hyperbolicity}
+
+The linear stability of equilibria on the critical manifold $\mathcal{S}_0^+$ is determined by the eigenvalues $\lambda_{1,2}$ of $J_{\mathrm{fast}}$, satisfying the characteristic polynomial:
+\begin{equation}
+\lambda^2 - \operatorname{Tr}(J_{\mathrm{fast}})\lambda + \det(J_{\mathrm{fast}}) = 0.
+\end{equation}
+
+\paragraph{1. Trace Evaluation:}
+From \eqref{eq:j_fast_explicit}, the trace of $J_{\mathrm{fast}}$ is given by:
+\begin{equation}
+\operatorname{Tr}(J_{\mathrm{fast}}) = \frac{\partial \tilde{F}}{\partial \tilde e} + \frac{\partial \tilde{H}}{\partial q_\theta} = -2\tilde e - 1.
+\label{eq:trace_eval}
+\end{equation}
+On the physical turbulent branch $\mathcal{S}_0^+$, TKE is strictly positive ($\tilde e > 0$). Consequently,
+\begin{equation}
+\operatorname{Tr}(J_{\mathrm{fast}}) < -1 < 0 \quad \forall \mathbf{x} \in \mathcal{S}_0^+.
+\end{equation}
+Because the trace is strictly negative everywhere on $\mathcal{S}_0^+$, oscillatory Hopf bifurcations ($\operatorname{Re}(\lambda) = 0, \operatorname{Im}(\lambda) \neq 0$) are strictly precluded in fast time.
+
+\paragraph{2. Determinant Evaluation:}
+The determinant of $J_{\mathrm{fast}}$ is computed as:
+\begin{align}
+\det(J_{\mathrm{fast}}) &= \left(\frac{\partial \tilde{F}}{\partial \tilde e}\right)\left(\frac{\partial \tilde{H}}{\partial q_\theta}\right) - \left(\frac{\partial \tilde{F}}{\partial q_\theta}\right)\left(\frac{\partial \tilde{H}}{\partial \tilde e}\right) \nonumber \\[4pt]
+&= (-2\tilde e)(-1) - \left(\frac{g \ell}{\theta_0}\right)\left(-\frac{c_w \ell}{C_\theta} \theta_z(T_s)\right) \nonumber \\[4pt]
+&= 2\tilde e - \frac{g c_w \ell^2}{\theta_0 C_\theta} \theta_z(T_s).
+\label{eq:det_eval}
+\end{align}
+
+\subsection*{A.4 Fold Locus and Saddle-Node Bifurcation Condition}
+
+According to Fenichel theory \citep{Fenichel1979}, a point $\mathbf{x} \in \mathcal{S}_0^+$ loses normal hyperbolicity if and only if at least one eigenvalue of $J_{\mathrm{fast}}$ crosses the imaginary axis. Since $\operatorname{Tr}(J_{\mathrm{fast}}) < 0$, loss of normal hyperbolicity occurs via a real zero-eigenvalue crossing ($\lambda_1 = 0$), which corresponds precisely to the singularity condition:
+\begin{equation}
+\det\left(J_{\mathrm{fast}}(\mathbf{x}_{\mathrm{fold}})\right) = 0.
+\label{eq:singularity_cond}
+\end{equation}
+
+Setting \eqref{eq:det_eval} equal to zero and solving for $\tilde e$ defines the exact fold TKE threshold $\tilde e_{\mathrm{fold}}$:
+\begin{equation}
+2\tilde e_{\mathrm{fold}} - \frac{g c_w \ell^2}{\theta_0 C_\theta} \theta_z(T_s) = 0 \implies \tilde e_{\mathrm{fold}}(T_s) = \frac{g c_w \ell^2}{2 \theta_0 C_\theta} \theta_z(T_s).
+\label{eq:e_fold_derived}
+\end{equation}
+
+Substituting $\tilde e_{\mathrm{fold}}(T_s)$ into the equilibrium relation $\tilde{F}(\tilde e, q_\theta^*; S, T_s) = 0$ yields the critical shear threshold $S_{\mathrm{fold}}(T_s)$:
+\begin{equation}
+S_{\mathrm{fold}}(T_s) = \frac{g c_w \ell}{2 \theta_0 C_\theta \sqrt{c_m}} \theta_z(T_s).
+\label{eq:S_fold_derived}
+\end{equation}
+
+At any point $\mathbf{x} \in \mathcal{C}_{\mathrm{fold}}$, the fast Jacobian matrix has spectrum $\sigma(J_{\mathrm{fast}}) = \{0, \lambda_2\}$, where $\lambda_2 = \operatorname{Tr}(J_{\mathrm{fast}}) = -2\tilde e_{\mathrm{fold}} - 1 < 0$. This confirms that the boundary $\mathcal{C}_{\mathrm{fold}}$ separates the attracting sheet $\mathcal{S}_0^{+,\mathrm{att}}$ ($\det J_{\mathrm{fast}} > 0$) from the repelling saddle sheet $\mathcal{S}_0^{+,\mathrm{rep}}$ ($\det J_{\mathrm{fast}} < 0$) via non-degenerate fast saddle-node bifurcations \citep{VanDeWiel2002, Kuehn2015}.

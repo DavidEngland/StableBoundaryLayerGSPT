@@ -1,0 +1,157 @@
+\section{Multi-Scale Governing Equations and Chart Regularization}
+
+This section defines the smooth fast--slow architecture for the stable boundary layer (SBL) model. We introduce the regularized state space, state the standing assumptions used in the geometric analysis, derive the desingularized fast chart, define the observation map, and introduce the critical manifold and fold locus.
+
+\subsection{System Definition and Standing Assumptions}
+
+We work with a multiscale autonomous system written in the desingularized fast time variable $\tau$ on an open chart domain $\Omega_0 \subset \mathbb{R}^5$:
+\begin{equation}
+\frac{d\mathbf{x}}{d\tau}
+= \mathbf{F}(\mathbf{x};\boldsymbol{\mu},\epsilon_1,\epsilon_2)
+\equiv
+\begin{pmatrix}
+F_{\mathrm{fast}}(\mathbf{x};\boldsymbol{\mu}) \\
+\epsilon_1 F_{\mathrm{slow}}(\mathbf{x};\boldsymbol{\mu}) \\
+\epsilon_1\epsilon_2 F_{\mathrm{superslow}}(\mathbf{x};\boldsymbol{\mu})
+\end{pmatrix}.
+\end{equation}
+
+The full state vector is $\mathbf{x} = (\tilde e, \hat q_\theta, S, T_s, T_g)^T \in \Omega_0 \subset \mathbb{R} \times \mathbb{R} \times \mathbb{R}_+ \times \mathbb{R}_+ \times \mathbb{R}_+$. The physical system comprises a five-dimensional state space ($n = 5$) partitioned into three distinct timescales:
+\begin{itemize}
+    \item \textbf{Fast Subsystem} ($n_{\mathrm{fast}} = 2$): Desingularized TKE coordinate $\tilde e \in \mathbb{R}$ and scaled turbulent heat flux coefficient $\hat q_\theta \in \mathbb{R}$ (where physical flux $q_\theta = \tilde e \hat q_\theta$).
+    \item \textbf{Slow Subsystem} ($n_{\mathrm{slow}} = 2$): Bulk vertical wind shear $S \in \mathbb{R}_+$ and surface skin temperature $T_s \in \mathbb{R}_+$.
+    \item \textbf{Super-Slow Subsystem} ($n_{\mathrm{superslow}} = 1$): Deep-soil temperature $T_g \in \mathbb{R}_+$.
+\end{itemize}
+
+\paragraph{Standing Assumptions.}
+Throughout this manuscript we assume:
+\begin{enumerate}
+\item[\textbf{(A1)}] \textbf{Domain regularity.} The chart domain $\Omega_0 \subset \mathbb{R}^5$ is open and connected, extending across the laminar boundary $\tilde e = 0$, and the vector field $\mathbf{F}$ is of class $C^\infty$ on $\Omega_0$.
+\item[\textbf{(A2)}] \textbf{Parameter domain.} The parameter vector $\boldsymbol{\mu} \in \mathcal{P}$ belongs to an open bounded set of physically admissible coefficients containing the turbulence closure, radiative, and thermodynamic constants.
+\item[\textbf{(A3)}] \textbf{Flux scaling and positive invariance.} The turbulent heat flux satisfies $q_\theta = \tilde e \hat q_\theta$, so that turbulent transport vanishes at the laminar limit $\tilde e = 0$. Consequently, the physical domain
+\begin{equation}
+\Omega_{\mathrm{phys}} = \{\mathbf{x} \in \Omega_0 \mid \tilde e > 0,\; S > 0,\; T_s > 0,\; T_g > 0\}
+\end{equation}
+and its closure $\bar\Omega_{\mathrm{phys}}$ are positively invariant under the flow \citep{vanDeWiel2017}.
+\item[\textbf{(A4)}] \textbf{Local well-posedness.} For each initial state $\mathbf{x}(0) \in \Omega_0$, there exists a unique local trajectory $\mathbf{x}(\tau) \in C^\infty((-\delta_t, \delta_t), \Omega_0)$.
+\item[\textbf{(A5)}] \textbf{Timescale separation.} The singular perturbation parameters satisfy
+\begin{equation}
+0 < \epsilon_1 \ll 1, \qquad 0 < \epsilon_2 \ll 1,
+\end{equation}
+separating fast turbulent adjustment ($O(1)$ time $\tau$), slow boundary-layer shear and thermal evolution ($O(\epsilon_1^{-1})$ time), and super-slow deep-soil heat conduction ($O((\epsilon_1\epsilon_2)^{-1})$ time) \citep{Kuehn2015, Kristiansen2024}.
+\end{enumerate}
+
+\subsection{Chart Regularization and Desingularization}
+
+In the physical TKE coordinate $e$, the fast equations contain non-smooth fractional exponents ($e^{1/2}$ shear production and $e^{3/2}$ Kolmogorov dissipation) that cause non-differentiability as $e \to 0^+$. This poses severe challenges for geometric analysis and numerical continuation \citep{desroches2012canards, Steinebach2023Rodas5P}.
+
+To restore $C^\infty$ smoothness and support automatic differentiation via tools like \texttt{ForwardDiff.jl} \citep{Rackauckas2017DifferentialEquations}, we introduce the regularized chart map:
+\begin{equation}
+\phi_\delta : e \mapsto \tilde e = \sqrt{e + \delta}, \qquad \delta > 0.
+\end{equation}
+
+\begin{proposition}[Desingularization and smooth extension]
+For fixed $\delta > 0$, the transformed vector field is $C^\infty$ smooth on the interior chart domain $\tilde e > \sqrt{\delta}$. The limiting desingularized chart obtained as $\delta \to 0^+$ under the positive time reparameterization
+\begin{equation}
+d\tau = \frac{dt}{\epsilon_1 \tilde e}, \qquad \text{i.e.,} \quad \frac{dt}{d\tau} = \epsilon_1 \tilde e,
+\end{equation}
+extends smoothly across the laminar boundary $\tilde e = 0$ to yield a polynomial fast subsystem on $\Omega_0$. Because
+\begin{equation}
+\frac{d\tau}{dt} = \frac{1}{\epsilon_1 \tilde e} > 0 \quad \text{on } \Omega_{\mathrm{phys}},
+\end{equation}
+this transformation is an orientation-preserving diffeomorphic time rescaling that preserves phase trajectories, equilibrium sets, and the signs of transverse eigenvalues along normally hyperbolic manifold branches.
+\end{proposition}
+
+\begin{proof}
+For $\delta > 0$ and $e > 0$, differentiating $\tilde e^2 = e + \delta$ with respect to physical time $t$ yields $2\tilde e \frac{d\tilde e}{dt} = \frac{de}{dt}$. Substituting the physical TKE evolution equation $\epsilon_1 \frac{de}{dt} = c_m \ell e^{1/2} S^2 - \frac{g}{\theta_0} \tilde e \hat q_\theta - \frac{1}{\ell} e^{3/2}$ gives:
+\begin{equation}
+\frac{d\tilde e}{dt} = \frac{1}{2\tilde e \epsilon_1} \left( c_m \ell \sqrt{\tilde e^2 - \delta}\,S^2 - \frac{g}{\theta_0} \tilde e \hat q_\theta - \frac{1}{\ell}(\tilde e^2 - \delta)^{3/2} \right).
+\end{equation}
+For fixed $\delta > 0$, the term $\sqrt{\tilde e^2 - \delta}$ is $C^\infty$ on $\tilde e > \sqrt{\delta}$. Applying the time transformation $\frac{d\tilde e}{d\tau} = \frac{dt}{d\tau}\frac{d\tilde e}{dt} = (\epsilon_1 \tilde e)\frac{d\tilde e}{dt}$ cancels $\epsilon_1 \tilde e$ in the denominator:
+\begin{equation}
+\frac{d\tilde e}{d\tau} = \frac{1}{2}\left( c_m \ell \sqrt{\tilde e^2 - \delta}\,S^2 - \frac{g}{\theta_0} \tilde e \hat q_\theta - \frac{1}{\ell}(\tilde e^2 - \delta)^{3/2} \right).
+\end{equation}
+Taking the limiting desingularized chart as $\delta \to 0^+$ yields:
+\begin{equation}
+\frac{d\tilde e}{d\tau} = \frac{1}{2} c_m \ell S^2 \tilde e - \frac{g}{2\theta_0} \tilde e \hat q_\theta - \frac{1}{2\ell} \tilde e^3 = \tilde e \left( \frac{1}{2} c_m \ell S^2 - \frac{g}{2\theta_0} \hat q_\theta - \frac{1}{2\ell} \tilde e^2 \right),
+\end{equation}
+which is $C^\infty$ polynomial in $\tilde e$ on all of $\Omega_0$, including $\tilde e = 0$. Because $\frac{d\tau}{dt} = (\epsilon_1 \tilde e)^{-1} > 0$ on $\Omega_{\mathrm{phys}}$, orbit orientations and normal hyperbolicity are preserved \citep{Fenichel1979, Kuehn2015}.
+\end{proof}
+
+\subsection{Subsystem Vector Field Components}
+
+Under Assumptions~(A1)--(A5) and Proposition~2.1, the complete desingularized vector field $\mathbf{F}(\mathbf{x})$ is given explicitly as follows.
+
+\paragraph{Fast subsystem ($n_{\mathrm{fast}} = 2$).}
+Governs rapid turbulent adjustment of $(\tilde e, \hat q_\theta)$:
+\begin{align}
+\tilde F(\mathbf{x}) &= \frac{1}{2} c_m \ell S^2 \tilde e - \frac{g}{2\theta_0} \tilde e \hat q_\theta - \frac{1}{2\ell} \tilde e^3, \\
+\tilde H(\mathbf{x}) &= - c_w \, \theta_z(T_s) \, \tilde e^3 - \frac{g}{\theta_0} c_\theta \ell \tilde e^2 \hat q_\theta^2 - \frac{C_\theta}{\ell} \tilde e^3 \hat q_\theta,
+\end{align}
+where $\theta_z(T_s) = \frac{\theta_{\mathrm{top}} - \Pi_s T_s}{\Delta z}$ is the background potential temperature gradient.
+
+\paragraph{Slow subsystem ($n_{\mathrm{slow}} = 2$).}
+Governs shear production $S$ and skin temperature $T_s$:
+\begin{align}
+F_S(\mathbf{x}) &= \tilde e \left[ \mathcal{F}_{\mathrm{ls}} - \frac{\partial}{\partial z}\big(c_m \ell \tilde e S\big) \right], \\
+F_{T_s}(\mathbf{x}) &= \frac{\tilde e}{C_s} \left[ R_{\mathrm{net}}(T_s) + \rho c_p \tilde e \hat q_\theta + \frac{k_g}{d_g}(T_g - T_s) \right],
+\end{align}
+where $R_{\mathrm{net}}(T_s) = R_{\mathrm{sw}}^{\downarrow} + \epsilon_a \sigma T_a^4 - \epsilon_s \sigma T_s^4$. The regularizing prefactor $\tilde e$ causes slow processes to dynamically ``freeze'' in fast time as the system approaches the laminar floor ($\tilde e \to 0$).
+
+\paragraph{Super-slow subsystem ($n_{\mathrm{superslow}} = 1$).}
+Governs soil thermal inertia:
+\begin{equation}
+F_{\mathrm{superslow}}(\mathbf{x}) = \tilde e \left[ \frac{k_g}{d_g^2}(T_s - T_g) \right].
+\end{equation}
+We emphasize that reduced slow dynamics are obtained by restricting the desingularized flow to the attracting Fenichel manifold $\mathcal{S}_\epsilon$, rather than by evaluating the slow vector field on the singular boundary alone.
+
+\subsection{Observation Mapping and Diagnostic Functionals}
+
+To project internal state-space dynamics onto observable boundary-layer quantities, we define the smooth observation operator
+\begin{equation}
+\boldsymbol{\Pi}_{\mathrm{obs}} : \Omega_0 \to \mathcal O \subset \mathbb{R}^3, \qquad
+\boldsymbol{\Pi}_{\mathrm{obs}}(\mathbf{x})
+= \begin{pmatrix}
+\pi_{Ri}(\mathbf{x}) \\
+\pi_H(\mathbf{x}) \\
+\pi_S(\mathbf{x})
+\end{pmatrix}
+= \begin{pmatrix}
+\frac{g}{\theta_0}\frac{\theta_z(T_s)}{S^2} \\[4pt]
+\rho c_p \tilde e \hat q_\theta \\[2pt]
+S
+\end{pmatrix}.
+\end{equation}
+
+\paragraph{Fast fiber annihilation.}
+Let $T_{\mathbf{x}}\mathcal{F}_{\mathrm{fast}} = \operatorname{span}\{\frac{\partial}{\partial \tilde e}, \frac{\partial}{\partial \hat q_\theta}\} \subset T_{\mathbf{x}}\Omega_0$ denote the tangent space to the fast fibers. In the state-space cotangent basis $\{d\tilde e, d\hat q_\theta, dS, dT_s, dT_g\}$, the differential Jacobian of the Bulk Richardson diagnostic is:
+\begin{equation}
+D\pi_{Ri}(\mathbf{x}) = \begin{pmatrix} 0 & 0 & -\frac{2g\,\theta_z(T_s)}{\theta_0 S^3} & \frac{g}{\theta_0 S^2}\frac{\partial \theta_z}{\partial T_s} & 0 \end{pmatrix}.
+\end{equation}
+Consequently, $D\boldsymbol{\Pi}_{\mathrm{obs}}(\mathbf{v}) = \mathbf{0}$ for all fast vectors $\mathbf{v} \in T_{\mathbf{x}}\mathcal{F}_{\mathrm{fast}}$. This proves that the Richardson diagnostic is aligned strictly with the slow cotangent subspace and is insensitive at first order to fast turbulent fluctuations $(\tilde e, \hat q_\theta)$.
+
+\subsection{Geometric Foundations: Critical Manifold and Fold Locus}
+
+We conclude this section by explicitly defining the invariant geometric objects that govern SBL transitions.
+
+\begin{definition}[Critical Manifold $\mathcal{S}_0$]
+Setting $\epsilon_1 = 0$ defines the critical manifold as the equilibrium set of the fast subsystem:
+\begin{equation}
+\mathcal{S}_0 = \left\{ \mathbf{x} \in \Omega_0 \mid F_{\mathrm{fast}}(\mathbf{x};\boldsymbol{\mu}) = \mathbf{0} \right\}.
+\end{equation}
+Since $n = 5$ and $n_{\mathrm{fast}} = 2$, $\mathcal{S}_0$ is a 3-dimensional embedded submanifold of $\Omega_0$.
+\end{definition}
+
+\begin{definition}[Fold Locus $\mathcal{C}_{\mathrm{fold}}$]
+The fold locus is the set of non-hyperbolic points on $\mathcal{S}_0$ where the fast Jacobian loses rank:
+\begin{equation}
+\mathcal{C}_{\mathrm{fold}} = \left\{ \mathbf{x} \in \mathcal{S}_0 \,\,\middle\vert\,\, \det D_{(\tilde e, \hat q_\theta)} F_{\mathrm{fast}}(\mathbf{x};\boldsymbol{\mu}) = 0 \right\}.
+\end{equation}
+\end{definition}
+
+\begin{definition}[Observed Threshold Image $\Gamma_{\mathrm{fold}}$]
+The campaign-specific critical Richardson threshold observed in field data is the image of the fold locus under the observation projection:
+\begin{equation}
+\Gamma_{\mathrm{fold}} = \boldsymbol{\Pi}_{\mathrm{obs}}(\mathcal{C}_{\mathrm{fold}}) \subset \mathcal{O}.
+\end{equation}
+\end{definition}
